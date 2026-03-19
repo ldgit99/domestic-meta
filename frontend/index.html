@@ -354,10 +354,16 @@
 
     <div class="grid">
       <div class="panel">
-        <h2>Manual Screening</h2>
+        <h2>Manual Review</h2>
         <label for="reviewCandidate">Candidate</label>
         <select id="reviewCandidate">
           <option value="">No candidate selected</option>
+        </select>
+
+        <label for="reviewStage">Review Stage</label>
+        <select id="reviewStage">
+          <option value="title_abstract">Title / Abstract</option>
+          <option value="full_text">Full Text</option>
         </select>
 
         <label for="reviewReasonCode">Reason Code</label>
@@ -466,6 +472,7 @@
     const searchesBody = document.getElementById("searches");
     const exportContent = document.getElementById("exportContent");
     const reviewCandidate = document.getElementById("reviewCandidate");
+    const reviewStage = document.getElementById("reviewStage");
     const reviewReasonCode = document.getElementById("reviewReasonCode");
     const reviewReasonText = document.getElementById("reviewReasonText");
     const fullText = document.getElementById("fullText");
@@ -612,7 +619,27 @@
       }
 
       const payload = await fetchJson(`/candidates/${candidateId}`);
+      reviewStage.value = suggestReviewStage(payload);
       candidateDetail.textContent = JSON.stringify(payload, null, 2);
+    }
+
+    function suggestReviewStage(detailPayload) {
+      if (detailPayload.latest_full_text_decision) {
+        return "full_text";
+      }
+
+      if (
+        detailPayload.full_text_artifact ||
+        detailPayload.extraction_result ||
+        (
+          detailPayload.latest_title_abstract_decision &&
+          detailPayload.latest_title_abstract_decision.decision === "include"
+        )
+      ) {
+        return "full_text";
+      }
+
+      return "title_abstract";
     }
 
     async function loadReviewQueue() {
@@ -685,7 +712,7 @@
       }
 
       const payload = {
-        stage: "title_abstract",
+        stage: reviewStage.value,
         decision,
         reason_code: reviewReasonCode.value || null,
         reason_text: reviewReasonText.value || null,

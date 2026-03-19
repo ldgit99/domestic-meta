@@ -1,3 +1,11 @@
+from app.core.constants import (
+    DECISION_EXCLUDE,
+    DECISION_INCLUDE,
+    DECISION_MAYBE,
+    DECISION_REVIEW,
+    FULL_TEXT_STAGE,
+    TITLE_ABSTRACT_STAGE,
+)
 from app.models.domain import EligibilityDecision, FullTextArtifact
 from app.schemas.candidate import DecisionCreate, FullTextArtifactCreate
 from app.services.prisma import PrismaService
@@ -19,6 +27,12 @@ class SearchManagementService:
 
         candidate = self.store.get_candidate(candidate_id)
         assert candidate is not None
+        candidate.status = self._status_for_decision(
+            current_status=candidate.status,
+            stage=payload.stage,
+            decision=payload.decision,
+        )
+        self.store.update_candidate(candidate)
         self.refresh_prisma(candidate.search_request_id)
         return decision
 
@@ -56,3 +70,24 @@ class SearchManagementService:
             decisions=decisions,
         )
         self.store.update_prisma_counts(updated)
+
+    def _status_for_decision(self, current_status: str, stage: str, decision: str) -> str:
+        if stage == TITLE_ABSTRACT_STAGE:
+            if decision == DECISION_INCLUDE:
+                return "selected_for_full_text"
+            if decision == DECISION_EXCLUDE:
+                return "excluded_title_abstract"
+            if decision in {DECISION_MAYBE, DECISION_REVIEW}:
+                return "needs_review_title_abstract"
+            return "screened_title_abstract"
+
+        if stage == FULL_TEXT_STAGE:
+            if decision == DECISION_INCLUDE:
+                return "included_full_text"
+            if decision == DECISION_EXCLUDE:
+                return "excluded_full_text"
+            if decision in {DECISION_MAYBE, DECISION_REVIEW}:
+                return "needs_review_full_text"
+            return "reviewed_full_text"
+
+        return current_status

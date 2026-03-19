@@ -124,6 +124,9 @@ class ReviewService:
         if include_for_full_text and artifact is None:
             reasons.append("full_text_needed")
 
+        if include_for_full_text and artifact is not None and full_text_decision is None:
+            reasons.append("full_text_decision_missing")
+
         if artifact is not None and extraction is None:
             reasons.append("extraction_not_run")
 
@@ -144,6 +147,7 @@ class ReviewService:
             "title_abstract_review_needed",
             "full_text_review_needed",
             "full_text_needed",
+            "full_text_decision_missing",
             "effect_size_not_computable",
             "low_confidence_extraction",
         }
