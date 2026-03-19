@@ -23,6 +23,7 @@ The repository already includes research and planning documents plus a working p
 - PRISMA flow payload generation and export
 - candidate detail view and review queue assembly
 - TXT and PDF full-text ingestion
+- OCR-required detection when PDF text extraction yields no usable text
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries and meta-analysis-ready CSV export
 - export endpoints for search manifests, candidates, screening, PRISMA, extraction, meta-analysis, and audit reports
@@ -65,6 +66,8 @@ Key settings:
 
 When live collection or OpenAI extraction is not configured, the prototype falls back to local
 stub data or heuristic extraction.
+If uploaded PDF text extraction fails or returns no usable text, the candidate remains in an
+OCR-needed state until manual text or an OCR-derived text file is supplied.
 
 If you are using `REPOSITORY_BACKEND=sqlalchemy` for a persistent relational database, prefer:
 
@@ -83,6 +86,7 @@ The dashboard currently supports:
 - submitting manual screening decisions
 - rendering PRISMA counts and PRISMA flow payloads
 - uploading TXT or PDF full text
+- surfacing `full_text_needs_ocr` and `ocr_required` states in review flows
 - running extraction
 - previewing export content
 - exporting a reproducible search manifest with criteria and PRISMA flow payloads
@@ -117,5 +121,5 @@ The dashboard currently supports:
 
 - production validation of `RISS` endpoint mapping
 - deployment pipeline validation for Alembic-based `PostgreSQL` upgrades
-- OCR and stronger PDF parsing
+- OCR execution pipeline and stronger PDF parsing
 - authentication and multi-user separation

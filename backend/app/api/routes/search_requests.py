@@ -54,10 +54,16 @@ def get_search_request_summary(
     prisma = store.get_prisma_counts(search_request_id)
     source_counts: dict[str, int] = {}
     status_counts: dict[str, int] = {}
+    full_text_status_counts: dict[str, int] = {}
 
     for candidate in candidates:
         source_counts[candidate.source] = source_counts.get(candidate.source, 0) + 1
         status_counts[candidate.status] = status_counts.get(candidate.status, 0) + 1
+        artifact = store.get_full_text_artifact(candidate.id)
+        if artifact is not None:
+            full_text_status_counts[artifact.text_extraction_status] = (
+                full_text_status_counts.get(artifact.text_extraction_status, 0) + 1
+            )
 
     return SearchRequestSummaryRead(
         id=result.id,
@@ -75,6 +81,7 @@ def get_search_request_summary(
         decision_count=len(decisions),
         source_counts=source_counts,
         status_counts=status_counts,
+        full_text_status_counts=full_text_status_counts,
         prisma=prisma,
     )
 

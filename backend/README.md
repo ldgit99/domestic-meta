@@ -16,6 +16,7 @@ FastAPI backend for the domestic education meta-analysis prototype.
 - configurable `RISS` live-or-stub connector
 - full-text registration
 - TXT and PDF text ingestion
+- OCR-required detection for scanned or textless PDFs
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries
 - export endpoints including audit and PRISMA flow payloads
@@ -97,6 +98,7 @@ The search manifest export includes:
 - original search request criteria
 - candidate, decision, and extraction counts
 - source and status distributions
+- full-text text-status distributions
 - PRISMA counts plus PRISMA flow payload
 
 ## OpenAI extraction
@@ -114,10 +116,11 @@ Otherwise it stores a heuristic fallback extraction.
 - `POST /api/candidates/{id}/full-text-file`
 
 Uploaded files are stored under `backend/uploads`. TXT is read directly. PDF text extraction uses
-`pypdf` when available.
+`pypdf` when available. When usable text is not extracted, the artifact is marked
+`ocr_required` and extraction is blocked until text is supplied.
 
 ## Next work items
 
 - production-safe RISS field mapping
 - deployment validation for Alembic migrations
-- OCR pipeline and stronger PDF parsing
+- OCR execution pipeline and stronger PDF parsing

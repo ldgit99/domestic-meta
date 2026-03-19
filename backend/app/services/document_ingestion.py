@@ -20,12 +20,12 @@ class DocumentIngestionService:
         safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file_name) or "upload.bin"
         stored_path = self.upload_dir / f"{candidate_id}_{safe_name}"
         stored_path.write_bytes(content)
-        text = self._extract_text(stored_path, content_type, content)
-        status_text = text if text is not None else ""
+        text_content, text_status = self._extract_text(stored_path, content_type, content)
         return FullTextArtifactCreate(
             file_name=file_name,
             mime_type=content_type or self._guess_mime(file_name),
-            text_content=status_text,
+            text_content=text_content,
+            text_extraction_status=text_status,
             stored_path=str(stored_path),
         )
 
@@ -37,21 +37,34 @@ class DocumentIngestionService:
             return "text/plain"
         return "application/octet-stream"
 
-    def _extract_text(self, stored_path: Path, content_type: str, content: bytes) -> str:
+    def _extract_text(self, stored_path: Path, content_type: str, content: bytes) -> tuple[str, str]:
         mime = content_type or self._guess_mime(stored_path.name)
         if mime.startswith("text/") or stored_path.suffix.lower() == ".txt":
-            return content.decode("utf-8", errors="replace")
+            text = content.decode("utf-8", errors="replace").strip()
+            return text, self._status_for_text(text)
 
         if mime == "application/pdf" or stored_path.suffix.lower() == ".pdf":
             try:
                 from pypdf import PdfReader
             except Exception:
-                return ""
+                return "", "ocr_required"
 
             try:
                 reader = PdfReader(str(stored_path))
-                return "\n".join((page.extract_text() or "") for page in reader.pages).strip()
+                text = "\n".join((page.extract_text() or "") for page in reader.pages).strip()
             except Exception:
-                return ""
+                return "", "ocr_required"
 
-        return content.decode("utf-8", errors="replace")
+            if self._has_usable_text(text):
+                return text, "available"
+            return "", "ocr_required"
+
+        text = content.decode("utf-8", errors="replace").strip()
+        return text, self._status_for_text(text)
+
+    def _status_for_text(self, text: str) -> str:
+        return "available" if self._has_usable_text(text) else "no_text_extracted"
+
+    def _has_usable_text(self, text: str) -> bool:
+        normalized = re.sub(r"\s+", "", text or "")
+        return len(normalized) >= 20

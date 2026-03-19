@@ -9,6 +9,15 @@ router = APIRouter(tags=["exports"])
 service = ExportService()
 
 
+def _artifacts_for_candidates(store, candidates):
+    artifacts = []
+    for candidate in candidates:
+        artifact = store.get_full_text_artifact(candidate.id)
+        if artifact is not None:
+            artifacts.append(artifact)
+    return artifacts
+
+
 @router.get("/search-requests/{search_request_id}/exports/candidates.csv", response_model=ExportPayloadRead)
 def export_candidates_csv(
     search_request_id: str,
@@ -46,12 +55,14 @@ def export_search_request_manifest_json(
     counts = store.get_prisma_counts(search_request_id)
     if counts is None:
         raise HTTPException(status_code=404, detail="PRISMA counts not found")
+    candidates = store.list_candidates(search_request_id)
     payload = service.search_request_manifest_json(
         search_request,
         counts,
-        store.list_candidates(search_request_id),
+        candidates,
         store.list_decisions_for_search(search_request_id),
         store.list_extraction_results_for_search(search_request_id),
+        _artifacts_for_candidates(store, candidates),
     )
     return ExportPayloadRead.model_validate(payload)
 
@@ -125,11 +136,13 @@ def export_audit_report(
     counts = store.get_prisma_counts(search_request_id)
     if counts is None:
         raise HTTPException(status_code=404, detail="PRISMA counts not found")
+    candidates = store.list_candidates(search_request_id)
     payload = service.audit_report_markdown(
         search_request,
         counts,
-        store.list_candidates(search_request_id),
+        candidates,
         store.list_decisions_for_search(search_request_id),
         store.list_extraction_results_for_search(search_request_id),
+        _artifacts_for_candidates(store, candidates),
     )
     return ExportPayloadRead.model_validate(payload)

@@ -56,6 +56,7 @@
 - `KCI` live collection is attempted only when configured; otherwise the service falls back to stub data
 - `RISS` live collection is attempted only when configured; otherwise the service falls back to stub data
 - document ingestion extracts text from TXT directly and from PDF through `pypdf` when available
+- failed or empty PDF extraction is persisted as `ocr_required`, which keeps the candidate in review until usable text exists
 - manual screening immediately refreshes PRISMA counts and downstream review state
 - PRISMA flow payloads are derived from persisted PRISMA counts plus exclusion reason counts
 - extraction uses OpenAI only when configured and otherwise stores heuristic fallback output
@@ -69,6 +70,7 @@
 - submit manual title and abstract decisions
 - inspect PRISMA counts and a PRISMA flow payload view
 - upload TXT or PDF full text
+- surface OCR-needed states through candidate detail, review queue, summary payloads, and exports
 - run extraction and inspect extraction JSON
 - preview export payloads for candidates, screening logs, PRISMA counts, PRISMA flow, meta-analysis CSV, and audit reports
 - preview a reproducible search manifest export with criteria, counts, and PRISMA flow payload

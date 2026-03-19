@@ -46,6 +46,7 @@ class FullTextArtifactCreate(BaseModel):
     source_url: str | None = None
     mime_type: str = "application/pdf"
     text_content: str = ""
+    text_extraction_status: str | None = None
     stored_path: str | None = None
 
 
@@ -101,6 +102,7 @@ class CandidateDetailRead(BaseModel):
 class CandidateQueueItemRead(BaseModel):
     candidate: CandidateRead
     latest_decision: EligibilityDecisionRead | None = None
+    full_text_status: str | None = None
     extraction_status: str | None = None
     effect_size_summary: EffectSizeSummaryRead = Field(default_factory=EffectSizeSummaryRead)
     review_priority: str

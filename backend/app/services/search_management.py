@@ -47,7 +47,7 @@ class SearchManagementService:
 
         candidate = self.store.get_candidate(candidate_id)
         assert candidate is not None
-        candidate.status = "full_text_available" if payload.text_content else "full_text_requested"
+        candidate.status = self._status_for_artifact(artifact.text_extraction_status)
         self.store.update_candidate(candidate)
         self.refresh_prisma(candidate.search_request_id)
         return artifact
@@ -91,3 +91,10 @@ class SearchManagementService:
             return "reviewed_full_text"
 
         return current_status
+
+    def _status_for_artifact(self, text_extraction_status: str) -> str:
+        if text_extraction_status == "available":
+            return "full_text_available"
+        if text_extraction_status in {"ocr_required", "ocr_failed", "no_text_extracted"}:
+            return "full_text_needs_ocr"
+        return "full_text_requested"

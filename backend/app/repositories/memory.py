@@ -129,7 +129,8 @@ class MemoryStore:
             source_url=payload.source_url,
             mime_type=payload.mime_type,
             text_content=payload.text_content,
-            text_extraction_status="available" if payload.text_content else "pending",
+            text_extraction_status=payload.text_extraction_status
+            or ("available" if payload.text_content.strip() else "pending"),
             created_at=now_iso(),
             stored_path=payload.stored_path,
         )

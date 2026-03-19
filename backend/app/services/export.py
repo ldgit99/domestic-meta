@@ -1,7 +1,14 @@
 import json
 
 from app.core.constants import FULL_TEXT_STAGE, TITLE_ABSTRACT_STAGE
-from app.models.domain import CandidateRecord, EligibilityDecision, ExtractionResult, PrismaCounts, SearchRequest
+from app.models.domain import (
+    CandidateRecord,
+    EligibilityDecision,
+    ExtractionResult,
+    FullTextArtifact,
+    PrismaCounts,
+    SearchRequest,
+)
 from app.services.effect_size import EffectSizeService
 from app.services.prisma import PrismaService
 
@@ -85,6 +92,7 @@ class ExportService:
         candidates: list[CandidateRecord],
         decisions: list[EligibilityDecision],
         results: list[ExtractionResult],
+        artifacts: list[FullTextArtifact],
     ) -> dict:
         payload = {
             "search_request": {
@@ -109,6 +117,7 @@ class ExportService:
                 "extraction_count": len(results),
                 "source_counts": self._source_counts(candidates),
                 "status_counts": self._status_counts(candidates),
+                "full_text_status_counts": self._full_text_status_counts(artifacts),
             },
             "prisma_counts": {
                 "identified_records": counts.identified_records,
@@ -249,8 +258,10 @@ class ExportService:
         candidates: list[CandidateRecord],
         decisions: list[EligibilityDecision],
         results: list[ExtractionResult],
+        artifacts: list[FullTextArtifact],
     ) -> dict:
         result_map = {item.candidate_id: item for item in results}
+        artifact_map = {item.candidate_record_id: item for item in artifacts}
         title_decision_map = self._latest_decision_map(decisions, stage=TITLE_ABSTRACT_STAGE)
         full_text_decision_map = self._latest_decision_map(decisions, stage=FULL_TEXT_STAGE)
         lines = [
@@ -277,6 +288,7 @@ class ExportService:
             f"- Extraction count: {len(results)}",
             f"- Source counts: {self._format_mapping(self._source_counts(candidates))}",
             f"- Status counts: {self._format_mapping(self._status_counts(candidates))}",
+            f"- Full-text status counts: {self._format_mapping(self._full_text_status_counts(artifacts))}",
             "",
             "## PRISMA Summary",
             "",
@@ -291,12 +303,13 @@ class ExportService:
             "",
             "## Candidate Snapshot",
             "",
-            "| Candidate | Source | Year | Status | TA Decision | FT Decision | Extraction | Effect | Review Flags |",
-            "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+            "| Candidate | Source | Year | Status | FT Text Status | TA Decision | FT Decision | Extraction | Effect | Review Flags |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
         ]
 
         for candidate in candidates:
             extraction = result_map.get(candidate.id)
+            artifact = artifact_map.get(candidate.id)
             summary = self.effect_sizes.summarize(extraction.fields_json if extraction else None)
             computed = summary.get("computed_effect_size") or {}
             effect_label = ""
@@ -306,7 +319,7 @@ class ExportService:
                 effect_label = str(summary.get("recommended_effect_type"))
 
             lines.append(
-                f"| {candidate.title} | {candidate.source} | {candidate.year} | {candidate.status} | {title_decision_map.get(candidate.id).decision if title_decision_map.get(candidate.id) else ''} | {full_text_decision_map.get(candidate.id).decision if full_text_decision_map.get(candidate.id) else ''} | {extraction.status if extraction else ''} | {effect_label} | {'; '.join(summary.get('review_flags', []))} |"
+                f"| {candidate.title} | {candidate.source} | {candidate.year} | {candidate.status} | {artifact.text_extraction_status if artifact else ''} | {title_decision_map.get(candidate.id).decision if title_decision_map.get(candidate.id) else ''} | {full_text_decision_map.get(candidate.id).decision if full_text_decision_map.get(candidate.id) else ''} | {extraction.status if extraction else ''} | {effect_label} | {'; '.join(summary.get('review_flags', []))} |"
             )
 
         lines.extend(["", "## Exclusion Reasons", ""])
@@ -336,6 +349,12 @@ class ExportService:
         counts: dict[str, int] = {}
         for candidate in candidates:
             counts[candidate.status] = counts.get(candidate.status, 0) + 1
+        return counts
+
+    def _full_text_status_counts(self, artifacts: list[FullTextArtifact]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for artifact in artifacts:
+            counts[artifact.text_extraction_status] = counts.get(artifact.text_extraction_status, 0) + 1
         return counts
 
     def _latest_decision_map(

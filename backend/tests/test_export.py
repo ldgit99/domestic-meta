@@ -1,4 +1,11 @@
-from app.models.domain import CandidateRecord, EligibilityDecision, ExtractionResult, PrismaCounts, SearchRequest
+from app.models.domain import (
+    CandidateRecord,
+    EligibilityDecision,
+    ExtractionResult,
+    FullTextArtifact,
+    PrismaCounts,
+    SearchRequest,
+)
 from app.services.export import ExportService
 
 
@@ -100,7 +107,7 @@ def _extraction() -> ExtractionResult:
                 ],
             },
             "intervention_or_predictor": "self-directed learning",
-            "comparison": "control group",
+            "comparison": "control",
             "statistics": [],
             "effect_size_inputs": {
                 "is_meta_analytic_ready": True,
@@ -118,6 +125,20 @@ def _extraction() -> ExtractionResult:
     )
 
 
+def _artifact() -> FullTextArtifact:
+    return FullTextArtifact(
+        id="a1",
+        candidate_record_id="c1",
+        file_name="study.pdf",
+        source_url=None,
+        mime_type="application/pdf",
+        text_content="Full text",
+        text_extraction_status="available",
+        created_at="now",
+        stored_path="study.pdf",
+    )
+
+
 def test_audit_report_contains_search_criteria_and_stage_decisions() -> None:
     payload = ExportService().audit_report_markdown(
         _search_request(),
@@ -125,12 +146,17 @@ def test_audit_report_contains_search_criteria_and_stage_decisions() -> None:
         [_candidate()],
         _decisions(),
         [_extraction()],
+        [_artifact()],
     )
 
     assert "# Audit Report: self-directed learning" in payload["content"]
     assert "Expanded Keywords: achievement, motivation" in payload["content"]
     assert "Status counts: included_full_text=1" in payload["content"]
-    assert "| Effects of self-directed learning on achievement | kci | 2024 | included_full_text | include | include | completed |" in payload["content"]
+    assert "Full-text status counts: available=1" in payload["content"]
+    assert (
+        "| Effects of self-directed learning on achievement | kci | 2024 | "
+        "included_full_text | available | include | include | completed |"
+    ) in payload["content"]
 
 
 def test_meta_analysis_ready_csv_contains_decision_columns() -> None:
@@ -162,9 +188,11 @@ def test_search_request_manifest_json_contains_summary_and_prisma_flow() -> None
         [_candidate()],
         _decisions(),
         [_extraction()],
+        [_artifact()],
     )
 
     assert '"expanded_keywords": [' in payload["content"]
     assert '"source_counts": {' in payload["content"]
+    assert '"full_text_status_counts": {' in payload["content"]
     assert '"prisma_flow": {' in payload["content"]
     assert '"studies_included_in_review": 2' in payload["content"]

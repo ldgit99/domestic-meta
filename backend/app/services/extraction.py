@@ -8,6 +8,23 @@ from app.models.domain import CandidateRecord, ExtractionResult, FullTextArtifac
 
 
 class ExtractionService:
+    GROUP_ALIASES = {
+        "intervention": [
+            "intervention group",
+            "experimental group",
+            "treatment group",
+            "\uc2e4\ud5d8\uc9d1\ub2e8",
+            "\ucc98\uce58\uc9d1\ub2e8",
+        ],
+        "control": [
+            "control group",
+            "comparison group",
+            "\ube44\uad50\uc9d1\ub2e8",
+            "\ub300\uc870\uc9d1\ub2e8",
+            "\ud1b5\uc81c\uc9d1\ub2e8",
+        ],
+    }
+
     def preview(
         self,
         candidate: CandidateRecord,
@@ -30,7 +47,19 @@ class ExtractionService:
                 "id": None,
                 "candidate_id": candidate.id,
                 "status": "missing_full_text",
-                "message": "원문이 없어 추출 프리뷰를 생성할 수 없습니다.",
+                "message": "Full text is missing, so extraction preview cannot run yet.",
+                "fields_json": self._empty_fields(),
+                "model_name": None,
+                "created_at": None,
+            }
+
+        if self._artifact_needs_text(artifact):
+            status = self._artifact_blocking_status(artifact)
+            return {
+                "id": None,
+                "candidate_id": candidate.id,
+                "status": status,
+                "message": self._artifact_blocking_message(status),
                 "fields_json": self._empty_fields(),
                 "model_name": None,
                 "created_at": None,
@@ -41,7 +70,7 @@ class ExtractionService:
             "id": None,
             "candidate_id": candidate.id,
             "status": "preview_ready",
-            "message": "원문 기반 휴리스틱 프리뷰입니다. 추출 실행 시 OpenAI 또는 fallback 로직이 저장됩니다.",
+            "message": "Heuristic preview is ready. Live extraction will use OpenAI when configured and fall back otherwise.",
             "fields_json": heuristic,
             "model_name": None,
             "created_at": None,
@@ -57,10 +86,23 @@ class ExtractionService:
                 id=generate_id("extract"),
                 candidate_id=candidate.id,
                 status="missing_full_text",
-                message="원문이 없어 추출을 실행할 수 없습니다.",
+                message="Full text is missing, so extraction cannot run.",
                 fields_json=self._empty_fields(),
                 model_name=None,
                 raw_response={},
+                created_at=now_iso(),
+            )
+
+        if self._artifact_needs_text(artifact):
+            status = self._artifact_blocking_status(artifact)
+            return ExtractionResult(
+                id=generate_id("extract"),
+                candidate_id=candidate.id,
+                status=status,
+                message=self._artifact_blocking_message(status),
+                fields_json=self._empty_fields(),
+                model_name=None,
+                raw_response={"text_extraction_status": artifact.text_extraction_status},
                 created_at=now_iso(),
             )
 
@@ -74,7 +116,7 @@ class ExtractionService:
             id=generate_id("extract"),
             candidate_id=candidate.id,
             status="fallback_heuristic",
-            message="OpenAI 설정이 없거나 응답 파싱에 실패하여 휴리스틱 추출 결과를 저장했습니다.",
+            message="OpenAI extraction was unavailable, so heuristic extraction was saved instead.",
             fields_json=heuristic,
             model_name=None,
             raw_response={},
@@ -147,7 +189,7 @@ class ExtractionService:
             id=generate_id("extract"),
             candidate_id=candidate.id,
             status="completed",
-            message="OpenAI Responses API 기반 구조화 추출을 완료했습니다.",
+            message="OpenAI Responses API extraction completed.",
             fields_json=parsed,
             model_name=raw_response.get("model") or settings.openai_model_extraction,
             raw_response=raw_response,
@@ -157,13 +199,14 @@ class ExtractionService:
     def _build_prompt(self, candidate: CandidateRecord, artifact: FullTextArtifact) -> str:
         text = artifact.text_content[:12000]
         return (
-            f"논문 제목: {candidate.title}\n"
-            f"연도: {candidate.year}\n"
-            f"초록: {candidate.abstract}\n"
-            "다음 원문 텍스트에서 교육학 메타분석에 필요한 구조화 데이터를 추출하라.\n"
-            "집단별 n, 평균, 표준편차, timepoint, t/F/p/r 통계, 권장 효과크기 유형, 계산 방식, 누락 입력을 함께 채워라.\n"
-            "모르는 값은 빈 문자열 또는 빈 배열로 두고 추정하지 말라.\n"
-            f"원문 텍스트:\n{text}"
+            f"Paper title: {candidate.title}\n"
+            f"Year: {candidate.year}\n"
+            f"Abstract: {candidate.abstract}\n"
+            "Extract meta-analysis-ready data for an education study.\n"
+            "Return study design, participants, group statistics, outcomes, timepoints, statistics, "
+            "effect size inputs, evidence spans, and confidence.\n"
+            "Use empty strings or empty arrays for missing values and do not infer missing numbers.\n"
+            f"Paper text:\n{text}"
         )
 
     def _parse_response_text(self, payload: dict) -> dict | None:
@@ -187,35 +230,23 @@ class ExtractionService:
 
     def _heuristic_fields(self, candidate: CandidateRecord, artifact: FullTextArtifact) -> dict:
         text = f"{candidate.title}\n{candidate.abstract}\n{artifact.text_content}"
-        sample_size = ""
-        sample_match = re.search(r"(\d+)\s*명", text)
-        if sample_match:
-            sample_size = sample_match.group(1)
-
+        sample_size, sample_evidence = self._extract_sample_size(text)
         groups = self._extract_groups(text)
         if not sample_size:
             group_total = sum(int(group["n"]) for group in groups if group.get("n"))
             if group_total:
                 sample_size = str(group_total)
 
-        study_design = "unknown"
-        if "준실험" in text:
-            study_design = "quasi_experimental"
-        elif "실험집단" in text or "통제집단" in text or "비교집단" in text:
-            study_design = "group_comparison"
-        elif "상관" in text:
-            study_design = "correlational"
-        elif "회귀" in text:
-            study_design = "regression"
-
+        study_design = self._detect_study_design(text)
         statistics = self._extract_statistics(text)
         effect_inputs = self._infer_effect_inputs(groups, sample_size, statistics)
+
         evidence = []
-        if sample_size and sample_match is not None:
+        if sample_evidence:
             evidence.append(
                 {
                     "field": "participants.sample_size_total",
-                    "evidence_text": sample_match.group(0),
+                    "evidence_text": sample_evidence,
                     "location": "heuristic",
                 }
             )
@@ -224,26 +255,10 @@ class ExtractionService:
                 evidence.append(
                     {
                         "field": f"participants.groups.{group['name']}",
-                        "evidence_text": f"{group['name']} 평균 {group['mean']} 표준편차 {group['sd']}",
+                        "evidence_text": f"{group['name']} n={group['n']} mean={group['mean']} sd={group['sd']}",
                         "location": "heuristic",
                     }
                 )
-
-        comparison = ""
-        if any(group["name"] in {"통제집단", "대조집단", "비교집단"} for group in groups):
-            comparison = next(
-                group["name"]
-                for group in groups
-                if group["name"] in {"통제집단", "대조집단", "비교집단"}
-            )
-
-        intervention = ""
-        if "협동학습" in text:
-            intervention = "협동학습"
-        elif "프로그램" in text:
-            intervention = "프로그램 개입"
-        elif "회귀" in text:
-            intervention = "회귀모형 예측변수"
 
         return {
             "study_design": study_design,
@@ -252,44 +267,92 @@ class ExtractionService:
                 "sample_size_total": sample_size,
                 "groups": groups,
             },
-            "intervention_or_predictor": intervention,
-            "comparison": comparison,
-            "outcomes": [],
+            "intervention_or_predictor": self._detect_intervention(text),
+            "comparison": self._detect_comparison(groups),
+            "outcomes": self._detect_outcomes(text),
+            "timepoints": [],
             "statistics": statistics,
             "effect_size_inputs": effect_inputs,
             "evidence_spans": evidence,
             "confidence": "low",
         }
 
-    def _extract_groups(self, text: str) -> list[dict]:
-        group_labels = ["실험집단", "통제집단", "비교집단", "처치집단", "대조집단"]
-        groups: list[dict] = []
-        number_pattern = r"-?(?:\d+(?:\.\d+)?|\.\d+)"
+    def _extract_sample_size(self, text: str) -> tuple[str, str]:
+        patterns = [
+            r"(\d+)\s*(?:participants|students|people)\b",
+            r"N\s*=\s*(\d+)",
+            r"\ud45c\ubcf8\s*(?:\uc218|\uc218\ub294)?\s*(\d+)",
+            r"(\d+)\s*\uba85",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group(1), match.group(0)
+        return "", ""
 
-        for label in group_labels:
-            n_match = re.search(rf"{label}\s*(?:은|는|이|가)?\s*(\d+)\s*명", text)
-            mean_sd_match = re.search(
-                rf"{label}[\s\S]{{0,100}}?평균(?:은|는|:)?\s*({number_pattern})[\s\S]{{0,30}}?표준편차(?:은|는|:)?\s*({number_pattern})",
+    def _detect_study_design(self, text: str) -> str:
+        lowered = text.lower()
+        if any(token in lowered for token in ["quasi-experimental", "quasi experimental", "\uc900\uc2e4\ud5d8"]):
+            return "quasi_experimental"
+        if any(
+            token in lowered
+            for token in [
+                "intervention group",
+                "control group",
+                "experimental group",
+                "comparison group",
+                "\uc2e4\ud5d8\uc9d1\ub2e8",
+                "\ud1b5\uc81c\uc9d1\ub2e8",
+                "\ube44\uad50\uc9d1\ub2e8",
+                "\ub300\uc870\uc9d1\ub2e8",
+            ]
+        ):
+            return "group_comparison"
+        if any(token in lowered for token in ["correlation", "correlational", "\uc0c1\uad00"]):
+            return "correlational"
+        if any(token in lowered for token in ["regression", "\ud68c\uadc0"]):
+            return "regression"
+        return "unknown"
+
+    def _extract_groups(self, text: str) -> list[dict]:
+        groups: list[dict] = []
+        for canonical_name, aliases in self.GROUP_ALIASES.items():
+            group = self._extract_group(text, canonical_name, aliases)
+            if group is not None:
+                groups.append(group)
+        return groups
+
+    def _extract_group(self, text: str, canonical_name: str, aliases: list[str]) -> dict | None:
+        number_pattern = r"-?(?:\d+(?:\.\d+)?|\.\d+)"
+        for alias in aliases:
+            escaped = re.escape(alias)
+            n_match = re.search(
+                rf"{escaped}[\s\S]{{0,60}}?(?:n\s*=\s*|had\s*|with\s*|was\s*|were\s*)?(\d+)\s*(?:participants|students|people|\uba85)?",
                 text,
+                re.IGNORECASE,
+            )
+            mean_sd_match = re.search(
+                rf"{escaped}[\s\S]{{0,140}}?(?:mean|\ud3c9\uade0)\s*(?:=|:|was)?\s*({number_pattern})[\s\S]{{0,60}}?(?:sd|standard deviation|\ud45c\uc900\ud3b8\ucc28)\s*(?:=|:|was)?\s*({number_pattern})",
+                text,
+                re.IGNORECASE,
             )
             if not mean_sd_match:
                 mean_sd_match = re.search(
-                    rf"{label}[\s\S]{{0,100}}?M\s*=\s*({number_pattern})[\s\S]{{0,20}}?SD\s*=\s*({number_pattern})",
+                    rf"{escaped}[\s\S]{{0,140}}?M\s*=\s*({number_pattern})[\s\S]{{0,40}}?SD\s*=\s*({number_pattern})",
                     text,
                     re.IGNORECASE,
                 )
 
             group = {
-                "name": label,
+                "name": canonical_name,
                 "n": n_match.group(1) if n_match else "",
                 "mean": mean_sd_match.group(1) if mean_sd_match else "",
                 "sd": mean_sd_match.group(2) if mean_sd_match else "",
                 "timepoint": "post",
             }
             if group["n"] or group["mean"] or group["sd"]:
-                groups.append(group)
-
-        return groups
+                return group
+        return None
 
     def _extract_statistics(self, text: str) -> list[dict]:
         stats: list[dict] = []
@@ -316,23 +379,51 @@ class ExtractionService:
 
         return stats
 
+    def _detect_comparison(self, groups: list[dict]) -> str:
+        if any(group["name"] == "control" for group in groups):
+            return "control"
+        if len(groups) >= 2:
+            return groups[1]["name"]
+        return ""
+
+    def _detect_intervention(self, text: str) -> str:
+        lowered = text.lower()
+        if "self-directed learning" in lowered or "\uc790\uae30\uc8fc\ub3c4\ud559\uc2b5" in text:
+            return "self-directed learning"
+        if "program" in lowered or "\ud504\ub85c\uadf8\ub7a8" in text:
+            return "program"
+        if "regression" in lowered or "\ud68c\uadc0" in text:
+            return "regression_predictor"
+        return ""
+
+    def _detect_outcomes(self, text: str) -> list[str]:
+        outcomes: list[str] = []
+        lowered = text.lower()
+        pairs = [
+            ("achievement", "achievement"),
+            ("motivation", "motivation"),
+            ("academic achievement", "academic achievement"),
+            ("\uc131\ucde8", "achievement"),
+            ("\ub3d9\uae30", "motivation"),
+        ]
+        for token, label in pairs:
+            if token in lowered or token in text:
+                outcomes.append(label)
+        return self._dedupe(outcomes)
+
     def _infer_effect_inputs(
         self,
         groups: list[dict],
         sample_size: str,
         statistics: list[dict],
     ) -> dict:
-        has_complete_groups = len(
-            [
-                group
-                for group in groups
-                if group.get("n") and group.get("mean") and group.get("sd")
-            ]
-        ) >= 2
+        complete_groups = [
+            group for group in groups if group.get("n") and group.get("mean") and group.get("sd")
+        ]
         t_value = next((item for item in statistics if item["label"] == "t_value"), None)
         r_value = next((item for item in statistics if item["label"] == "correlation_r"), None)
 
-        if has_complete_groups:
+        if len(complete_groups) >= 2:
             return {
                 "is_meta_analytic_ready": True,
                 "effect_type_candidates": ["hedges_g", "standardized_mean_difference"],
@@ -389,6 +480,27 @@ class ExtractionService:
                 output.append(value)
         return output
 
+    def _artifact_needs_text(self, artifact: FullTextArtifact) -> bool:
+        return artifact.text_extraction_status != "available" or not artifact.text_content.strip()
+
+    def _artifact_blocking_status(self, artifact: FullTextArtifact) -> str:
+        if artifact.text_extraction_status in {"ocr_required", "no_text_extracted"}:
+            return "ocr_required"
+        if artifact.text_extraction_status == "ocr_failed":
+            return "ocr_failed"
+        if artifact.text_extraction_status == "pending":
+            return "text_extraction_pending"
+        return "text_not_available"
+
+    def _artifact_blocking_message(self, status: str) -> str:
+        messages = {
+            "ocr_required": "Text extraction did not produce usable text. OCR or manual text entry is required.",
+            "ocr_failed": "OCR or text extraction failed. Re-upload the document or provide manual text.",
+            "text_extraction_pending": "Full text is registered, but usable text has not been extracted yet.",
+            "text_not_available": "Usable text is not available for extraction yet.",
+        }
+        return messages.get(status, "Usable text is not available for extraction yet.")
+
     def _empty_fields(self) -> dict:
         return {
             "study_design": "",
@@ -400,6 +512,7 @@ class ExtractionService:
             "intervention_or_predictor": "",
             "comparison": "",
             "outcomes": [],
+            "timepoints": [],
             "statistics": [],
             "effect_size_inputs": {
                 "is_meta_analytic_ready": False,
@@ -446,6 +559,10 @@ class ExtractionService:
                 "intervention_or_predictor": {"type": "string"},
                 "comparison": {"type": "string"},
                 "outcomes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "timepoints": {
                     "type": "array",
                     "items": {"type": "string"},
                 },
@@ -509,6 +626,7 @@ class ExtractionService:
                 "intervention_or_predictor",
                 "comparison",
                 "outcomes",
+                "timepoints",
                 "statistics",
                 "effect_size_inputs",
                 "evidence_spans",

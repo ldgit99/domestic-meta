@@ -41,6 +41,7 @@ class SearchRequestSummaryRead(BaseModel):
     decision_count: int
     source_counts: dict[str, int] = Field(default_factory=dict)
     status_counts: dict[str, int] = Field(default_factory=dict)
+    full_text_status_counts: dict[str, int] = Field(default_factory=dict)
     prisma: PrismaCountsRead | None = None
 
 

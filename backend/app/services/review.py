@@ -70,6 +70,11 @@ class ReviewService:
                 {
                     "candidate": detail["candidate"],
                     "latest_decision": latest_decision,
+                    "full_text_status": (
+                        detail["full_text_artifact"].text_extraction_status
+                        if detail["full_text_artifact"]
+                        else None
+                    ),
                     "extraction_status": detail["extraction_result"].status if detail["extraction_result"] else None,
                     "effect_size_summary": detail["effect_size_summary"],
                     "review_priority": detail["review_priority"],
@@ -107,6 +112,9 @@ class ReviewService:
             return []
 
         reasons: list[str] = []
+        artifact_status = artifact.text_extraction_status if artifact is not None else None
+        artifact_has_text = self._artifact_has_text(artifact)
+
         if title_decision is None:
             reasons.append("title_abstract_decision_missing")
         elif title_decision.decision in {DECISION_MAYBE, DECISION_REVIEW}:
@@ -124,10 +132,17 @@ class ReviewService:
         if include_for_full_text and artifact is None:
             reasons.append("full_text_needed")
 
-        if include_for_full_text and artifact is not None and full_text_decision is None:
+        if include_for_full_text and artifact_status in {"ocr_required", "no_text_extracted"}:
+            reasons.append("ocr_required")
+        elif include_for_full_text and artifact_status == "ocr_failed":
+            reasons.append("ocr_failed")
+        elif include_for_full_text and artifact_status == "pending":
+            reasons.append("text_extraction_pending")
+
+        if include_for_full_text and artifact_has_text and full_text_decision is None:
             reasons.append("full_text_decision_missing")
 
-        if artifact is not None and extraction is None:
+        if artifact_has_text and extraction is None:
             reasons.append("extraction_not_run")
 
         if extraction is not None:
@@ -150,10 +165,18 @@ class ReviewService:
             "full_text_decision_missing",
             "effect_size_not_computable",
             "low_confidence_extraction",
+            "ocr_required",
+            "ocr_failed",
+            "text_extraction_pending",
         }
         if any(reason in high_priority or reason.startswith("extraction_status_") for reason in reasons):
             return "high"
         return "medium"
+
+    def _artifact_has_text(self, artifact) -> bool:
+        if artifact is None:
+            return False
+        return artifact.text_extraction_status == "available" and bool((artifact.text_content or "").strip())
 
     def _dedupe(self, values: list[str]) -> list[str]:
         output: list[str] = []

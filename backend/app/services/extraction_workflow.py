@@ -18,6 +18,8 @@ class ExtractionWorkflowService:
 
         if result.status in {"completed", "fallback_heuristic"}:
             candidate.status = "extracted"
-            self.store.update_candidate(candidate)
+        elif result.status in {"ocr_required", "ocr_failed", "text_extraction_pending", "text_not_available"}:
+            candidate.status = "full_text_needs_ocr"
 
+        self.store.update_candidate(candidate)
         return result
