@@ -67,4 +67,4 @@ class DocumentIngestionService:
 
     def _has_usable_text(self, text: str) -> bool:
         normalized = re.sub(r"\s+", "", text or "")
-        return len(normalized) >= 20
+        return len(normalized) >= settings.ocr_min_text_length

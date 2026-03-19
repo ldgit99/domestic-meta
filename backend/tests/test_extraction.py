@@ -1,5 +1,15 @@
+from pathlib import Path
+from types import SimpleNamespace
+
 from app.models.domain import CandidateRecord, FullTextArtifact
+from app.repositories.memory import MemoryStore
+from app.schemas.candidate import FullTextArtifactCreate
+from app.schemas.search import SearchRequestCreate
 from app.services.extraction import ExtractionService
+from app.services.extraction_workflow import ExtractionWorkflowService
+from app.services.ocr import OCRService
+from app.services.prisma import PrismaService
+from app.services.search_management import SearchManagementService
 
 
 def test_extraction_fallback_detects_group_statistics_and_meta_ready_signal() -> None:
@@ -123,3 +133,73 @@ def test_extraction_supports_korean_group_labels() -> None:
     assert result.fields_json["participants"]["sample_size_total"] == "80"
     assert result.fields_json["participants"]["groups"][0]["n"] == "40"
     assert result.fields_json["effect_size_inputs"]["recommended_effect_type"] == "hedges_g"
+
+
+def test_extraction_workflow_attempts_ocr_before_extracting(tmp_path: Path, monkeypatch) -> None:
+    store = MemoryStore()
+    created = store.create_search_request(SearchRequestCreate(query_text="ocr workflow"))
+    candidate = CandidateRecord(
+        id="c4",
+        search_request_id=created.id,
+        source="kci",
+        source_record_id="k4",
+        title="OCR workflow candidate",
+        authors=["Han"],
+        year=2024,
+        journal_or_school="Journal of Education",
+        abstract="",
+        keywords=["ocr"],
+        doi=None,
+        url=None,
+        document_type="journal_article",
+        language="ko",
+        raw_payload={},
+        status="selected_for_full_text",
+        canonical_record_id="c4",
+    )
+    store.add_candidates([candidate])
+    search_management = SearchManagementService(store=store, prisma_service=PrismaService())
+    stored_file = tmp_path / "scan.pdf"
+    stored_file.write_bytes(b"%PDF-1.4 fake scan")
+    search_management.register_full_text(
+        candidate.id,
+        FullTextArtifactCreate(
+            file_name="scan.pdf",
+            mime_type="application/pdf",
+            text_content="",
+            text_extraction_status="ocr_required",
+            stored_path=str(stored_file),
+        ),
+    )
+
+    def fake_run(*args, **kwargs):
+        return SimpleNamespace(
+            returncode=0,
+            stdout="The study included 80 participants. The intervention group had 40 students. The control group had 40 students. The intervention group mean was 82.4 with a standard deviation of 10.1. The control group mean was 75.2 with a standard deviation of 11.3.",
+            stderr="",
+        )
+
+    monkeypatch.setattr("app.services.ocr.subprocess.run", fake_run)
+    ocr_service = OCRService(
+        store=store,
+        search_management=search_management,
+        command_template="tesseract {input_path} stdout -l kor+eng",
+        timeout_seconds=30,
+        min_text_length=20,
+    )
+    workflow = ExtractionWorkflowService(
+        store=store,
+        extraction_service=ExtractionService(),
+        ocr_service=ocr_service,
+    )
+
+    result = workflow.run(candidate.id)
+    artifact = store.get_full_text_artifact(candidate.id)
+    updated_candidate = store.get_candidate(candidate.id)
+
+    assert result is not None
+    assert result.status in {"fallback_heuristic", "completed"}
+    assert artifact is not None
+    assert artifact.text_extraction_status == "available"
+    assert updated_candidate is not None
+    assert updated_candidate.status == "extracted"

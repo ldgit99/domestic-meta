@@ -10,6 +10,7 @@
 - `backend/app/services/orchestrator.py`: collection, reset-on-rerun, deduplication, title and abstract screening, PRISMA recalculation
 - `backend/app/services/search_management.py`: manual review and full-text registration with PRISMA refresh
 - `backend/app/services/document_ingestion.py`: uploaded TXT and PDF persistence plus text extraction
+- `backend/app/services/ocr.py`: optional OCR retry runner for stored artifacts
 - `backend/app/services/prisma.py`: PRISMA count recomputation and flow payload generation
 - `backend/app/services/review.py`: candidate detail assembly and review queue generation
 - `backend/app/services/extraction.py`: OpenAI `Responses API` extraction plus heuristic fallback
@@ -31,6 +32,7 @@
 - `POST /api/candidates/{id}/decision`
 - `POST /api/candidates/{id}/full-text`
 - `POST /api/candidates/{id}/full-text-file`
+- `POST /api/candidates/{id}/ocr`
 - `POST /api/candidates/{id}/extract`
 - `GET /api/candidates/{id}/extraction`
 - `GET /api/search-requests/{id}/prisma`
@@ -57,6 +59,7 @@
 - `RISS` live collection is attempted only when configured; otherwise the service falls back to stub data
 - document ingestion extracts text from TXT directly and from PDF through `pypdf` when available
 - failed or empty PDF extraction is persisted as `ocr_required`, which keeps the candidate in review until usable text exists
+- a configurable OCR command can be invoked later to update the stored artifact and candidate status
 - manual screening immediately refreshes PRISMA counts and downstream review state
 - PRISMA flow payloads are derived from persisted PRISMA counts plus exclusion reason counts
 - extraction uses OpenAI only when configured and otherwise stores heuristic fallback output
@@ -71,6 +74,7 @@
 - inspect PRISMA counts and a PRISMA flow payload view
 - upload TXT or PDF full text
 - surface OCR-needed states through candidate detail, review queue, summary payloads, and exports
+- trigger OCR retries against stored full-text files
 - run extraction and inspect extraction JSON
 - preview export payloads for candidates, screening logs, PRISMA counts, PRISMA flow, meta-analysis CSV, and audit reports
 - preview a reproducible search manifest export with criteria, counts, and PRISMA flow payload

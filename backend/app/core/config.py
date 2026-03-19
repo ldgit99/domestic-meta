@@ -38,6 +38,9 @@ class Settings(BaseModel):
     openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
     openai_model_extraction: str = os.getenv("OPENAI_MODEL_EXTRACTION", "gpt-4o-mini")
     openai_responses_url: str = os.getenv("OPENAI_RESPONSES_URL", "https://api.openai.com/v1/responses")
+    ocr_command_template: str | None = os.getenv("OCR_COMMAND_TEMPLATE")
+    ocr_timeout_seconds: int = int(os.getenv("OCR_TIMEOUT_SECONDS", "180"))
+    ocr_min_text_length: int = int(os.getenv("OCR_MIN_TEXT_LENGTH", "20"))
 
 
 settings = Settings()

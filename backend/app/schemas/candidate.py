@@ -71,6 +71,13 @@ class ExtractionResultRead(BaseModel):
     created_at: str | None = None
 
 
+class OCRRunRead(BaseModel):
+    candidate_id: str
+    status: str
+    message: str
+    full_text_artifact: FullTextArtifactRead | None = None
+
+
 class EffectSizeComputedRead(BaseModel):
     metric: str
     value: float

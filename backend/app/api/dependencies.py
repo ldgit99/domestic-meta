@@ -5,6 +5,7 @@ from app.services.document_ingestion import DocumentIngestionService
 from app.services.effect_size import EffectSizeService
 from app.services.extraction import ExtractionService
 from app.services.extraction_workflow import ExtractionWorkflowService
+from app.services.ocr import OCRService
 from app.services.orchestrator import SearchOrchestrator
 from app.services.prisma import PrismaService
 from app.services.review import ReviewService
@@ -31,7 +32,18 @@ _effect_size_service = EffectSizeService()
 _extraction_service = ExtractionService()
 _orchestrator = SearchOrchestrator(store=_store)
 _search_management = SearchManagementService(store=_store, prisma_service=_prisma_service)
-_extraction_workflow = ExtractionWorkflowService(store=_store, extraction_service=_extraction_service)
+_ocr_service = OCRService(
+    store=_store,
+    search_management=_search_management,
+    command_template=settings.ocr_command_template,
+    timeout_seconds=settings.ocr_timeout_seconds,
+    min_text_length=settings.ocr_min_text_length,
+)
+_extraction_workflow = ExtractionWorkflowService(
+    store=_store,
+    extraction_service=_extraction_service,
+    ocr_service=_ocr_service,
+)
 _review_service = ReviewService(store=_store, effect_size_service=_effect_size_service)
 
 
@@ -61,6 +73,10 @@ def get_extraction_service() -> ExtractionService:
 
 def get_extraction_workflow() -> ExtractionWorkflowService:
     return _extraction_workflow
+
+
+def get_ocr_service() -> OCRService:
+    return _ocr_service
 
 
 def get_review_service() -> ReviewService:

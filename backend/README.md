@@ -17,6 +17,7 @@ FastAPI backend for the domestic education meta-analysis prototype.
 - full-text registration
 - TXT and PDF text ingestion
 - OCR-required detection for scanned or textless PDFs
+- optional OCR retry through an external command template
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries
 - export endpoints including audit and PRISMA flow payloads
@@ -109,15 +110,21 @@ Otherwise it stores a heuristic fallback extraction.
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL_EXTRACTION`
 - `OPENAI_RESPONSES_URL`
+- `OCR_COMMAND_TEMPLATE`
+- `OCR_TIMEOUT_SECONDS`
+- `OCR_MIN_TEXT_LENGTH`
 
 ## Full-text ingestion endpoints
 
 - `POST /api/candidates/{id}/full-text`
 - `POST /api/candidates/{id}/full-text-file`
+- `POST /api/candidates/{id}/ocr`
 
 Uploaded files are stored under `backend/uploads`. TXT is read directly. PDF text extraction uses
 `pypdf` when available. When usable text is not extracted, the artifact is marked
 `ocr_required` and extraction is blocked until text is supplied.
+If `OCR_COMMAND_TEMPLATE` is configured, the OCR endpoint can retry extraction against the stored
+file and update the artifact to `available` when usable text is returned.
 
 ## Next work items
 

@@ -462,12 +462,16 @@ interview</textarea>
         <p style="margin:8px 0 14px; color: var(--muted); font-size: 13px; line-height: 1.5;">
           If a PDF is image-based and text extraction fails, the candidate will move to
           <code>full_text_needs_ocr</code>. Paste OCR text below or re-upload a text-based file.
+          When the backend has an OCR command configured, the extraction action will try OCR first.
         </p>
 
         <label for="fullText">Fallback Full Text</label>
         <textarea id="fullText">The study included 120 middle school students. The intervention group had 60 students and the control group had 60 students. After the self-directed learning program, the intervention group mean was 82.4 with a standard deviation of 10.1. The control group mean was 75.2 with a standard deviation of 11.3. The difference was statistically significant at p less than .05.</textarea>
 
-        <button id="runExtraction">Register Full Text or OCR Text and Run Extraction</button>
+        <div class="actions" style="margin-top:14px;">
+          <button id="runOcr" class="ghost">Run OCR On Stored File</button>
+          <button id="runExtraction">Register Full Text or OCR Text and Run Extraction</button>
+        </div>
       </div>
     </div>
 
@@ -534,6 +538,7 @@ interview</textarea>
     const decisionIncludeButton = document.getElementById("decisionInclude");
     const decisionMaybeButton = document.getElementById("decisionMaybe");
     const decisionExcludeButton = document.getElementById("decisionExclude");
+    const runOcrButton = document.getElementById("runOcr");
     const runExtractionButton = document.getElementById("runExtraction");
 
     const queryInput = document.getElementById("query");
@@ -918,6 +923,25 @@ interview</textarea>
         await submitDecision("exclude");
       } catch (error) {
         reviewResult.textContent = String(error);
+      }
+    });
+
+    runOcrButton.addEventListener("click", async () => {
+      try {
+        const candidate = selectedCandidate();
+        if (!candidate) {
+          extraction.textContent = "Select a candidate before running OCR.";
+          return;
+        }
+
+        const payload = await fetchJson(`/candidates/${candidate.id}/ocr`, {
+          method: "POST"
+        });
+
+        extraction.textContent = JSON.stringify(payload, null, 2);
+        await refreshSearchState(lastSearchId);
+      } catch (error) {
+        extraction.textContent = String(error);
       }
     });
 

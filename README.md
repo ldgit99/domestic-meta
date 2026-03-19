@@ -24,6 +24,7 @@ The repository already includes research and planning documents plus a working p
 - candidate detail view and review queue assembly
 - TXT and PDF full-text ingestion
 - OCR-required detection when PDF text extraction yields no usable text
+- optional OCR retry through a configurable external command
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries and meta-analysis-ready CSV export
 - export endpoints for search manifests, candidates, screening, PRISMA, extraction, meta-analysis, and audit reports
@@ -63,6 +64,7 @@ Key settings:
 - `KCI_LIVE_ENABLED=true`
 - `RISS_LIVE_ENABLED=true`
 - `OPENAI_API_KEY=...`
+- `OCR_COMMAND_TEMPLATE=tesseract {input_path} stdout -l kor+eng`
 
 When live collection or OpenAI extraction is not configured, the prototype falls back to local
 stub data or heuristic extraction.
@@ -87,6 +89,7 @@ The dashboard currently supports:
 - rendering PRISMA counts and PRISMA flow payloads
 - uploading TXT or PDF full text
 - surfacing `full_text_needs_ocr` and `ocr_required` states in review flows
+- rerunning OCR on stored PDF files when an external OCR command is configured
 - running extraction
 - previewing export content
 - exporting a reproducible search manifest with criteria and PRISMA flow payloads
@@ -104,6 +107,7 @@ The dashboard currently supports:
 - `POST /api/candidates/{id}/decision`
 - `POST /api/candidates/{id}/full-text`
 - `POST /api/candidates/{id}/full-text-file`
+- `POST /api/candidates/{id}/ocr`
 - `POST /api/candidates/{id}/extract`
 - `GET /api/candidates/{id}/extraction`
 - `GET /api/search-requests/{id}/prisma`

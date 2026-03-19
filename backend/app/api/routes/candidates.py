@@ -4,6 +4,7 @@ from app.api.dependencies import (
     get_document_ingestion,
     get_extraction_service,
     get_extraction_workflow,
+    get_ocr_service,
     get_review_service,
     get_search_management,
     get_store,
@@ -18,10 +19,12 @@ from app.schemas.candidate import (
     ExtractionResultRead,
     FullTextArtifactCreate,
     FullTextArtifactRead,
+    OCRRunRead,
 )
 from app.services.document_ingestion import DocumentIngestionService
 from app.services.extraction import ExtractionService
 from app.services.extraction_workflow import ExtractionWorkflowService
+from app.services.ocr import OCRService
 from app.services.review import ReviewService
 from app.services.search_management import SearchManagementService
 
@@ -108,6 +111,17 @@ async def upload_full_text_file(
     if created is None:
         raise HTTPException(status_code=404, detail="Candidate not found")
     return FullTextArtifactRead.model_validate(created)
+
+
+@router.post("/candidates/{candidate_id}/ocr", response_model=OCRRunRead)
+def run_ocr(
+    candidate_id: str,
+    ocr_service: OCRService = Depends(get_ocr_service),
+) -> OCRRunRead:
+    payload = ocr_service.run(candidate_id)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    return OCRRunRead.model_validate(payload)
 
 
 @router.post("/candidates/{candidate_id}/extract", response_model=ExtractionResultRead)
