@@ -1,6 +1,6 @@
 import json
 
-from app.models.domain import CandidateRecord, EligibilityDecision, PrismaCounts
+from app.models.domain import CandidateRecord, EligibilityDecision, ExtractionResult, PrismaCounts
 
 
 class ExportService:
@@ -66,4 +66,59 @@ class ExportService:
             "content_type": "application/json",
             "file_name": f"{search_request_id}_prisma_counts.json",
             "content": json.dumps(payload, ensure_ascii=False, indent=2),
+        }
+
+    def extraction_results_json(
+        self,
+        search_request_id: str,
+        results: list[ExtractionResult],
+    ) -> dict:
+        payload = [
+            {
+                "id": item.id,
+                "candidate_id": item.candidate_id,
+                "status": item.status,
+                "message": item.message,
+                "fields_json": item.fields_json,
+                "model_name": item.model_name,
+                "created_at": item.created_at,
+            }
+            for item in results
+        ]
+        return {
+            "search_request_id": search_request_id,
+            "content_type": "application/json",
+            "file_name": f"{search_request_id}_extraction_results.json",
+            "content": json.dumps(payload, ensure_ascii=False, indent=2),
+        }
+
+    def meta_analysis_ready_csv(
+        self,
+        search_request_id: str,
+        candidates: list[CandidateRecord],
+        results: list[ExtractionResult],
+    ) -> dict:
+        result_map = {item.candidate_id: item for item in results}
+        lines = [
+            "candidate_id,title,year,study_design,is_meta_analytic_ready,sample_size_total,intervention_or_predictor,comparison,confidence,status"
+        ]
+        for candidate in candidates:
+            result = result_map.get(candidate.id)
+            if result is None:
+                continue
+            fields = result.fields_json or {}
+            participants = fields.get("participants", {})
+            effect = fields.get("effect_size_inputs", {})
+            title = candidate.title.replace('"', "'")
+            intervention = str(fields.get("intervention_or_predictor", "")).replace('"', "'")
+            comparison = str(fields.get("comparison", "")).replace('"', "'")
+            lines.append(
+                f'{candidate.id},"{title}",{candidate.year},{fields.get("study_design","")},{effect.get("is_meta_analytic_ready", False)},{participants.get("sample_size_total","")},"{intervention}","{comparison}",{fields.get("confidence","")},{result.status}'
+            )
+
+        return {
+            "search_request_id": search_request_id,
+            "content_type": "text/csv",
+            "file_name": f"{search_request_id}_meta_analysis_ready.csv",
+            "content": "\n".join(lines),
         }

@@ -76,3 +76,15 @@ class FullTextArtifact:
     text_content: str
     text_extraction_status: str
     created_at: str
+
+
+@dataclass
+class ExtractionResult:
+    id: str
+    candidate_id: str
+    status: str
+    message: str
+    fields_json: dict
+    model_name: str | None
+    raw_response: dict = field(default_factory=dict)
+    created_at: str | None = None

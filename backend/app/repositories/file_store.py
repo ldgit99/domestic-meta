@@ -7,6 +7,7 @@ from app.core.utils import generate_id, now_iso
 from app.models.domain import (
     CandidateRecord,
     EligibilityDecision,
+    ExtractionResult,
     FullTextArtifact,
     PrismaCounts,
     SearchRequest,
@@ -20,19 +21,36 @@ class FileStore:
         self.file_path = Path(file_path)
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
         if not self.file_path.exists():
-            self._save_raw(
-                {
-                    "search_requests": {},
-                    "candidates": {},
-                    "decisions": {},
-                    "prisma_counts": {},
-                    "full_text_artifacts": {},
-                }
-            )
+            self._save_raw(self._default_payload())
+
+    def _default_payload(self) -> dict:
+        return {
+            "search_requests": {},
+            "candidates": {},
+            "decisions": {},
+            "prisma_counts": {},
+            "full_text_artifacts": {},
+            "extraction_results": {},
+        }
 
     def _load_raw(self) -> dict:
+        if not self.file_path.exists():
+            payload = self._default_payload()
+            self._save_raw(payload)
+            return payload
+
         with self.file_path.open("r", encoding="utf-8") as handle:
-            return json.load(handle)
+            payload = json.load(handle)
+
+        changed = False
+        for key, default_value in self._default_payload().items():
+            if key not in payload:
+                payload[key] = default_value
+                changed = True
+
+        if changed:
+            self._save_raw(payload)
+        return payload
 
     def _save_raw(self, payload: dict) -> None:
         with self.file_path.open("w", encoding="utf-8") as handle:
@@ -52,6 +70,9 @@ class FileStore:
 
     def _deserialize_artifact(self, payload: dict) -> FullTextArtifact:
         return FullTextArtifact(**payload)
+
+    def _deserialize_extraction(self, payload: dict) -> ExtractionResult:
+        return ExtractionResult(**payload)
 
     def list_search_requests(self) -> list[SearchRequest]:
         raw = self._load_raw()
@@ -93,6 +114,7 @@ class FileStore:
         for candidate_id in candidate_ids:
             raw["candidates"].pop(candidate_id, None)
             raw["full_text_artifacts"].pop(candidate_id, None)
+            raw["extraction_results"].pop(candidate_id, None)
         raw["decisions"] = {
             key: value
             for key, value in raw["decisions"].items()
@@ -218,3 +240,27 @@ class FileStore:
         raw = self._load_raw()
         payload = raw["full_text_artifacts"].get(candidate_id)
         return self._deserialize_artifact(payload) if payload else None
+
+    def save_extraction_result(self, item: ExtractionResult) -> ExtractionResult:
+        raw = self._load_raw()
+        raw["extraction_results"][item.candidate_id] = asdict(item)
+        self._save_raw(raw)
+        return item
+
+    def get_extraction_result(self, candidate_id: str) -> ExtractionResult | None:
+        raw = self._load_raw()
+        payload = raw["extraction_results"].get(candidate_id)
+        return self._deserialize_extraction(payload) if payload else None
+
+    def list_extraction_results_for_search(self, search_request_id: str) -> list[ExtractionResult]:
+        raw = self._load_raw()
+        candidate_ids = {
+            item["id"]
+            for item in raw["candidates"].values()
+            if item["search_request_id"] == search_request_id
+        }
+        return [
+            self._deserialize_extraction(item)
+            for key, item in raw["extraction_results"].items()
+            if key in candidate_ids
+        ]

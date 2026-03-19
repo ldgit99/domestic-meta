@@ -1,11 +1,10 @@
 from app.models.domain import EligibilityDecision, FullTextArtifact
-from app.repositories.memory import MemoryStore
 from app.schemas.candidate import DecisionCreate, FullTextArtifactCreate
 from app.services.prisma import PrismaService
 
 
 class SearchManagementService:
-    def __init__(self, store: MemoryStore, prisma_service: PrismaService) -> None:
+    def __init__(self, store, prisma_service: PrismaService) -> None:
         self.store = store
         self.prisma_service = prisma_service
 

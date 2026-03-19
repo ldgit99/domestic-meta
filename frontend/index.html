@@ -22,7 +22,7 @@
     .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
     .grid-wide { display: grid; gap: 16px; grid-template-columns: 1.2fr 0.8fr; }
     label { display: block; font-size: 14px; margin-bottom: 8px; }
-    input, button, textarea, select { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: white; font: inherit; }
+    input, button, textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: white; font: inherit; }
     textarea { min-height: 160px; resize: vertical; }
     button { background: var(--accent); color: white; border: none; cursor: pointer; margin-top: 16px; }
     .secondary { background: var(--accent-2); }
@@ -31,22 +31,23 @@
     th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 14px; }
     th { color: var(--muted); font-weight: 600; }
     .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #e6f0ef; color: var(--accent); font-size: 12px; }
-    .actions { display: grid; gap: 12px; grid-template-columns: 1fr 1fr 1fr; }
+    .actions { display: grid; gap: 12px; grid-template-columns: 1fr 1fr 1fr 1fr; }
     @media (max-width: 860px) { .grid, .grid-wide, .actions { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>교육학 메타분석 지원 AI 에이전트</h1>
-    <p class="lead">지속 저장되는 검색 요청, 후보 목록, PRISMA 집계, JSON/CSV export까지 확인하는 현재 프로토타입입니다.</p>
+    <p class="lead">지속 저장되는 검색 요청, PRISMA, export, 그리고 데모 원문 기반 추출까지 확인하는 현재 프로토타입입니다.</p>
 
     <div class="panel">
       <label for="query">검색어</label>
       <input id="query" value="협동학습" />
       <div class="actions">
         <button id="run">검색 실행</button>
-        <button id="exportCsv" class="secondary">후보 CSV 보기</button>
-        <button id="exportPrisma" class="secondary">PRISMA JSON 보기</button>
+        <button id="exportCsv" class="secondary">후보 CSV</button>
+        <button id="exportPrisma" class="secondary">PRISMA JSON</button>
+        <button id="exportMeta" class="secondary">메타분석 CSV</button>
       </div>
     </div>
 
@@ -95,15 +96,26 @@
       </div>
     </div>
 
+    <div class="panel">
+      <h2>데모 원문 텍스트</h2>
+      <textarea id="fullText">연구대상은 중학교 2학년 120명이었다. 실험집단 60명과 통제집단 60명으로 구성하였다. 협동학습 기반 수업을 적용한 결과, 학업성취도 사후검사에서 실험집단 평균은 82.4, 표준편차는 10.1이었고 통제집단 평균은 75.2, 표준편차는 11.3이었다. 두 집단 간 차이는 통계적으로 유의하였다(p &lt; .05).</textarea>
+      <button id="runExtraction">첫 후보 원문 등록 + 추출 실행</button>
+    </div>
+
     <div class="grid">
       <div class="panel">
         <h2>Export 내용</h2>
         <textarea id="exportContent">아직 생성되지 않음</textarea>
       </div>
       <div class="panel">
-        <h2>PRISMA</h2>
-        <pre id="prisma">API 실행 전</pre>
+        <h2>추출 결과</h2>
+        <pre id="extraction">아직 실행되지 않음</pre>
       </div>
+    </div>
+
+    <div class="panel">
+      <h2>PRISMA</h2>
+      <pre id="prisma">API 실행 전</pre>
     </div>
   </div>
 
@@ -111,15 +123,21 @@
     const runButton = document.getElementById("run");
     const exportCsvButton = document.getElementById("exportCsv");
     const exportPrismaButton = document.getElementById("exportPrisma");
+    const exportMetaButton = document.getElementById("exportMeta");
+    const runExtractionButton = document.getElementById("runExtraction");
     const result = document.getElementById("result");
     const summary = document.getElementById("summary");
     const prisma = document.getElementById("prisma");
+    const extraction = document.getElementById("extraction");
     const candidatesBody = document.getElementById("candidates");
     const searchesBody = document.getElementById("searches");
     const exportContent = document.getElementById("exportContent");
+    const fullText = document.getElementById("fullText");
     let lastSearchId = null;
+    let currentCandidates = [];
 
     function renderCandidates(items) {
+      currentCandidates = items;
       if (!items.length) {
         candidatesBody.innerHTML = '<tr><td colspan="4">후보 없음</td></tr>';
         return;
@@ -159,18 +177,25 @@
         exportContent.value = "먼저 검색을 실행하세요.";
         return;
       }
-      const url = kind === "prisma"
-        ? `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/prisma-counts.json`
-        : `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/candidates.csv`;
-      const res = await fetch(url);
+      const map = {
+        candidates: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/candidates.csv`,
+        prisma: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/prisma-counts.json`,
+        meta: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/meta-analysis-ready.csv`
+      };
+      const res = await fetch(map[kind]);
       const payload = await res.json();
       exportContent.value = payload.content;
+    }
+
+    function firstCanonicalCandidate() {
+      return currentCandidates.find(item => item.canonical_record_id === item.id) || currentCandidates[0] || null;
     }
 
     runButton.addEventListener("click", async () => {
       result.textContent = "요청 중...";
       summary.textContent = "요약 대기 중...";
       prisma.textContent = "집계 대기 중...";
+      extraction.textContent = "추출 대기 중...";
       exportContent.value = "Export 생성 대기 중...";
 
       try {
@@ -201,7 +226,7 @@
         prisma.textContent = JSON.stringify(prismaJson, null, 2);
         renderCandidates(candidatesJson);
         await loadSearches();
-        await loadExport("csv");
+        await loadExport("candidates");
       } catch (error) {
         result.textContent = String(error);
         summary.textContent = "오류 발생";
@@ -210,20 +235,43 @@
       }
     });
 
-    exportCsvButton.addEventListener("click", async () => {
+    runExtractionButton.addEventListener("click", async () => {
       try {
-        await loadExport("csv");
+        const candidate = firstCanonicalCandidate();
+        if (!candidate) {
+          extraction.textContent = "먼저 검색을 실행해 후보를 만드세요.";
+          return;
+        }
+        await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/full-text`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            file_name: "demo.txt",
+            mime_type: "text/plain",
+            text_content: fullText.value
+          })
+        });
+        const res = await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/extract`, {
+          method: "POST"
+        });
+        const payload = await res.json();
+        extraction.textContent = JSON.stringify(payload, null, 2);
+        await loadExport("meta");
       } catch (error) {
-        exportContent.value = String(error);
+        extraction.textContent = String(error);
       }
     });
 
+    exportCsvButton.addEventListener("click", async () => {
+      try { await loadExport("candidates"); } catch (error) { exportContent.value = String(error); }
+    });
+
     exportPrismaButton.addEventListener("click", async () => {
-      try {
-        await loadExport("prisma");
-      } catch (error) {
-        exportContent.value = String(error);
-      }
+      try { await loadExport("prisma"); } catch (error) { exportContent.value = String(error); }
+    });
+
+    exportMetaButton.addEventListener("click", async () => {
+      try { await loadExport("meta"); } catch (error) { exportContent.value = String(error); }
     });
 
     loadSearches().catch(() => {});

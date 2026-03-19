@@ -1,27 +1,27 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.api.dependencies import get_search_management, get_store
-from app.repositories.memory import MemoryStore
+from app.api.dependencies import get_extraction_service, get_extraction_workflow, get_search_management, get_store
+from app.repositories.file_store import FileStore
 from app.schemas.candidate import (
     CandidateRead,
     DecisionCreate,
     EligibilityDecisionRead,
-    ExtractionPreviewRead,
+    ExtractionResultRead,
     FullTextArtifactCreate,
     FullTextArtifactRead,
 )
 from app.services.extraction import ExtractionService
+from app.services.extraction_workflow import ExtractionWorkflowService
 from app.services.search_management import SearchManagementService
 
 
 router = APIRouter(tags=["candidates"])
-extraction_service = ExtractionService()
 
 
 @router.get("/search-requests/{search_request_id}/candidates", response_model=list[CandidateRead])
 def list_candidates(
     search_request_id: str,
-    store: MemoryStore = Depends(get_store),
+    store: FileStore = Depends(get_store),
 ) -> list[CandidateRead]:
     if store.get_search_request(search_request_id) is None:
         raise HTTPException(status_code=404, detail="Search request not found")
@@ -56,14 +56,27 @@ def upload_full_text(
     return FullTextArtifactRead.model_validate(created)
 
 
-@router.get("/candidates/{candidate_id}/extraction", response_model=ExtractionPreviewRead)
+@router.post("/candidates/{candidate_id}/extract", response_model=ExtractionResultRead)
+def run_extraction(
+    candidate_id: str,
+    extraction_workflow: ExtractionWorkflowService = Depends(get_extraction_workflow),
+) -> ExtractionResultRead:
+    created = extraction_workflow.run(candidate_id)
+    if created is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    return ExtractionResultRead.model_validate(created)
+
+
+@router.get("/candidates/{candidate_id}/extraction", response_model=ExtractionResultRead)
 def preview_extraction(
     candidate_id: str,
-    store: MemoryStore = Depends(get_store),
-) -> ExtractionPreviewRead:
+    store: FileStore = Depends(get_store),
+    extraction_service: ExtractionService = Depends(get_extraction_service),
+) -> ExtractionResultRead:
     candidate = store.get_candidate(candidate_id)
     if candidate is None:
         raise HTTPException(status_code=404, detail="Candidate not found")
+    existing = store.get_extraction_result(candidate_id)
     artifact = store.get_full_text_artifact(candidate_id)
-    payload = extraction_service.preview(candidate, artifact)
-    return ExtractionPreviewRead.model_validate(payload)
+    payload = extraction_service.preview(candidate, artifact, existing=existing)
+    return ExtractionResultRead.model_validate(payload)

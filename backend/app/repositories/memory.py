@@ -3,6 +3,7 @@ from app.core.utils import generate_id, now_iso
 from app.models.domain import (
     CandidateRecord,
     EligibilityDecision,
+    ExtractionResult,
     FullTextArtifact,
     PrismaCounts,
     SearchRequest,
@@ -18,6 +19,7 @@ class MemoryStore:
         self.decisions: dict[str, EligibilityDecision] = {}
         self.prisma_counts: dict[str, PrismaCounts] = {}
         self.full_text_artifacts: dict[str, FullTextArtifact] = {}
+        self.extraction_results: dict[str, ExtractionResult] = {}
 
     def list_search_requests(self) -> list[SearchRequest]:
         return sorted(self.search_requests.values(), key=lambda item: item.created_at, reverse=True)
@@ -48,6 +50,7 @@ class MemoryStore:
         for candidate_id in candidate_ids:
             self.candidates.pop(candidate_id, None)
             self.full_text_artifacts.pop(candidate_id, None)
+            self.extraction_results.pop(candidate_id, None)
         self.decisions = {
             key: value
             for key, value in self.decisions.items()
@@ -134,3 +137,14 @@ class MemoryStore:
 
     def get_full_text_artifact(self, candidate_id: str) -> FullTextArtifact | None:
         return self.full_text_artifacts.get(candidate_id)
+
+    def save_extraction_result(self, item: ExtractionResult) -> ExtractionResult:
+        self.extraction_results[item.candidate_id] = item
+        return item
+
+    def get_extraction_result(self, candidate_id: str) -> ExtractionResult | None:
+        return self.extraction_results.get(candidate_id)
+
+    def list_extraction_results_for_search(self, search_request_id: str) -> list[ExtractionResult]:
+        candidate_ids = {item.id for item in self.list_candidates(search_request_id)}
+        return [item for item in self.extraction_results.values() if item.candidate_id in candidate_ids]

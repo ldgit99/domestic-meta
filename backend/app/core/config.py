@@ -22,6 +22,9 @@ class Settings(BaseModel):
     kci_query_param: str = os.getenv("KCI_QUERY_PARAM", "keyword")
     kci_count_param: str = os.getenv("KCI_COUNT_PARAM", "displayCount")
     kci_response_format: str = os.getenv("KCI_RESPONSE_FORMAT", "xml")
+    openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
+    openai_model_extraction: str = os.getenv("OPENAI_MODEL_EXTRACTION", "gpt-4o-mini")
+    openai_responses_url: str = os.getenv("OPENAI_RESPONSES_URL", "https://api.openai.com/v1/responses")
 
 
 settings = Settings()

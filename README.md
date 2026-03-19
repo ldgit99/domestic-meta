@@ -22,12 +22,10 @@
 - 중복 제거
 - 규칙 기반 1차 선별
 - PRISMA 집계
-- 후보 목록 조회
-- 후보 CSV export
-- screening log JSON export
-- PRISMA counts JSON export
-- 원문 아티팩트 등록 API
-- 추출 프리뷰 자리표시자 API
+- 원문 아티팩트 등록
+- OpenAI Responses API 기반 추출 경로
+- OpenAI 미설정 시 휴리스틱 fallback 추출
+- 후보/스크리닝/PRISMA/추출 export
 
 ## 빠른 시작
 
@@ -45,9 +43,12 @@ uvicorn app.main:app --reload
 
 런타임 데이터는 `backend/data/store.json`에 저장된다.
 
-### Optional KCI live config
+### Optional KCI / OpenAI config
 
-`backend/.env.example`에 있는 값을 환경변수로 채우면 KCI live 요청을 시도한다. 설정이 없거나 요청이 실패하면 스텁 데이터로 자동 fallback 한다.
+`backend/.env.example`에 있는 값을 환경변수로 채우면 KCI live 요청과 OpenAI 추출을 시도한다.
+
+- KCI가 설정되지 않았거나 요청이 실패하면 스텁 데이터로 fallback 한다.
+- OpenAI가 설정되지 않았거나 요청이 실패하면 휴리스틱 추출 결과를 저장한다.
 
 ### Frontend
 
@@ -63,16 +64,18 @@ uvicorn app.main:app --reload
 - `GET /api/search-requests/{id}/candidates`
 - `POST /api/candidates/{id}/decision`
 - `POST /api/candidates/{id}/full-text`
+- `POST /api/candidates/{id}/extract`
 - `GET /api/candidates/{id}/extraction`
 - `GET /api/search-requests/{id}/prisma`
 - `GET /api/search-requests/{id}/exports/candidates.csv`
 - `GET /api/search-requests/{id}/exports/screening-log.json`
 - `GET /api/search-requests/{id}/exports/prisma-counts.json`
+- `GET /api/search-requests/{id}/exports/extraction-results.json`
+- `GET /api/search-requests/{id}/exports/meta-analysis-ready.csv`
 
 ## 아직 미구현
 
 - 실제 RISS 연동
-- OpenAI Responses API 기반 추출
-- PostgreSQL / Redis
 - PDF 파싱/OCR
+- PostgreSQL / Redis
 - 인증/권한

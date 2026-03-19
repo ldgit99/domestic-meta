@@ -57,8 +57,13 @@ class FullTextArtifactRead(FullTextArtifactCreate):
     created_at: str
 
 
-class ExtractionPreviewRead(BaseModel):
+class ExtractionResultRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str | None = None
     candidate_id: str
     status: str
     message: str
-    fields: dict
+    fields_json: dict = Field(default_factory=dict)
+    model_name: str | None = None
+    created_at: str | None = None
