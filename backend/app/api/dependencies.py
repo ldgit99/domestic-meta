@@ -8,6 +8,7 @@ from app.services.extraction_workflow import ExtractionWorkflowService
 from app.services.ocr import OCRService
 from app.services.orchestrator import SearchOrchestrator
 from app.services.prisma import PrismaService
+from app.services.quality import QualityAssessmentService
 from app.services.review import ReviewService
 from app.services.search_management import SearchManagementService
 
@@ -29,6 +30,7 @@ _store = _build_store()
 _prisma_service = PrismaService()
 _document_ingestion = DocumentIngestionService()
 _effect_size_service = EffectSizeService()
+_quality_service = QualityAssessmentService()
 _extraction_service = ExtractionService()
 _orchestrator = SearchOrchestrator(store=_store)
 _search_management = SearchManagementService(store=_store, prisma_service=_prisma_service)
@@ -44,7 +46,11 @@ _extraction_workflow = ExtractionWorkflowService(
     extraction_service=_extraction_service,
     ocr_service=_ocr_service,
 )
-_review_service = ReviewService(store=_store, effect_size_service=_effect_size_service)
+_review_service = ReviewService(
+    store=_store,
+    effect_size_service=_effect_size_service,
+    quality_service=_quality_service,
+)
 
 
 def get_store():
@@ -65,6 +71,10 @@ def get_document_ingestion() -> DocumentIngestionService:
 
 def get_effect_size_service() -> EffectSizeService:
     return _effect_size_service
+
+
+def get_quality_service() -> QualityAssessmentService:
+    return _quality_service
 
 
 def get_extraction_service() -> ExtractionService:

@@ -7,12 +7,19 @@ from app.core.constants import (
     TITLE_ABSTRACT_STAGE,
 )
 from app.services.effect_size import EffectSizeService
+from app.services.quality import QualityAssessmentService
 
 
 class ReviewService:
-    def __init__(self, store, effect_size_service: EffectSizeService) -> None:
+    def __init__(
+        self,
+        store,
+        effect_size_service: EffectSizeService,
+        quality_service: QualityAssessmentService,
+    ) -> None:
         self.store = store
         self.effect_size_service = effect_size_service
+        self.quality_service = quality_service
 
     def get_candidate_detail(self, candidate_id: str) -> dict | None:
         candidate = self.store.get_candidate(candidate_id)
@@ -31,12 +38,16 @@ class ReviewService:
         effect_size_summary = self.effect_size_service.summarize(
             extraction.fields_json if extraction is not None else None
         )
+        quality_assessment = self.quality_service.assess(
+            extraction.fields_json if extraction is not None else None
+        )
         review_reasons = self._review_reasons(
             title_decision,
             full_text_decision,
             artifact,
             extraction,
             effect_size_summary,
+            quality_assessment,
         )
 
         return {
@@ -46,8 +57,9 @@ class ReviewService:
             "full_text_artifact": artifact,
             "extraction_result": extraction,
             "effect_size_summary": effect_size_summary,
+            "quality_assessment": quality_assessment,
             "needs_manual_review": bool(review_reasons),
-            "review_priority": self._review_priority(review_reasons),
+            "review_priority": self._review_priority(review_reasons, quality_assessment),
             "review_reasons": review_reasons,
         }
 
@@ -77,6 +89,7 @@ class ReviewService:
                     ),
                     "extraction_status": detail["extraction_result"].status if detail["extraction_result"] else None,
                     "effect_size_summary": detail["effect_size_summary"],
+                    "quality_assessment": detail["quality_assessment"],
                     "review_priority": detail["review_priority"],
                     "review_reasons": detail["review_reasons"],
                 }
@@ -105,6 +118,7 @@ class ReviewService:
         artifact,
         extraction,
         effect_size_summary: dict,
+        quality_assessment: dict,
     ) -> list[str]:
         if full_text_decision and full_text_decision.decision == DECISION_EXCLUDE:
             return []
@@ -151,10 +165,13 @@ class ReviewService:
             if not effect_size_summary["is_computable"]:
                 reasons.append("effect_size_not_computable")
             reasons.extend(effect_size_summary["review_flags"])
+            if quality_assessment.get("score") == "low":
+                reasons.append("quality_assessment_low")
+            reasons.extend(quality_assessment.get("warnings") or [])
 
         return self._dedupe(reasons)
 
-    def _review_priority(self, reasons: list[str]) -> str:
+    def _review_priority(self, reasons: list[str], quality_assessment: dict) -> str:
         if not reasons:
             return "low"
 
@@ -168,7 +185,14 @@ class ReviewService:
             "ocr_required",
             "ocr_failed",
             "text_extraction_pending",
+            "quality_assessment_low",
+            "sample_size_mismatch",
+            "missing_evidence_spans",
+            "effect_inputs_incomplete",
+            "meta_ready_without_sufficient_inputs",
         }
+        if quality_assessment.get("score") == "low":
+            return "high"
         if any(reason in high_priority or reason.startswith("extraction_status_") for reason in reasons):
             return "high"
         return "medium"

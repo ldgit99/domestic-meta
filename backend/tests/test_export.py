@@ -109,6 +109,8 @@ def _extraction() -> ExtractionResult:
             },
             "intervention_or_predictor": "self-directed learning",
             "comparison": "control",
+            "outcomes": ["achievement"],
+            "timepoints": ["posttest"],
             "statistics": [],
             "effect_size_inputs": {
                 "is_meta_analytic_ready": True,
@@ -118,7 +120,21 @@ def _extraction() -> ExtractionResult:
                 "correlation_coefficient": "",
                 "missing_inputs": [],
             },
-            "confidence": "medium",
+            "evidence_spans": [
+                {"field": "participants.sample_size_total", "evidence_text": "N=120", "location": "heuristic"},
+                {"field": "participants.groups.intervention", "evidence_text": "intervention n=60 mean=82.4 sd=10.1", "location": "heuristic"},
+                {"field": "participants.groups.control", "evidence_text": "control n=60 mean=75.2 sd=11.3", "location": "heuristic"},
+                {"field": "outcomes.0", "evidence_text": "achievement", "location": "heuristic"},
+            ],
+            "confidence": "high",
+            "quality_assessment": {
+                "score": "high",
+                "warnings": [],
+                "evidence_count": 4,
+                "group_sample_size_total_matches": True,
+                "critical_fields_present": ["study_design", "sample_size", "outcomes", "evidence_spans", "effect_inputs"],
+                "critical_fields_missing": [],
+            },
         },
         model_name=None,
         raw_response={},
@@ -154,7 +170,7 @@ def _event() -> PipelineEvent:
     )
 
 
-def test_audit_report_contains_search_criteria_and_stage_decisions() -> None:
+def test_audit_report_contains_search_criteria_stage_decisions_and_quality_summary() -> None:
     payload = ExportService().audit_report_markdown(
         _search_request(),
         _counts(),
@@ -169,14 +185,17 @@ def test_audit_report_contains_search_criteria_and_stage_decisions() -> None:
     assert "Expanded Keywords: achievement, motivation" in payload["content"]
     assert "Status counts: included_full_text=1" in payload["content"]
     assert "Full-text status counts: available=1" in payload["content"]
+    assert "Quality score counts: high=1" in payload["content"]
     assert "## Recent Activity" in payload["content"]
+    assert "QA Score | QA Warnings" in payload["content"]
     assert (
         "| Effects of self-directed learning on achievement | kci | 2024 | "
         "included_full_text | available | include | include | completed |"
     ) in payload["content"]
+    assert "| high |  |" in payload["content"]
 
 
-def test_meta_analysis_ready_csv_contains_decision_columns() -> None:
+def test_meta_analysis_ready_csv_contains_decision_and_quality_columns() -> None:
     payload = ExportService().meta_analysis_ready_csv(
         "s1",
         [_candidate()],
@@ -185,9 +204,13 @@ def test_meta_analysis_ready_csv_contains_decision_columns() -> None:
     )
 
     assert "latest_decision_stage" in payload["content"]
+    assert "qa_score" in payload["content"]
+    assert "qa_warnings" in payload["content"]
+    assert "qa_evidence_count" in payload["content"]
     assert "full_text" in payload["content"]
     assert "hedges_g" in payload["content"]
     assert "two_group_posttest_smd" in payload["content"]
+    assert "high" in payload["content"]
 
 
 def test_screening_log_json_contains_candidate_metadata() -> None:
@@ -198,7 +221,7 @@ def test_screening_log_json_contains_candidate_metadata() -> None:
     assert '"stage": "full_text"' in payload["content"]
 
 
-def test_search_request_manifest_json_contains_summary_prisma_flow_and_event_counts() -> None:
+def test_search_request_manifest_json_contains_summary_prisma_flow_event_counts_and_quality_counts() -> None:
     payload = ExportService().search_request_manifest_json(
         _search_request(),
         _counts(),
@@ -212,6 +235,8 @@ def test_search_request_manifest_json_contains_summary_prisma_flow_and_event_cou
     assert '"expanded_keywords": [' in payload["content"]
     assert '"source_counts": {' in payload["content"]
     assert '"full_text_status_counts": {' in payload["content"]
+    assert '"quality_score_counts": {' in payload["content"]
+    assert '"high": 1' in payload["content"]
     assert '"prisma_flow": {' in payload["content"]
     assert '"studies_included_in_review": 2' in payload["content"]
     assert '"event_count": 1' in payload["content"]

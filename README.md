@@ -26,7 +26,7 @@ The repository already includes research and planning documents plus a working p
 - OCR-required detection when PDF text extraction yields no usable text
 - optional OCR retry through a configurable external command
 - OpenAI `Responses API` extraction path with heuristic fallback
-- effect-size readiness summaries and meta-analysis-ready CSV export
+- effect-size readiness summaries, extraction quality assessment, and meta-analysis-ready CSV export
 - pipeline event logging, timeline inspection, and events export
 - export endpoints for search manifests, candidates, screening, PRISMA, extraction, meta-analysis, and audit reports
 
@@ -95,6 +95,7 @@ The dashboard currently supports:
 - surfacing `full_text_needs_ocr` and `ocr_required` states in review flows
 - rerunning OCR on stored PDF files when an external OCR command is configured
 - running extraction
+- surfacing extraction quality scores and review warnings in candidate detail and exports
 - previewing export content
 - exporting a reproducible search manifest with criteria and PRISMA flow payloads
 

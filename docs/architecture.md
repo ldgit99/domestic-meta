@@ -16,6 +16,7 @@
 - `backend/app/services/extraction.py`: OpenAI `Responses API` extraction plus heuristic fallback
 - `backend/app/services/extraction_workflow.py`: extraction execution and persistence
 - `backend/app/services/effect_size.py`: effect-size-readiness summaries
+- `backend/app/services/quality.py`: extraction quality scoring, evidence coverage checks, and sample-size consistency checks
 - `backend/app/services/connectors.py`: `KCI` and `RISS` live-or-stub connectors
 - `frontend/index.html`: static dashboard for search orchestration, review, PRISMA inspection, and extraction
 
@@ -67,6 +68,7 @@
 - PRISMA flow payloads are derived from persisted PRISMA counts plus exclusion reason counts
 - extraction uses OpenAI only when configured and otherwise stores heuristic fallback output
 - effect-size readiness is computed from extracted statistics and included in review outputs and exports
+- extraction results carry a `quality_assessment` payload that feeds review priority, manifests, audit reports, and meta-analysis exports
 
 ## Current dashboard behavior
 
@@ -80,6 +82,7 @@
 - surface OCR-needed states through candidate detail, review queue, summary payloads, and exports
 - trigger OCR retries against stored full-text files
 - run extraction and inspect extraction JSON
+- surface extraction quality scores and warnings in candidate detail and review outputs
 - preview export payloads for candidates, screening logs, PRISMA counts, PRISMA flow, meta-analysis CSV, and audit reports
 - preview a reproducible search manifest export with criteria, counts, and PRISMA flow payload
 

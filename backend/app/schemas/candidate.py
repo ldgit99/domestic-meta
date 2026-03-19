@@ -94,6 +94,15 @@ class EffectSizeSummaryRead(BaseModel):
     review_flags: list[str] = Field(default_factory=list)
 
 
+class QualityAssessmentRead(BaseModel):
+    score: str = "low"
+    warnings: list[str] = Field(default_factory=list)
+    evidence_count: int = 0
+    group_sample_size_total_matches: bool | None = None
+    critical_fields_present: list[str] = Field(default_factory=list)
+    critical_fields_missing: list[str] = Field(default_factory=list)
+
+
 class CandidateDetailRead(BaseModel):
     candidate: CandidateRead
     latest_title_abstract_decision: EligibilityDecisionRead | None = None
@@ -101,6 +110,7 @@ class CandidateDetailRead(BaseModel):
     full_text_artifact: FullTextArtifactRead | None = None
     extraction_result: ExtractionResultRead | None = None
     effect_size_summary: EffectSizeSummaryRead = Field(default_factory=EffectSizeSummaryRead)
+    quality_assessment: QualityAssessmentRead = Field(default_factory=QualityAssessmentRead)
     needs_manual_review: bool = False
     review_priority: str = "low"
     review_reasons: list[str] = Field(default_factory=list)
@@ -112,5 +122,6 @@ class CandidateQueueItemRead(BaseModel):
     full_text_status: str | None = None
     extraction_status: str | None = None
     effect_size_summary: EffectSizeSummaryRead = Field(default_factory=EffectSizeSummaryRead)
+    quality_assessment: QualityAssessmentRead = Field(default_factory=QualityAssessmentRead)
     review_priority: str
     review_reasons: list[str] = Field(default_factory=list)

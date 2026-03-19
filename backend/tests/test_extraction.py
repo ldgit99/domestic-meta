@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 from app.models.domain import CandidateRecord, FullTextArtifact
 from app.repositories.memory import MemoryStore
-from app.schemas.candidate import FullTextArtifactCreate
 from app.schemas.search import SearchRequestCreate
+from app.schemas.candidate import FullTextArtifactCreate
 from app.services.extraction import ExtractionService
 from app.services.extraction_workflow import ExtractionWorkflowService
 from app.services.ocr import OCRService
@@ -56,6 +56,9 @@ def test_extraction_fallback_detects_group_statistics_and_meta_ready_signal() ->
     assert fields["participants"]["sample_size_total"] == "120"
     assert fields["participants"]["groups"][0]["n"] == "60"
     assert fields["participants"]["groups"][0]["mean"] == "82.4"
+    assert fields["quality_assessment"]["score"] == "medium"
+    assert "low_confidence_extraction" in fields["quality_assessment"]["warnings"]
+    assert fields["quality_assessment"]["evidence_count"] >= 3
 
 
 def test_extraction_blocks_when_ocr_is_required() -> None:
@@ -92,6 +95,8 @@ def test_extraction_blocks_when_ocr_is_required() -> None:
 
     assert result.status == "ocr_required"
     assert result.fields_json["effect_size_inputs"]["is_meta_analytic_ready"] is False
+    assert result.fields_json["quality_assessment"]["score"] == "low"
+    assert "missing_evidence_spans" in result.fields_json["quality_assessment"]["warnings"]
 
 
 def test_extraction_supports_korean_group_labels() -> None:
@@ -122,7 +127,7 @@ def test_extraction_supports_korean_group_labels() -> None:
         text_content=(
             "\ud45c\ubcf8\uc218 80\uba85. \uc2e4\ud5d8\uc9d1\ub2e8 40\uba85, \ud1b5\uc81c\uc9d1\ub2e8 40\uba85. "
             "\uc2e4\ud5d8\uc9d1\ub2e8 \ud3c9\uade0 82.4 \ud45c\uc900\ud3b8\ucc28 10.1. "
-            "\ud1b5\uc81c\uc9d1\ub2e8 \ud3c9\uade0 75.2 \ud45c\uc900\ud3b8\ucc28 11.3."
+            "\ud1b5\uc81c\uc9d1\ub2e8 \ud3c9\uade0 75.2 \ud45c\uc900\ud3b8\ucc28 11.3. \uc0ac\ud6c4 \uc131\ucde8\ub3c4\ub97c \ube44\uad50\ud588\ub2e4."
         ),
         text_extraction_status="available",
         created_at="now",
@@ -133,6 +138,8 @@ def test_extraction_supports_korean_group_labels() -> None:
     assert result.fields_json["participants"]["sample_size_total"] == "80"
     assert result.fields_json["participants"]["groups"][0]["n"] == "40"
     assert result.fields_json["effect_size_inputs"]["recommended_effect_type"] == "hedges_g"
+    assert "posttest" in result.fields_json["timepoints"]
+    assert result.fields_json["quality_assessment"]["score"] in {"medium", "high"}
 
 
 def test_extraction_workflow_attempts_ocr_before_extracting(tmp_path: Path, monkeypatch) -> None:
@@ -199,6 +206,7 @@ def test_extraction_workflow_attempts_ocr_before_extracting(tmp_path: Path, monk
 
     assert result is not None
     assert result.status in {"fallback_heuristic", "completed"}
+    assert result.fields_json["quality_assessment"]["score"] in {"medium", "high"}
     assert artifact is not None
     assert artifact.text_extraction_status == "available"
     assert updated_candidate is not None

@@ -12,12 +12,14 @@ from app.models.domain import (
 )
 from app.services.effect_size import EffectSizeService
 from app.services.prisma import PrismaService
+from app.services.quality import QualityAssessmentService
 
 
 class ExportService:
     def __init__(self) -> None:
         self.effect_sizes = EffectSizeService()
         self.prisma = PrismaService()
+        self.quality = QualityAssessmentService()
 
     def candidates_csv(self, search_request_id: str, candidates: list[CandidateRecord]) -> dict:
         lines = [
@@ -122,6 +124,7 @@ class ExportService:
                 "source_counts": self._source_counts(candidates),
                 "status_counts": self._status_counts(candidates),
                 "full_text_status_counts": self._full_text_status_counts(artifacts),
+                "quality_score_counts": self._quality_score_counts(results),
             },
             "prisma_counts": {
                 "identified_records": counts.identified_records,
@@ -233,7 +236,7 @@ class ExportService:
         result_map = {item.candidate_id: item for item in results}
         latest_decision_map = self._latest_decision_map(decisions)
         lines = [
-            "candidate_id,source,document_type,title,year,latest_decision_stage,latest_decision,study_design,is_meta_analytic_ready,recommended_effect_type,computation_method,computed_metric,computed_value,computed_variance,sample_size_total,intervention_or_predictor,comparison,confidence,status,missing_inputs,review_flags"
+            "candidate_id,source,document_type,title,year,latest_decision_stage,latest_decision,study_design,is_meta_analytic_ready,recommended_effect_type,computation_method,computed_metric,computed_value,computed_variance,sample_size_total,intervention_or_predictor,comparison,confidence,status,qa_score,qa_warnings,qa_evidence_count,missing_inputs,review_flags"
         ]
         for candidate in candidates:
             result = result_map.get(candidate.id)
@@ -246,6 +249,7 @@ class ExportService:
             effect = fields.get("effect_size_inputs", {})
             summary = self.effect_sizes.summarize(fields)
             computed = summary.get("computed_effect_size") or {}
+            quality = self._quality_payload(fields)
             lines.append(
                 self._csv_line(
                     [
@@ -268,6 +272,9 @@ class ExportService:
                         fields.get("comparison", ""),
                         fields.get("confidence", ""),
                         result.status,
+                        quality.get("score", ""),
+                        "|".join(quality.get("warnings") or []),
+                        quality.get("evidence_count", 0),
                         "|".join(summary.get("missing_inputs", [])),
                         "|".join(summary.get("review_flags", [])),
                     ]
@@ -322,6 +329,7 @@ class ExportService:
             f"- Source counts: {self._format_mapping(self._source_counts(candidates))}",
             f"- Status counts: {self._format_mapping(self._status_counts(candidates))}",
             f"- Full-text status counts: {self._format_mapping(self._full_text_status_counts(artifacts))}",
+            f"- Quality score counts: {self._format_mapping(self._quality_score_counts(results))}",
             "",
             "## PRISMA Summary",
             "",
@@ -336,14 +344,16 @@ class ExportService:
             "",
             "## Candidate Snapshot",
             "",
-            "| Candidate | Source | Year | Status | FT Text Status | TA Decision | FT Decision | Extraction | Effect | Review Flags |",
-            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+            "| Candidate | Source | Year | Status | FT Text Status | TA Decision | FT Decision | Extraction | Effect | QA Score | QA Warnings | Review Flags |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
         ]
 
         for candidate in candidates:
             extraction = result_map.get(candidate.id)
             artifact = artifact_map.get(candidate.id)
-            summary = self.effect_sizes.summarize(extraction.fields_json if extraction else None)
+            fields = extraction.fields_json if extraction else None
+            summary = self.effect_sizes.summarize(fields)
+            quality = self._quality_payload(fields)
             computed = summary.get("computed_effect_size") or {}
             effect_label = ""
             if computed:
@@ -352,7 +362,7 @@ class ExportService:
                 effect_label = str(summary.get("recommended_effect_type"))
 
             lines.append(
-                f"| {candidate.title} | {candidate.source} | {candidate.year} | {candidate.status} | {artifact.text_extraction_status if artifact else ''} | {title_decision_map.get(candidate.id).decision if title_decision_map.get(candidate.id) else ''} | {full_text_decision_map.get(candidate.id).decision if full_text_decision_map.get(candidate.id) else ''} | {extraction.status if extraction else ''} | {effect_label} | {'; '.join(summary.get('review_flags', []))} |"
+                f"| {candidate.title} | {candidate.source} | {candidate.year} | {candidate.status} | {artifact.text_extraction_status if artifact else ''} | {title_decision_map.get(candidate.id).decision if title_decision_map.get(candidate.id) else ''} | {full_text_decision_map.get(candidate.id).decision if full_text_decision_map.get(candidate.id) else ''} | {extraction.status if extraction else ''} | {effect_label} | {quality.get('score', '')} | {'; '.join(quality.get('warnings') or [])} | {'; '.join(summary.get('review_flags', []))} |"
             )
 
         lines.extend(["", "## Recent Activity", ""])
@@ -399,6 +409,21 @@ class ExportService:
         for artifact in artifacts:
             counts[artifact.text_extraction_status] = counts.get(artifact.text_extraction_status, 0) + 1
         return counts
+
+    def _quality_score_counts(self, results: list[ExtractionResult]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for result in results:
+            quality = self._quality_payload(result.fields_json)
+            score = str(quality.get("score") or "unknown")
+            counts[score] = counts.get(score, 0) + 1
+        return counts
+
+    def _quality_payload(self, fields: dict | None) -> dict:
+        payload = fields or {}
+        existing = payload.get("quality_assessment")
+        if isinstance(existing, dict) and existing.get("score"):
+            return existing
+        return self.quality.assess(payload)
 
     def _latest_decision_map(
         self,

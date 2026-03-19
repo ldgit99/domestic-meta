@@ -20,6 +20,7 @@ FastAPI backend for the domestic education meta-analysis prototype.
 - optional OCR retry through an external command template
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries
+- extraction quality assessment with evidence coverage and sample-size checks
 - export endpoints including audit and PRISMA flow payloads
 - pipeline event logging for collection, screening, OCR, and extraction actions
 - search manifest export with search criteria, counts, and PRISMA flow payload
@@ -104,12 +105,13 @@ The search manifest export includes:
 - candidate, decision, and extraction counts
 - source and status distributions
 - full-text text-status distributions
+- extraction quality score distributions
 - PRISMA counts plus PRISMA flow payload
 
 ## OpenAI extraction
 
 When configured, the backend attempts `Responses API` extraction with structured JSON output.
-Otherwise it stores a heuristic fallback extraction.
+Otherwise it stores a heuristic fallback extraction with an attached quality assessment payload.
 
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL_EXTRACTION`

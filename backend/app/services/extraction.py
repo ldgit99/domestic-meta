@@ -1,3 +1,4 @@
+import copy
 import json
 import re
 import urllib.request
@@ -5,6 +6,7 @@ import urllib.request
 from app.core.config import settings
 from app.core.utils import generate_id, now_iso
 from app.models.domain import CandidateRecord, ExtractionResult, FullTextArtifact
+from app.services.quality import QualityAssessmentService
 
 
 class ExtractionService:
@@ -13,17 +15,20 @@ class ExtractionService:
             "intervention group",
             "experimental group",
             "treatment group",
-            "\uc2e4\ud5d8\uc9d1\ub2e8",
-            "\ucc98\uce58\uc9d1\ub2e8",
+            "실험집단",
+            "처치집단",
         ],
         "control": [
             "control group",
             "comparison group",
-            "\ube44\uad50\uc9d1\ub2e8",
-            "\ub300\uc870\uc9d1\ub2e8",
-            "\ud1b5\uc81c\uc9d1\ub2e8",
+            "비교집단",
+            "대조집단",
+            "통제집단",
         ],
     }
+
+    def __init__(self) -> None:
+        self.quality = QualityAssessmentService()
 
     def preview(
         self,
@@ -37,7 +42,7 @@ class ExtractionService:
                 "candidate_id": existing.candidate_id,
                 "status": existing.status,
                 "message": existing.message,
-                "fields_json": existing.fields_json,
+                "fields_json": self._with_quality_assessment(existing.fields_json),
                 "model_name": existing.model_name,
                 "created_at": existing.created_at,
             }
@@ -71,7 +76,7 @@ class ExtractionService:
             "candidate_id": candidate.id,
             "status": "preview_ready",
             "message": "Heuristic preview is ready. Live extraction will use OpenAI when configured and fall back otherwise.",
-            "fields_json": heuristic,
+            "fields_json": self._with_quality_assessment(heuristic),
             "model_name": None,
             "created_at": None,
         }
@@ -111,7 +116,7 @@ class ExtractionService:
             if live_result is not None:
                 return live_result
 
-        heuristic = self._heuristic_fields(candidate, artifact)
+        heuristic = self._with_quality_assessment(self._heuristic_fields(candidate, artifact))
         return ExtractionResult(
             id=generate_id("extract"),
             candidate_id=candidate.id,
@@ -190,7 +195,7 @@ class ExtractionService:
             candidate_id=candidate.id,
             status="completed",
             message="OpenAI Responses API extraction completed.",
-            fields_json=parsed,
+            fields_json=self._with_quality_assessment(parsed),
             model_name=raw_response.get("model") or settings.openai_model_extraction,
             raw_response=raw_response,
             created_at=now_iso(),
@@ -240,6 +245,7 @@ class ExtractionService:
         study_design = self._detect_study_design(text)
         statistics = self._extract_statistics(text)
         effect_inputs = self._infer_effect_inputs(groups, sample_size, statistics)
+        timepoints = self._extract_timepoints(text)
 
         evidence = []
         if sample_evidence:
@@ -270,7 +276,7 @@ class ExtractionService:
             "intervention_or_predictor": self._detect_intervention(text),
             "comparison": self._detect_comparison(groups),
             "outcomes": self._detect_outcomes(text),
-            "timepoints": [],
+            "timepoints": timepoints,
             "statistics": statistics,
             "effect_size_inputs": effect_inputs,
             "evidence_spans": evidence,
@@ -281,8 +287,8 @@ class ExtractionService:
         patterns = [
             r"(\d+)\s*(?:participants|students|people)\b",
             r"N\s*=\s*(\d+)",
-            r"\ud45c\ubcf8\s*(?:\uc218|\uc218\ub294)?\s*(\d+)",
-            r"(\d+)\s*\uba85",
+            r"표본\s*(?:수|수는)?\s*(\d+)",
+            r"(\d+)\s*명",
         ]
         for pattern in patterns:
             match = re.search(pattern, text, re.IGNORECASE)
@@ -292,7 +298,7 @@ class ExtractionService:
 
     def _detect_study_design(self, text: str) -> str:
         lowered = text.lower()
-        if any(token in lowered for token in ["quasi-experimental", "quasi experimental", "\uc900\uc2e4\ud5d8"]):
+        if any(token in lowered for token in ["quasi-experimental", "quasi experimental", "준실험"]):
             return "quasi_experimental"
         if any(
             token in lowered
@@ -301,16 +307,16 @@ class ExtractionService:
                 "control group",
                 "experimental group",
                 "comparison group",
-                "\uc2e4\ud5d8\uc9d1\ub2e8",
-                "\ud1b5\uc81c\uc9d1\ub2e8",
-                "\ube44\uad50\uc9d1\ub2e8",
-                "\ub300\uc870\uc9d1\ub2e8",
+                "실험집단",
+                "통제집단",
+                "비교집단",
+                "대조집단",
             ]
         ):
             return "group_comparison"
-        if any(token in lowered for token in ["correlation", "correlational", "\uc0c1\uad00"]):
+        if any(token in lowered for token in ["correlation", "correlational", "상관"]):
             return "correlational"
-        if any(token in lowered for token in ["regression", "\ud68c\uadc0"]):
+        if any(token in lowered for token in ["regression", "회귀"]):
             return "regression"
         return "unknown"
 
@@ -327,12 +333,12 @@ class ExtractionService:
         for alias in aliases:
             escaped = re.escape(alias)
             n_match = re.search(
-                rf"{escaped}[\s\S]{{0,60}}?(?:n\s*=\s*|had\s*|with\s*|was\s*|were\s*)?(\d+)\s*(?:participants|students|people|\uba85)?",
+                rf"{escaped}[\s\S]{{0,60}}?(?:n\s*=\s*|had\s*|with\s*|was\s*|were\s*)?(\d+)\s*(?:participants|students|people|명)?",
                 text,
                 re.IGNORECASE,
             )
             mean_sd_match = re.search(
-                rf"{escaped}[\s\S]{{0,140}}?(?:mean|\ud3c9\uade0)\s*(?:=|:|was)?\s*({number_pattern})[\s\S]{{0,60}}?(?:sd|standard deviation|\ud45c\uc900\ud3b8\ucc28)\s*(?:=|:|was)?\s*({number_pattern})",
+                rf"{escaped}[\s\S]{{0,140}}?(?:mean|평균)\s*(?:=|:|was)?\s*({number_pattern})[\s\S]{{0,60}}?(?:sd|standard deviation|표준편차)\s*(?:=|:|was|of)?\s*({number_pattern})",
                 text,
                 re.IGNORECASE,
             )
@@ -361,6 +367,7 @@ class ExtractionService:
         f_match = re.search(rf"\bf\s*[=\(]?\s*({number_pattern})", text, re.IGNORECASE)
         r_match = re.search(rf"\br\s*=\s*({number_pattern})", text, re.IGNORECASE)
         p_match = re.search(r"\bp\s*([<=>])\s*(\.?\d+)", text, re.IGNORECASE)
+        beta_match = re.search(rf"(?:beta|β)\s*=\s*({number_pattern})", text, re.IGNORECASE)
 
         if t_match:
             stats.append({"label": "t_value", "value": t_match.group(1), "location": "heuristic"})
@@ -376,8 +383,28 @@ class ExtractionService:
                     "location": "heuristic",
                 }
             )
+        if beta_match:
+            stats.append({"label": "beta", "value": beta_match.group(1), "location": "heuristic"})
 
         return stats
+
+    def _extract_timepoints(self, text: str) -> list[str]:
+        lowered = text.lower()
+        values: list[str] = []
+        pairs = [
+            ("pretest", "pretest"),
+            ("posttest", "posttest"),
+            ("pre-test", "pretest"),
+            ("post-test", "posttest"),
+            ("사전", "pretest"),
+            ("사후", "posttest"),
+            ("추후", "follow_up"),
+            ("follow-up", "follow_up"),
+        ]
+        for token, normalized in pairs:
+            if token in lowered or token in text:
+                values.append(normalized)
+        return self._dedupe(values)
 
     def _detect_comparison(self, groups: list[dict]) -> str:
         if any(group["name"] == "control" for group in groups):
@@ -388,11 +415,11 @@ class ExtractionService:
 
     def _detect_intervention(self, text: str) -> str:
         lowered = text.lower()
-        if "self-directed learning" in lowered or "\uc790\uae30\uc8fc\ub3c4\ud559\uc2b5" in text:
+        if "self-directed learning" in lowered or "자기주도학습" in text:
             return "self-directed learning"
-        if "program" in lowered or "\ud504\ub85c\uadf8\ub7a8" in text:
+        if "program" in lowered or "프로그램" in text:
             return "program"
-        if "regression" in lowered or "\ud68c\uadc0" in text:
+        if "regression" in lowered or "회귀" in text:
             return "regression_predictor"
         return ""
 
@@ -403,8 +430,10 @@ class ExtractionService:
             ("achievement", "achievement"),
             ("motivation", "motivation"),
             ("academic achievement", "academic achievement"),
-            ("\uc131\ucde8", "achievement"),
-            ("\ub3d9\uae30", "motivation"),
+            ("engagement", "engagement"),
+            ("성취", "achievement"),
+            ("동기", "motivation"),
+            ("참여", "engagement"),
         ]
         for token, label in pairs:
             if token in lowered or token in text:
@@ -473,6 +502,11 @@ class ExtractionService:
             "missing_inputs": self._dedupe(missing_inputs),
         }
 
+    def _with_quality_assessment(self, fields: dict) -> dict:
+        payload = copy.deepcopy(fields)
+        payload["quality_assessment"] = self.quality.assess(payload)
+        return payload
+
     def _dedupe(self, values: list[str]) -> list[str]:
         output: list[str] = []
         for value in values:
@@ -502,7 +536,7 @@ class ExtractionService:
         return messages.get(status, "Usable text is not available for extraction yet.")
 
     def _empty_fields(self) -> dict:
-        return {
+        payload = {
             "study_design": "",
             "participants": {
                 "population": "",
@@ -525,6 +559,7 @@ class ExtractionService:
             "evidence_spans": [],
             "confidence": "low",
         }
+        return self._with_quality_assessment(payload)
 
     def _response_schema(self) -> dict:
         return {
