@@ -16,7 +16,9 @@
 
 - 파일 기반 영속 저장소
 - 검색 요청 생성/목록/요약
-- KCI/RISS 스텁 기반 후보 수집
+- rerun 시 이전 결과 reset
+- KCI live-or-stub 수집 경로
+- RISS 스텁 기반 후보 수집
 - 중복 제거
 - 규칙 기반 1차 선별
 - PRISMA 집계
@@ -43,6 +45,10 @@ uvicorn app.main:app --reload
 
 런타임 데이터는 `backend/data/store.json`에 저장된다.
 
+### Optional KCI live config
+
+`backend/.env.example`에 있는 값을 환경변수로 채우면 KCI live 요청을 시도한다. 설정이 없거나 요청이 실패하면 스텁 데이터로 자동 fallback 한다.
+
 ### Frontend
 
 `frontend/index.html`을 브라우저에서 열면 된다. 백엔드가 먼저 실행 중이어야 한다.
@@ -65,7 +71,7 @@ uvicorn app.main:app --reload
 
 ## 아직 미구현
 
-- 실제 KCI/RISS 연동
+- 실제 RISS 연동
 - OpenAI Responses API 기반 추출
 - PostgreSQL / Redis
 - PDF 파싱/OCR

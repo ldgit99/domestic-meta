@@ -83,6 +83,28 @@ class FileStore:
         self._save_raw(raw)
         return item
 
+    def reset_search_results(self, search_request_id: str) -> None:
+        raw = self._load_raw()
+        candidate_ids = {
+            candidate_id
+            for candidate_id, item in raw["candidates"].items()
+            if item["search_request_id"] == search_request_id
+        }
+        for candidate_id in candidate_ids:
+            raw["candidates"].pop(candidate_id, None)
+            raw["full_text_artifacts"].pop(candidate_id, None)
+        raw["decisions"] = {
+            key: value
+            for key, value in raw["decisions"].items()
+            if value["candidate_record_id"] not in candidate_ids
+        }
+        existing = raw["prisma_counts"].get(search_request_id)
+        prisma_id = existing["id"] if existing else generate_id("prisma")
+        raw["prisma_counts"][search_request_id] = asdict(
+            PrismaCounts(id=prisma_id, search_request_id=search_request_id)
+        )
+        self._save_raw(raw)
+
     def get_search_request(self, search_request_id: str) -> SearchRequest | None:
         raw = self._load_raw()
         payload = raw["search_requests"].get(search_request_id)
@@ -116,6 +138,12 @@ class FileStore:
         raw = self._load_raw()
         raw["candidates"][item.id] = asdict(item)
         self._save_raw(raw)
+
+    def save_decision(self, item: EligibilityDecision) -> EligibilityDecision:
+        raw = self._load_raw()
+        raw["decisions"][item.id] = asdict(item)
+        self._save_raw(raw)
+        return item
 
     def create_decision(self, candidate_id: str, payload: DecisionCreate) -> EligibilityDecision | None:
         raw = self._load_raw()

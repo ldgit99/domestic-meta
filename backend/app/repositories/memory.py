@@ -19,6 +19,9 @@ class MemoryStore:
         self.prisma_counts: dict[str, PrismaCounts] = {}
         self.full_text_artifacts: dict[str, FullTextArtifact] = {}
 
+    def list_search_requests(self) -> list[SearchRequest]:
+        return sorted(self.search_requests.values(), key=lambda item: item.created_at, reverse=True)
+
     def create_search_request(self, payload: SearchRequestCreate) -> SearchRequest:
         item = SearchRequest(
             id=generate_id("search"),
@@ -40,6 +43,20 @@ class MemoryStore:
         )
         return item
 
+    def reset_search_results(self, search_request_id: str) -> None:
+        candidate_ids = {item.id for item in self.list_candidates(search_request_id)}
+        for candidate_id in candidate_ids:
+            self.candidates.pop(candidate_id, None)
+            self.full_text_artifacts.pop(candidate_id, None)
+        self.decisions = {
+            key: value
+            for key, value in self.decisions.items()
+            if value.candidate_record_id not in candidate_ids
+        }
+        existing = self.prisma_counts.get(search_request_id)
+        prisma_id = existing.id if existing else generate_id("prisma")
+        self.prisma_counts[search_request_id] = PrismaCounts(id=prisma_id, search_request_id=search_request_id)
+
     def get_search_request(self, search_request_id: str) -> SearchRequest | None:
         return self.search_requests.get(search_request_id)
 
@@ -59,6 +76,10 @@ class MemoryStore:
     def update_candidate(self, item: CandidateRecord) -> None:
         self.candidates[item.id] = item
 
+    def save_decision(self, item: EligibilityDecision) -> EligibilityDecision:
+        self.decisions[item.id] = item
+        return item
+
     def create_decision(self, candidate_id: str, payload: DecisionCreate) -> EligibilityDecision | None:
         candidate = self.get_candidate(candidate_id)
         if candidate is None:
@@ -75,7 +96,7 @@ class MemoryStore:
             reviewed_by=payload.reviewed_by,
             created_at=now_iso(),
         )
-        self.decisions[item.id] = item
+        self.save_decision(item)
         if payload.stage == TITLE_ABSTRACT_STAGE:
             candidate.status = "screened_title_abstract"
         return item

@@ -1,15 +1,14 @@
-from app.repositories.memory import MemoryStore
 from app.schemas.search import SearchRunResult
-from app.services.connectors import KCIStubConnector, RISSStubConnector
+from app.services.connectors import KCIConnector, RISSStubConnector
 from app.services.deduplication import DeduplicationService
 from app.services.prisma import PrismaService
 from app.services.screening import ScreeningService
 
 
 class SearchOrchestrator:
-    def __init__(self, store: MemoryStore) -> None:
+    def __init__(self, store) -> None:
         self.store = store
-        self.connectors = [KCIStubConnector(), RISSStubConnector()]
+        self.connectors = [KCIConnector(), RISSStubConnector()]
         self.deduplication = DeduplicationService()
         self.screening = ScreeningService()
         self.prisma = PrismaService()
@@ -20,6 +19,7 @@ class SearchOrchestrator:
             raise KeyError("Search request not found")
 
         self.store.update_search_request_status(search_request_id, "running")
+        self.store.reset_search_results(search_request_id)
 
         collected = []
         for connector in self.connectors:
@@ -33,7 +33,7 @@ class SearchOrchestrator:
             if candidate.canonical_record_id != candidate.id:
                 continue
             decision = self.screening.screen_title_abstract(candidate)
-            self.store.decisions[decision.id] = decision
+            self.store.save_decision(decision)
             candidate.status = "screened_title_abstract"
             self.store.update_candidate(candidate)
             screened_count += 1

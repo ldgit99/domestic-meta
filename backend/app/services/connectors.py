@@ -1,5 +1,10 @@
+import json
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
 from collections.abc import Iterable
 
+from app.core.config import settings
 from app.core.constants import SOURCE_KCI, SOURCE_RISS
 from app.core.utils import generate_id
 from app.models.domain import CandidateRecord, SearchRequest
@@ -55,6 +60,116 @@ class KCIStubConnector(BaseConnector):
                 status="collected",
             ),
         ]
+
+
+class KCILiveConnector(BaseConnector):
+    source_name = SOURCE_KCI
+
+    def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
+        if not settings.kci_live_enabled or not settings.kci_api_url or not settings.kci_api_key:
+            return []
+
+        params = {
+            settings.kci_api_key_param: settings.kci_api_key,
+            settings.kci_query_param: request.query_text,
+            settings.kci_count_param: "20",
+        }
+        url = f"{settings.kci_api_url}?{urllib.parse.urlencode(params)}"
+        try:
+            with urllib.request.urlopen(url, timeout=15) as response:
+                payload = response.read().decode("utf-8", errors="replace")
+        except Exception:
+            return []
+
+        if settings.kci_response_format.lower() == "json":
+            return self._parse_json(payload, request)
+        return self._parse_xml(payload, request)
+
+    def _parse_json(self, payload: str, request: SearchRequest) -> list[CandidateRecord]:
+        try:
+            data = json.loads(payload)
+        except json.JSONDecodeError:
+            return []
+
+        records = data.get("items") or data.get("results") or data.get("records") or []
+        if isinstance(records, dict):
+            records = records.get("item") or records.get("records") or []
+        if not isinstance(records, list):
+            return []
+
+        return [self._candidate_from_mapping(item, request) for item in records if isinstance(item, dict)]
+
+    def _parse_xml(self, payload: str, request: SearchRequest) -> list[CandidateRecord]:
+        try:
+            root = ET.fromstring(payload)
+        except ET.ParseError:
+            return []
+
+        records = root.findall(".//record") or root.findall(".//item") or root.findall(".//result")
+        if not records:
+            records = [node for node in root.iter() if list(node)]
+        candidates = []
+        for node in records[:20]:
+            mapping = {child.tag.split("}")[-1]: (child.text or "").strip() for child in node if (child.text or "").strip()}
+            if mapping:
+                candidates.append(self._candidate_from_mapping(mapping, request))
+        return candidates
+
+    def _candidate_from_mapping(self, item: dict, request: SearchRequest) -> CandidateRecord:
+        title = (
+            item.get("title")
+            or item.get("articleTitle")
+            or item.get("journalTitle")
+            or f"{request.query_text} 관련 KCI 논문"
+        )
+        authors = item.get("authors") or item.get("author") or item.get("creator") or ""
+        author_list = [part.strip() for part in str(authors).replace(";", ",").split(",") if part.strip()] or ["미상"]
+        year_value = item.get("year") or item.get("pubYear") or item.get("publicationYear") or "0"
+        try:
+            year = int(str(year_value)[:4])
+        except ValueError:
+            year = 0
+
+        keywords = item.get("keywords") or item.get("keyword") or request.query_text
+        keyword_list = [part.strip() for part in str(keywords).replace(";", ",").split(",") if part.strip()]
+        abstract = item.get("abstract") or item.get("description") or ""
+        record_id = item.get("id") or item.get("articleId") or item.get("identifier") or generate_id("kci")
+        journal = item.get("journal") or item.get("journalTitle") or item.get("publisher") or "KCI"
+        doi = item.get("doi")
+        url = item.get("url") or item.get("link")
+
+        return CandidateRecord(
+            id=generate_id("cand"),
+            search_request_id=request.id,
+            source=self.source_name,
+            source_record_id=str(record_id),
+            title=title,
+            authors=author_list,
+            year=year,
+            journal_or_school=journal,
+            abstract=abstract,
+            keywords=keyword_list,
+            doi=doi,
+            url=url,
+            document_type="journal_article",
+            language="ko",
+            raw_payload={"source": "live", "origin": "kci", "item": item},
+            status="collected",
+        )
+
+
+class KCIConnector(BaseConnector):
+    source_name = SOURCE_KCI
+
+    def __init__(self) -> None:
+        self.live = KCILiveConnector()
+        self.stub = KCIStubConnector()
+
+    def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
+        live_items = list(self.live.collect(request))
+        if live_items:
+            return live_items
+        return self.stub.collect(request)
 
 
 class RISSStubConnector(BaseConnector):
