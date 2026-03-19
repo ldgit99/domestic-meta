@@ -1,9 +1,13 @@
 import json
 
 from app.models.domain import CandidateRecord, EligibilityDecision, ExtractionResult, PrismaCounts, SearchRequest
+from app.services.effect_size import EffectSizeService
 
 
 class ExportService:
+    def __init__(self) -> None:
+        self.effect_sizes = EffectSizeService()
+
     def candidates_csv(self, search_request_id: str, candidates: list[CandidateRecord]) -> dict:
         lines = [
             "id,source,title,year,document_type,status,canonical_record_id,duplicate_group_id"
@@ -100,20 +104,40 @@ class ExportService:
     ) -> dict:
         result_map = {item.candidate_id: item for item in results}
         lines = [
-            "candidate_id,title,year,study_design,is_meta_analytic_ready,sample_size_total,intervention_or_predictor,comparison,confidence,status"
+            "candidate_id,title,year,study_design,is_meta_analytic_ready,recommended_effect_type,computation_method,computed_metric,computed_value,computed_variance,sample_size_total,intervention_or_predictor,comparison,confidence,status,missing_inputs,review_flags"
         ]
         for candidate in candidates:
             result = result_map.get(candidate.id)
             if result is None:
                 continue
+
             fields = result.fields_json or {}
             participants = fields.get("participants", {})
             effect = fields.get("effect_size_inputs", {})
-            title = candidate.title.replace('"', "'")
-            intervention = str(fields.get("intervention_or_predictor", "")).replace('"', "'")
-            comparison = str(fields.get("comparison", "")).replace('"', "'")
+            summary = self.effect_sizes.summarize(fields)
+            computed = summary.get("computed_effect_size") or {}
             lines.append(
-                f'{candidate.id},"{title}",{candidate.year},{fields.get("study_design","")},{effect.get("is_meta_analytic_ready", False)},{participants.get("sample_size_total","")},"{intervention}","{comparison}",{fields.get("confidence","")},{result.status}'
+                self._csv_line(
+                    [
+                        candidate.id,
+                        candidate.title,
+                        candidate.year,
+                        fields.get("study_design", ""),
+                        effect.get("is_meta_analytic_ready", False),
+                        summary.get("recommended_effect_type") or "",
+                        summary.get("computation_method") or "",
+                        computed.get("metric", ""),
+                        computed.get("value", ""),
+                        computed.get("variance", ""),
+                        participants.get("sample_size_total", ""),
+                        fields.get("intervention_or_predictor", ""),
+                        fields.get("comparison", ""),
+                        fields.get("confidence", ""),
+                        result.status,
+                        "|".join(summary.get("missing_inputs", [])),
+                        "|".join(summary.get("review_flags", [])),
+                    ]
+                )
             )
 
         return {
@@ -153,15 +177,23 @@ class ExportService:
             "",
             "## Candidate Snapshot",
             "",
-            "| Candidate | Source | Status | Decision | Extraction |",
-            "| --- | --- | --- | --- | --- |",
+            "| Candidate | Source | Status | Decision | Extraction | Effect | Review Flags |",
+            "| --- | --- | --- | --- | --- | --- | --- |",
         ]
 
         for candidate in candidates:
             decision = decision_map.get(candidate.id)
             extraction = result_map.get(candidate.id)
+            summary = self.effect_sizes.summarize(extraction.fields_json if extraction else None)
+            computed = summary.get("computed_effect_size") or {}
+            effect_label = ""
+            if computed:
+                effect_label = f"{computed.get('metric')}={computed.get('value')}"
+            elif summary.get("recommended_effect_type"):
+                effect_label = str(summary.get("recommended_effect_type"))
+
             lines.append(
-                f"| {candidate.title} | {candidate.source} | {candidate.status} | {decision.decision if decision else ''} | {extraction.status if extraction else ''} |"
+                f"| {candidate.title} | {candidate.source} | {candidate.status} | {decision.decision if decision else ''} | {extraction.status if extraction else ''} | {effect_label} | {'; '.join(summary.get('review_flags', []))} |"
             )
 
         lines.extend(["", "## Exclusion Reasons", ""])
@@ -177,3 +209,10 @@ class ExportService:
             "file_name": f"{search_request.id}_audit_report.md",
             "content": "\n".join(lines),
         }
+
+    def _csv_line(self, values: list[object]) -> str:
+        return ",".join(self._csv_value(value) for value in values)
+
+    def _csv_value(self, value: object) -> str:
+        text = "" if value is None else str(value)
+        return f'"{text.replace(chr(34), chr(39))}"'

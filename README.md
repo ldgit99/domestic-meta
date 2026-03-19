@@ -22,10 +22,12 @@
 - 중복 제거
 - 규칙 기반 1차 선별
 - 대시보드 기반 수동 선별
+- 후보 상세 조회와 검토 큐 API
 - PRISMA 집계
 - 원문 아티팩트 등록
 - TXT/PDF 업로드 기반 원문 저장
 - OpenAI Responses API 기반 추출 경로
+- 효과크기 계산 가능성 요약과 메타분석 입력 CSV 강화
 - OpenAI 미설정 시 휴리스틱 fallback 추출
 - 후보/스크리닝/PRISMA/추출/audit report export
 
@@ -57,7 +59,7 @@ uvicorn app.main:app --reload
 
 `frontend/index.html`을 브라우저에서 열면 된다. 백엔드가 먼저 실행 중이어야 한다.
 
-현재 프론트엔드는 검색 실행, 수동 선별, TXT/PDF 업로드, 추출 실행, PRISMA/스크리닝/audit export 조회까지 한 화면에서 확인하는 형태다.
+현재 프론트엔드는 검색 실행, 수동 선별, 검토 큐 확인, 후보 상세 조회, TXT/PDF 업로드, 추출 실행, PRISMA/스크리닝/audit export 조회까지 한 화면에서 확인하는 형태다.
 
 ## 노출된 API
 
@@ -67,6 +69,8 @@ uvicorn app.main:app --reload
 - `GET /api/search-requests/{id}/summary`
 - `POST /api/search-requests/{id}/run`
 - `GET /api/search-requests/{id}/candidates`
+- `GET /api/search-requests/{id}/review-queue`
+- `GET /api/candidates/{id}`
 - `POST /api/candidates/{id}/decision`
 - `POST /api/candidates/{id}/full-text`
 - `POST /api/candidates/{id}/full-text-file`

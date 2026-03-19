@@ -2,7 +2,7 @@ from app.models.domain import CandidateRecord, FullTextArtifact
 from app.services.extraction import ExtractionService
 
 
-def test_extraction_fallback_detects_meta_ready_signal() -> None:
+def test_extraction_fallback_detects_group_statistics_and_meta_ready_signal() -> None:
     candidate = CandidateRecord(
         id="c1",
         search_request_id="s1",
@@ -27,13 +27,21 @@ def test_extraction_fallback_detects_meta_ready_signal() -> None:
         file_name="demo.txt",
         source_url=None,
         mime_type="text/plain",
-        text_content="연구대상은 120명이었다. 실험집단과 통제집단의 평균과 표준편차를 보고하였다.",
+        text_content=(
+            "연구대상은 120명이었다. 실험집단 60명과 통제집단 60명으로 구성하였다. "
+            "실험집단 평균은 82.4, 표준편차는 10.1이었고 통제집단 평균은 75.2, 표준편차는 11.3이었다. "
+            "두 집단 간 차이는 통계적으로 유의하였다(p < .05)."
+        ),
         text_extraction_status="available",
         created_at="now",
     )
 
     result = ExtractionService().run(candidate, artifact)
+    fields = result.fields_json
 
     assert result.status in {"fallback_heuristic", "completed"}
-    assert result.fields_json["effect_size_inputs"]["is_meta_analytic_ready"] is True
-    assert result.fields_json["participants"]["sample_size_total"] == "120"
+    assert fields["effect_size_inputs"]["is_meta_analytic_ready"] is True
+    assert fields["effect_size_inputs"]["recommended_effect_type"] == "hedges_g"
+    assert fields["participants"]["sample_size_total"] == "120"
+    assert fields["participants"]["groups"][0]["n"] == "60"
+    assert fields["participants"]["groups"][0]["mean"] == "82.4"

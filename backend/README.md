@@ -8,6 +8,7 @@ FastAPI 기반 초기 백엔드 구현이다.
 - 파일 기반 영속 저장소
 - rerun-safe 수집 실행
 - 후보 논문 조회
+- 후보 상세와 검토 큐 API
 - PRISMA 집계 조회
 - 규칙 기반 1차 선별
 - KCI live-or-stub 커넥터
@@ -15,6 +16,7 @@ FastAPI 기반 초기 백엔드 구현이다.
 - 원문 등록
 - TXT/PDF 업로드와 텍스트 추출
 - OpenAI Responses API 기반 추출 경로
+- 효과크기 계산 가능성 요약
 - 휴리스틱 fallback 추출
 - audit report export
 
@@ -46,6 +48,13 @@ FastAPI 기반 초기 백엔드 구현이다.
 - `POST /api/candidates/{id}/full-text-file`: `multipart/form-data` 파일 업로드
 
 업로드 파일은 `backend/uploads`에 저장되며, `txt`는 UTF-8 기준으로 읽고 `pdf`는 `pypdf`가 설치된 경우 텍스트 추출을 시도한다.
+
+## 검토와 효과크기 요약
+
+- `GET /api/candidates/{id}`: 후보 상세, 최신 결정, 추출 결과, 효과크기 계산 가능성 요약
+- `GET /api/search-requests/{id}/review-queue`: 사람 검토가 필요한 canonical 후보 목록
+
+현재 효과크기 요약은 두 집단 평균/표준편차, 상관계수, t값과 표본수를 이용해 `hedges_g` 또는 `fisher_z` 계산 가능 여부를 정리한다.
 
 ## 추후 연결 예정
 

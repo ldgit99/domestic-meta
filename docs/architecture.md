@@ -8,9 +8,11 @@
 - `backend/app/services/search_management.py`: manual review and full-text registration with PRISMA refresh
 - `backend/app/services/document_ingestion.py`: uploaded TXT/PDF persistence and text extraction
 - `backend/app/services/extraction.py`: OpenAI Responses API extraction plus heuristic fallback
+- `backend/app/services/effect_size.py`: extracted statistics to effect-size-readiness summary
+- `backend/app/services/review.py`: candidate detail assembly and review queue generation
 - `backend/app/services/extraction_workflow.py`: extraction execution and persistence
 - `backend/app/services/connectors.py`: KCI live-or-stub connector plus RISS stub connector
-- `frontend/index.html`: persistent search list, summary, PRISMA, manual review, exports, file upload, and extraction controls
+- `frontend/index.html`: persistent search list, summary, PRISMA, manual review, review queue, file upload, and extraction controls
 
 ## Exposed APIs
 
@@ -20,6 +22,8 @@
 - `GET /api/search-requests/{id}/summary`
 - `POST /api/search-requests/{id}/run`
 - `GET /api/search-requests/{id}/candidates`
+- `GET /api/search-requests/{id}/review-queue`
+- `GET /api/candidates/{id}`
 - `POST /api/candidates/{id}/decision`
 - `POST /api/candidates/{id}/full-text`
 - `POST /api/candidates/{id}/full-text-file`
@@ -41,6 +45,8 @@
 - KCI collection uses live mode only when configured; otherwise it falls back to stub data
 - document ingestion extracts text from TXT immediately and from PDF through `pypdf` when available
 - manual decisions from the dashboard immediately recalculate PRISMA counts and refresh screening logs
+- extracted group statistics, t-values, and correlations are converted into effect-size readiness summaries
+- review queue lists only canonical candidates that still need human action
 - extraction uses OpenAI only when configured; otherwise it falls back to heuristics
 
 ## Next implementation target

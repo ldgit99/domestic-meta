@@ -39,7 +39,7 @@
 <body>
   <div class="wrap">
     <h1>교육학 메타분석 지원 AI 에이전트</h1>
-    <p class="lead">지속 저장되는 검색 요청, PRISMA, 스크리닝 로그, 그리고 TXT/PDF 업로드 기반 추출까지 한 화면에서 검토하는 프로토타입입니다.</p>
+    <p class="lead">검색, 수동 선별, 검토 큐, 효과크기 요약, 그리고 TXT/PDF 업로드 기반 추출까지 한 화면에서 다루는 프로토타입입니다.</p>
 
     <div class="panel">
       <label for="query">검색어</label>
@@ -128,6 +128,17 @@
 
     <div class="grid">
       <div class="panel">
+        <h2>선택 후보 상세</h2>
+        <pre id="candidateDetail">후보를 선택하면 상세 정보를 불러옵니다.</pre>
+      </div>
+      <div class="panel">
+        <h2>검토 큐</h2>
+        <pre id="reviewQueue">검색 실행 전</pre>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
         <h2>Export 내용</h2>
         <textarea id="exportContent">아직 생성되지 않음</textarea>
       </div>
@@ -159,6 +170,8 @@
     const prisma = document.getElementById("prisma");
     const extraction = document.getElementById("extraction");
     const reviewResult = document.getElementById("reviewResult");
+    const reviewQueue = document.getElementById("reviewQueue");
+    const candidateDetail = document.getElementById("candidateDetail");
     const candidatesBody = document.getElementById("candidates");
     const searchesBody = document.getElementById("searches");
     const exportContent = document.getElementById("exportContent");
@@ -188,9 +201,19 @@
       `).join("");
 
       const reviewItems = items.filter(item => item.canonical_record_id === item.id || item.canonical_record_id === null);
+      if (!reviewItems.length) {
+        reviewCandidate.innerHTML = '<option value="">후보 없음</option>';
+        return;
+      }
+
+      const previousValue = reviewCandidate.value;
       reviewCandidate.innerHTML = reviewItems.map(item => `
         <option value="${item.id}">${item.title} (${item.source}, ${item.year}, ${item.status})</option>
       `).join("");
+
+      if (reviewItems.some(item => item.id === previousValue)) {
+        reviewCandidate.value = previousValue;
+      }
     }
 
     function renderSearches(items) {
@@ -213,6 +236,26 @@
       renderSearches(payload);
     }
 
+    async function loadCandidateDetail(candidateId) {
+      if (!candidateId) {
+        candidateDetail.textContent = "후보를 선택하면 상세 정보를 불러옵니다.";
+        return;
+      }
+      const res = await fetch(`http://127.0.0.1:8000/api/candidates/${candidateId}`);
+      const payload = await res.json();
+      candidateDetail.textContent = JSON.stringify(payload, null, 2);
+    }
+
+    async function loadReviewQueue() {
+      if (!lastSearchId) {
+        reviewQueue.textContent = "검색 실행 전";
+        return;
+      }
+      const res = await fetch(`http://127.0.0.1:8000/api/search-requests/${lastSearchId}/review-queue`);
+      const payload = await res.json();
+      reviewQueue.textContent = JSON.stringify(payload, null, 2);
+    }
+
     async function refreshSearchState(searchId) {
       const summaryRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${searchId}/summary`);
       const summaryJson = await summaryRes.json();
@@ -227,6 +270,8 @@
       prisma.textContent = JSON.stringify(prismaJson, null, 2);
       renderCandidates(candidatesJson);
       await loadSearches();
+      await loadReviewQueue();
+      await loadCandidateDetail(reviewCandidate.value);
     }
 
     async function loadExport(kind) {
@@ -255,6 +300,8 @@
       summary.textContent = "요약 대기 중...";
       prisma.textContent = "집계 대기 중...";
       reviewResult.textContent = "수동 선별 대기 중...";
+      reviewQueue.textContent = "검토 큐 생성 중...";
+      candidateDetail.textContent = "후보 상세 대기 중...";
       extraction.textContent = "추출 대기 중...";
       exportContent.value = "Export 생성 대기 중...";
 
@@ -280,6 +327,8 @@
         summary.textContent = "오류 발생";
         prisma.textContent = "오류 발생";
         reviewResult.textContent = "오류 발생";
+        reviewQueue.textContent = "오류 발생";
+        candidateDetail.textContent = "오류 발생";
         candidatesBody.innerHTML = '<tr><td colspan="4">오류 발생</td></tr>';
       }
     });
@@ -380,6 +429,10 @@
 
     exportAuditButton.addEventListener("click", async () => {
       try { await loadExport("audit"); } catch (error) { exportContent.value = String(error); }
+    });
+
+    reviewCandidate.addEventListener("change", async () => {
+      try { await loadCandidateDetail(reviewCandidate.value); } catch (error) { candidateDetail.textContent = String(error); }
     });
 
     loadSearches().catch(() => {});

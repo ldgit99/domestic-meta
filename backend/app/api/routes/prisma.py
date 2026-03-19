@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_store
-from app.repositories.memory import MemoryStore
+from app.repositories.file_store import FileStore
 from app.schemas.prisma import PrismaCountsRead
 
 
@@ -11,7 +11,7 @@ router = APIRouter(tags=["prisma"])
 @router.get("/search-requests/{search_request_id}/prisma", response_model=PrismaCountsRead)
 def get_prisma_counts(
     search_request_id: str,
-    store: MemoryStore = Depends(get_store),
+    store: FileStore = Depends(get_store),
 ) -> PrismaCountsRead:
     counts = store.get_prisma_counts(search_request_id)
     if counts is None:

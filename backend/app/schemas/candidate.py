@@ -68,3 +68,40 @@ class ExtractionResultRead(BaseModel):
     fields_json: dict = Field(default_factory=dict)
     model_name: str | None = None
     created_at: str | None = None
+
+
+class EffectSizeComputedRead(BaseModel):
+    metric: str
+    value: float
+    variance: float | None = None
+
+
+class EffectSizeSummaryRead(BaseModel):
+    is_computable: bool = False
+    recommended_effect_type: str | None = None
+    computation_method: str | None = None
+    computed_effect_size: EffectSizeComputedRead | None = None
+    available_inputs: list[str] = Field(default_factory=list)
+    missing_inputs: list[str] = Field(default_factory=list)
+    review_flags: list[str] = Field(default_factory=list)
+
+
+class CandidateDetailRead(BaseModel):
+    candidate: CandidateRead
+    latest_title_abstract_decision: EligibilityDecisionRead | None = None
+    latest_full_text_decision: EligibilityDecisionRead | None = None
+    full_text_artifact: FullTextArtifactRead | None = None
+    extraction_result: ExtractionResultRead | None = None
+    effect_size_summary: EffectSizeSummaryRead = Field(default_factory=EffectSizeSummaryRead)
+    needs_manual_review: bool = False
+    review_priority: str = "low"
+    review_reasons: list[str] = Field(default_factory=list)
+
+
+class CandidateQueueItemRead(BaseModel):
+    candidate: CandidateRead
+    latest_decision: EligibilityDecisionRead | None = None
+    extraction_status: str | None = None
+    effect_size_summary: EffectSizeSummaryRead = Field(default_factory=EffectSizeSummaryRead)
+    review_priority: str
+    review_reasons: list[str] = Field(default_factory=list)

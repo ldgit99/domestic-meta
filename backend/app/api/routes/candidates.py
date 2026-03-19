@@ -4,11 +4,14 @@ from app.api.dependencies import (
     get_document_ingestion,
     get_extraction_service,
     get_extraction_workflow,
+    get_review_service,
     get_search_management,
     get_store,
 )
 from app.repositories.file_store import FileStore
 from app.schemas.candidate import (
+    CandidateDetailRead,
+    CandidateQueueItemRead,
     CandidateRead,
     DecisionCreate,
     EligibilityDecisionRead,
@@ -19,6 +22,7 @@ from app.schemas.candidate import (
 from app.services.document_ingestion import DocumentIngestionService
 from app.services.extraction import ExtractionService
 from app.services.extraction_workflow import ExtractionWorkflowService
+from app.services.review import ReviewService
 from app.services.search_management import SearchManagementService
 
 
@@ -37,6 +41,29 @@ def list_candidates(
         key=lambda item: (item.canonical_record_id != item.id, item.year * -1, item.title),
     )
     return [CandidateRead.model_validate(item) for item in items]
+
+
+@router.get("/search-requests/{search_request_id}/review-queue", response_model=list[CandidateQueueItemRead])
+def list_review_queue(
+    search_request_id: str,
+    store: FileStore = Depends(get_store),
+    review_service: ReviewService = Depends(get_review_service),
+) -> list[CandidateQueueItemRead]:
+    if store.get_search_request(search_request_id) is None:
+        raise HTTPException(status_code=404, detail="Search request not found")
+    payload = review_service.build_review_queue(search_request_id)
+    return [CandidateQueueItemRead.model_validate(item) for item in payload]
+
+
+@router.get("/candidates/{candidate_id}", response_model=CandidateDetailRead)
+def get_candidate_detail(
+    candidate_id: str,
+    review_service: ReviewService = Depends(get_review_service),
+) -> CandidateDetailRead:
+    payload = review_service.get_candidate_detail(candidate_id)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    return CandidateDetailRead.model_validate(payload)
 
 
 @router.post("/candidates/{candidate_id}/decision", response_model=EligibilityDecisionRead)
