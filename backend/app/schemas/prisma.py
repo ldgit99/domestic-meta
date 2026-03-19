@@ -17,6 +17,33 @@ class PrismaCountsRead(BaseModel):
     studies_included_in_review: int
 
 
+class PrismaFlowNodeRead(BaseModel):
+    id: str
+    label: str
+    count: int
+    stage: str
+    description: str
+
+
+class PrismaFlowEdgeRead(BaseModel):
+    source: str
+    target: str
+    count: int
+    label: str
+
+
+class PrismaReasonCountRead(BaseModel):
+    reason_code: str
+    count: int
+
+
+class PrismaFlowRead(BaseModel):
+    search_request_id: str
+    nodes: list[PrismaFlowNodeRead] = Field(default_factory=list)
+    edges: list[PrismaFlowEdgeRead] = Field(default_factory=list)
+    exclusion_reasons: list[PrismaReasonCountRead] = Field(default_factory=list)
+
+
 class ExportPayloadRead(BaseModel):
     search_request_id: str
     content_type: str

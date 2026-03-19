@@ -2,11 +2,13 @@ import json
 
 from app.models.domain import CandidateRecord, EligibilityDecision, ExtractionResult, PrismaCounts, SearchRequest
 from app.services.effect_size import EffectSizeService
+from app.services.prisma import PrismaService
 
 
 class ExportService:
     def __init__(self) -> None:
         self.effect_sizes = EffectSizeService()
+        self.prisma = PrismaService()
 
     def candidates_csv(self, search_request_id: str, candidates: list[CandidateRecord]) -> dict:
         lines = [
@@ -69,6 +71,15 @@ class ExportService:
             "search_request_id": search_request_id,
             "content_type": "application/json",
             "file_name": f"{search_request_id}_prisma_counts.json",
+            "content": json.dumps(payload, ensure_ascii=False, indent=2),
+        }
+
+    def prisma_flow_json(self, search_request_id: str, counts: PrismaCounts) -> dict:
+        payload = self.prisma.build_flow(search_request_id, counts)
+        return {
+            "search_request_id": search_request_id,
+            "content_type": "application/json",
+            "file_name": f"{search_request_id}_prisma_flow.json",
             "content": json.dumps(payload, ensure_ascii=False, indent=2),
         }
 

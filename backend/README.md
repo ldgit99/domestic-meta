@@ -1,40 +1,40 @@
 # Backend
 
-FastAPI 기반 초기 백엔드 구현이다.
+FastAPI backend for the domestic education meta-analysis prototype.
 
-## 포함 기능
+## Implemented capabilities
 
-- 검색 요청 생성 및 조회
-- 파일 기반 영속 저장소
-- 선택 가능한 `SQLAlchemy/PostgreSQL` 저장소
-- rerun-safe 수집 실행
-- 후보 논문 조회
-- 후보 상세와 검토 큐 API
-- PRISMA 집계 조회
-- 규칙 기반 1차 선별
-- KCI live-or-stub 커넥터
-- RISS configurable live-or-stub 커넥터
-- 원문 등록
-- TXT/PDF 업로드와 텍스트 추출
-- OpenAI Responses API 기반 추출 경로
-- 효과크기 계산 가능성 요약
-- 휴리스틱 fallback 추출
-- audit report export
+- search request creation and lookup
+- file-backed persistence
+- optional `SQLAlchemy` persistence for `PostgreSQL` or `SQLite`
+- rerun-safe orchestration
+- candidate listing and candidate detail APIs
+- title and abstract screening plus manual review
+- PRISMA counts lookup
+- PRISMA flow payload generation
+- configurable `KCI` live-or-stub connector
+- configurable `RISS` live-or-stub connector
+- full-text registration
+- TXT and PDF text ingestion
+- OpenAI `Responses API` extraction path with heuristic fallback
+- effect-size readiness summaries
+- export endpoints including audit and PRISMA flow payloads
 
-## 저장소 모드
+## Repository backend modes
 
-- `REPOSITORY_BACKEND=file`: 기존 JSON 파일 저장소 사용
-- `REPOSITORY_BACKEND=sqlalchemy`: `DATABASE_URL` 기반 데이터베이스 저장소 사용
+- `REPOSITORY_BACKEND=file`: JSON persistence under `backend/data/store.json`
+- `REPOSITORY_BACKEND=sqlalchemy`: relational persistence using `DATABASE_URL`
 
-예시:
+Example:
 
 - `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/rissmeta`
 
-현재 SQLAlchemy 저장소는 앱 시작 시 테이블을 자동 생성한다. 운영 환경에서는 추후 마이그레이션 체계로 바꾸는 것이 맞다.
+`SQLAlchemy` mode currently auto-creates tables at startup. Operational deployments should add an
+explicit migration workflow next.
 
-## KCI 연동
+## KCI collection
 
-기본값은 스텁이다. 아래 환경변수를 설정하면 live 요청을 시도하고, 실패 시 스텁으로 자동 fallback 한다.
+Live collection is enabled only when configured. Otherwise the connector falls back to stub data.
 
 - `KCI_LIVE_ENABLED=true`
 - `KCI_API_URL`
@@ -44,9 +44,9 @@ FastAPI 기반 초기 백엔드 구현이다.
 - `KCI_COUNT_PARAM`
 - `KCI_RESPONSE_FORMAT`
 
-## RISS 연동
+## RISS collection
 
-기본값은 스텁이다. 아래 환경변수를 설정하면 live 요청을 시도하고, 실패 시 스텁으로 자동 fallback 한다.
+Live collection is enabled only when configured. Otherwise the connector falls back to stub data.
 
 - `RISS_LIVE_ENABLED=true`
 - `RISS_API_URL`
@@ -59,34 +59,38 @@ FastAPI 기반 초기 백엔드 구현이다.
 - `RISS_THESIS_VALUE`
 - `RISS_JOURNAL_VALUE`
 
-현재 구현은 일반 JSON/XML 응답과 SPARQL 스타일 `results.bindings` JSON을 모두 받을 수 있게 만들어져 있다.
+The current connector accepts JSON, XML, and SPARQL-style `results.bindings` JSON payloads.
 
-## OpenAI 추출
+## PRISMA flow endpoints
 
-아래 환경변수를 설정하면 `Responses API`와 `Structured Outputs` 기반 추출을 시도한다.
+- `GET /api/search-requests/{id}/prisma/flow`
+- `GET /api/search-requests/{id}/exports/prisma-flow.json`
+
+The flow payload includes:
+
+- nodes for identified, duplicate-removed, screened, retrieval, eligibility, and included stages
+- edges describing stage transitions
+- exclusion-reason counts keyed by recorded `reason_code`
+
+## OpenAI extraction
+
+When configured, the backend attempts `Responses API` extraction with structured JSON output.
+Otherwise it stores a heuristic fallback extraction.
 
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL_EXTRACTION`
 - `OPENAI_RESPONSES_URL`
 
-설정이 없거나 요청이 실패하면 휴리스틱 추출 결과를 저장한다.
+## Full-text ingestion endpoints
 
-## 원문 업로드
+- `POST /api/candidates/{id}/full-text`
+- `POST /api/candidates/{id}/full-text-file`
 
-- `POST /api/candidates/{id}/full-text`: JSON 본문으로 직접 텍스트 등록
-- `POST /api/candidates/{id}/full-text-file`: `multipart/form-data` 파일 업로드
+Uploaded files are stored under `backend/uploads`. TXT is read directly. PDF text extraction uses
+`pypdf` when available.
 
-업로드 파일은 `backend/uploads`에 저장되며, `txt`는 UTF-8 기준으로 읽고 `pdf`는 `pypdf`가 설치된 경우 텍스트 추출을 시도한다.
+## Next work items
 
-## 검토와 효과크기 요약
-
-- `GET /api/candidates/{id}`: 후보 상세, 최신 결정, 추출 결과, 효과크기 계산 가능성 요약
-- `GET /api/search-requests/{id}/review-queue`: 사람 검토가 필요한 canonical 후보 목록
-
-현재 효과크기 요약은 두 집단 평균/표준편차, 상관계수, t값과 표본수를 이용해 `hedges_g` 또는 `fisher_z` 계산 가능 여부를 정리한다.
-
-## 추후 연결 예정
-
-- RISS 실운영 엔드포인트별 매핑 보정
-- PostgreSQL 마이그레이션 도입
-- PDF OCR 및 정교한 파서
+- production-safe RISS field mapping
+- database migration tooling
+- OCR pipeline and stronger PDF parsing

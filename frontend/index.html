@@ -1,99 +1,352 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RISS Meta Agent</title>
+  <title>Domestic Meta Agent</title>
   <style>
     :root {
-      --bg: #f3efe6;
-      --panel: #fffaf0;
-      --ink: #1f2a30;
-      --muted: #66757f;
-      --accent: #006a6a;
-      --accent-2: #c96f3b;
-      --line: #d7d0c4;
+      --bg: #f4efe6;
+      --panel: #fffaf1;
+      --ink: #1d2a30;
+      --muted: #6a787f;
+      --line: #d8cfbf;
+      --accent: #0d6b67;
+      --accent-2: #c46d36;
+      --accent-3: #dcefea;
+      --shadow: rgba(31, 42, 48, 0.08);
     }
-    body { margin: 0; font-family: Georgia, "Noto Serif KR", serif; background: linear-gradient(180deg, #efe8d8 0%, #f7f4ed 100%); color: var(--ink); }
-    .wrap { max-width: 1200px; margin: 0 auto; padding: 40px 20px 80px; }
-    h1 { margin: 0 0 12px; font-size: 44px; line-height: 1.05; }
-    p.lead { margin: 0 0 24px; color: var(--muted); font-size: 18px; }
-    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 12px 30px rgba(28, 39, 46, 0.08); margin-bottom: 20px; }
-    .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
-    .grid-wide { display: grid; gap: 16px; grid-template-columns: 1.2fr 0.8fr; }
-    label { display: block; font-size: 14px; margin-bottom: 8px; }
-    input, select, button, textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: white; font: inherit; }
-    textarea { min-height: 160px; resize: vertical; }
-    button { background: var(--accent); color: white; border: none; cursor: pointer; margin-top: 16px; }
-    .secondary { background: var(--accent-2); }
-    pre { white-space: pre-wrap; word-break: break-word; background: #f7f6f1; padding: 16px; border-radius: 12px; border: 1px solid var(--line); min-height: 180px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 14px; }
-    th { color: var(--muted); font-weight: 600; }
-    .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #e6f0ef; color: var(--accent); font-size: 12px; }
-    .actions { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-    .decision-actions { display: grid; gap: 12px; grid-template-columns: repeat(3, 1fr); }
-    @media (max-width: 860px) { .grid, .grid-wide, .decision-actions { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(196, 109, 54, 0.10), transparent 28%),
+        radial-gradient(circle at top right, rgba(13, 107, 103, 0.12), transparent 32%),
+        linear-gradient(180deg, #ede5d6 0%, #f8f5ef 100%);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 46px;
+      line-height: 1.04;
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      line-height: 1.15;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .lead {
+      max-width: 780px;
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.55;
+    }
+
+    .panel {
+      margin-bottom: 18px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(255, 250, 241, 0.94);
+      box-shadow: 0 16px 38px var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-wide {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+    }
+
+    .actions {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      margin-top: 16px;
+    }
+
+    .decision-actions {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .flow-stages {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .flow-stage {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fffdf8 0%, #fbf5ec 100%);
+    }
+
+    .flow-stage-title {
+      margin: 0 0 12px;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .flow-node {
+      margin-bottom: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+    }
+
+    .flow-node:last-child {
+      margin-bottom: 0;
+    }
+
+    .flow-count {
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .flow-label {
+      margin-bottom: 6px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .flow-desc {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .flow-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .flow-list li {
+      margin-bottom: 8px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      color: var(--muted);
+    }
+
+    input, select, button, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: white;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    input, select, textarea {
+      padding: 12px 14px;
+    }
+
+    textarea {
+      min-height: 170px;
+      resize: vertical;
+    }
+
+    button {
+      padding: 12px 14px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      transition: transform 140ms ease, opacity 140ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.96;
+    }
+
+    .secondary {
+      background: var(--accent-2);
+    }
+
+    .ghost {
+      background: var(--accent-3);
+      color: var(--accent);
+    }
+
+    .table-button {
+      margin: 0;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    pre, .code-block {
+      min-height: 180px;
+      margin: 0;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #f8f5ef;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #e8f2ef;
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f5e7de;
+      color: #7a4726;
+      font-size: 12px;
+    }
+
+    @media (max-width: 960px) {
+      .grid,
+      .grid-wide,
+      .decision-actions {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>교육학 메타분석 지원 AI 에이전트</h1>
-    <p class="lead">검색, 수동 선별, 검토 큐, 효과크기 요약, 그리고 TXT/PDF 업로드 기반 추출까지 한 화면에서 다루는 프로토타입입니다.</p>
+    <h1>Domestic Meta Agent</h1>
+    <p class="lead">
+      RISS and KCI search orchestration for education meta-analysis. The dashboard keeps
+      candidate screening, PRISMA counts, PRISMA flow payloads, full-text upload, and extraction
+      in one place.
+    </p>
 
     <div class="panel">
-      <label for="query">검색어</label>
-      <input id="query" value="협동학습" />
+      <label for="query">Search Query</label>
+      <input id="query" value="self-directed learning" />
       <div class="actions">
-        <button id="run">검색 실행</button>
-        <button id="exportCsv" class="secondary">후보 CSV</button>
-        <button id="exportScreening" class="secondary">스크리닝 로그</button>
-        <button id="exportPrisma" class="secondary">PRISMA JSON</button>
-        <button id="exportMeta" class="secondary">메타분석 CSV</button>
-        <button id="exportAudit" class="secondary">감사 리포트</button>
+        <button id="run">Run Search</button>
+        <button id="exportCsv" class="secondary">Candidates CSV</button>
+        <button id="exportScreening" class="secondary">Screening Log</button>
+        <button id="exportPrisma" class="secondary">PRISMA Counts</button>
+        <button id="exportPrismaFlow" class="secondary">PRISMA Flow</button>
+        <button id="exportMeta" class="secondary">Meta CSV</button>
+        <button id="exportAudit" class="secondary">Audit Report</button>
       </div>
     </div>
 
     <div class="grid">
       <div class="panel">
-        <h2>실행 결과</h2>
-        <pre id="result">API 실행 전</pre>
+        <h2>Run Result</h2>
+        <pre id="result">Create and run a search request to inspect the pipeline output.</pre>
       </div>
       <div class="panel">
-        <h2>검색 요약</h2>
-        <pre id="summary">API 실행 전</pre>
+        <h2>Search Summary</h2>
+        <pre id="summary">Summary payload will appear here.</pre>
       </div>
     </div>
 
     <div class="grid-wide">
       <div class="panel">
-        <h2>후보 논문</h2>
+        <h2>Candidate Records</h2>
         <table>
           <thead>
             <tr>
-              <th>제목</th>
-              <th>소스</th>
-              <th>연도</th>
-              <th>상태</th>
+              <th>Title</th>
+              <th>Source</th>
+              <th>Year</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="candidates">
-            <tr><td colspan="4">API 실행 전</td></tr>
+            <tr><td colspan="5">No candidates yet.</td></tr>
           </tbody>
         </table>
       </div>
       <div class="panel">
-        <h2>최근 검색 요청</h2>
+        <h2>Recent Searches</h2>
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>검색어</th>
-              <th>상태</th>
+              <th>Query</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="searches">
-            <tr><td colspan="3">아직 검색 없음</td></tr>
+            <tr><td colspan="4">No prior searches loaded.</td></tr>
           </tbody>
         </table>
       </div>
@@ -101,73 +354,110 @@
 
     <div class="grid">
       <div class="panel">
-        <h2>수동 선별</h2>
-        <label for="reviewCandidate">후보 선택</label>
+        <h2>Manual Screening</h2>
+        <label for="reviewCandidate">Candidate</label>
         <select id="reviewCandidate">
-          <option value="">후보 없음</option>
+          <option value="">No candidate selected</option>
         </select>
-        <label for="reviewReasonCode">제외 사유 코드</label>
-        <input id="reviewReasonCode" placeholder="예: insufficient_statistics" />
-        <label for="reviewReasonText">메모</label>
-        <textarea id="reviewReasonText">자동 선별 결과를 검토한 메모를 남길 수 있습니다.</textarea>
+
+        <label for="reviewReasonCode">Reason Code</label>
+        <input id="reviewReasonCode" placeholder="for example: insufficient_statistics" />
+
+        <label for="reviewReasonText">Review Note</label>
+        <textarea id="reviewReasonText">Record the reason for the manual screening action.</textarea>
+
         <div class="decision-actions">
-          <button id="decisionInclude">포함</button>
-          <button id="decisionMaybe" class="secondary">검토 필요</button>
-          <button id="decisionExclude" class="secondary">제외</button>
+          <button id="decisionInclude">Include</button>
+          <button id="decisionMaybe" class="ghost">Needs Review</button>
+          <button id="decisionExclude" class="secondary">Exclude</button>
         </div>
-        <pre id="reviewResult">아직 수동 선별을 수행하지 않음</pre>
+
+        <pre id="reviewResult">Manual decision responses will appear here.</pre>
       </div>
+
       <div class="panel">
-        <h2>원문 업로드 또는 데모 텍스트</h2>
-        <label for="fullTextFile">TXT/PDF 업로드</label>
+        <h2>Full Text Ingestion</h2>
+        <label for="fullTextFile">Upload TXT or PDF</label>
         <input id="fullTextFile" type="file" accept=".txt,.pdf,text/plain,application/pdf" />
-        <textarea id="fullText">연구대상은 중학교 2학년 120명이었다. 실험집단 60명과 통제집단 60명으로 구성하였다. 협동학습 기반 수업을 적용한 결과, 학업성취도 사후검사에서 실험집단 평균은 82.4, 표준편차는 10.1이었고 통제집단 평균은 75.2, 표준편차는 11.3이었다. 두 집단 간 차이는 통계적으로 유의하였다(p &lt; .05).</textarea>
-        <button id="runExtraction">선택 후보 원문 등록 또는 파일 업로드 + 추출 실행</button>
+
+        <label for="fullText">Fallback Full Text</label>
+        <textarea id="fullText">The study included 120 middle school students. The intervention group had 60 students and the control group had 60 students. After the self-directed learning program, the intervention group mean was 82.4 with a standard deviation of 10.1. The control group mean was 75.2 with a standard deviation of 11.3. The difference was statistically significant at p less than .05.</textarea>
+
+        <button id="runExtraction">Register Full Text and Run Extraction</button>
       </div>
     </div>
 
     <div class="grid">
       <div class="panel">
-        <h2>선택 후보 상세</h2>
-        <pre id="candidateDetail">후보를 선택하면 상세 정보를 불러옵니다.</pre>
+        <h2>Selected Candidate Detail</h2>
+        <pre id="candidateDetail">Choose a candidate to inspect detail, artifact, extraction, and review flags.</pre>
       </div>
       <div class="panel">
-        <h2>검토 큐</h2>
-        <pre id="reviewQueue">검색 실행 전</pre>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="panel">
-        <h2>Export 내용</h2>
-        <textarea id="exportContent">아직 생성되지 않음</textarea>
-      </div>
-      <div class="panel">
-        <h2>추출 결과</h2>
-        <pre id="extraction">아직 실행되지 않음</pre>
+        <h2>Review Queue</h2>
+        <pre id="reviewQueue">The review queue for the current search appears here.</pre>
       </div>
     </div>
 
     <div class="panel">
-      <h2>PRISMA</h2>
-      <pre id="prisma">API 실행 전</pre>
+      <h2>PRISMA Flow Diagram Payload</h2>
+      <div id="prismaFlow" class="flow-stages">
+        <div class="flow-stage">Run a search to render the PRISMA flow diagram payload.</div>
+      </div>
+      <div class="grid" style="margin-top:16px;">
+        <div>
+          <h3>Edges</h3>
+          <ul id="prismaEdges" class="flow-list">
+            <li>No flow edges loaded.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Exclusion Reasons</h3>
+          <ul id="prismaReasons" class="flow-list">
+            <li>No exclusion reasons loaded.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>Export Preview</h2>
+        <textarea id="exportContent">Export content will appear here.</textarea>
+      </div>
+      <div class="panel">
+        <h2>Extraction Result</h2>
+        <pre id="extraction">Extraction responses will appear here.</pre>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>PRISMA Counts</h2>
+      <pre id="prisma">PRISMA counts will appear here.</pre>
     </div>
   </div>
 
   <script>
+    const apiBase = "http://127.0.0.1:8000/api";
+
     const runButton = document.getElementById("run");
     const exportCsvButton = document.getElementById("exportCsv");
     const exportScreeningButton = document.getElementById("exportScreening");
     const exportPrismaButton = document.getElementById("exportPrisma");
+    const exportPrismaFlowButton = document.getElementById("exportPrismaFlow");
     const exportMetaButton = document.getElementById("exportMeta");
     const exportAuditButton = document.getElementById("exportAudit");
     const decisionIncludeButton = document.getElementById("decisionInclude");
     const decisionMaybeButton = document.getElementById("decisionMaybe");
     const decisionExcludeButton = document.getElementById("decisionExclude");
     const runExtractionButton = document.getElementById("runExtraction");
+
+    const queryInput = document.getElementById("query");
     const result = document.getElementById("result");
     const summary = document.getElementById("summary");
     const prisma = document.getElementById("prisma");
+    const prismaFlow = document.getElementById("prismaFlow");
+    const prismaEdges = document.getElementById("prismaEdges");
+    const prismaReasons = document.getElementById("prismaReasons");
     const extraction = document.getElementById("extraction");
     const reviewResult = document.getElementById("reviewResult");
     const reviewQueue = document.getElementById("reviewQueue");
@@ -180,163 +470,217 @@
     const reviewReasonText = document.getElementById("reviewReasonText");
     const fullText = document.getElementById("fullText");
     const fullTextFile = document.getElementById("fullTextFile");
+
     let lastSearchId = null;
     let currentCandidates = [];
 
     function renderCandidates(items) {
       currentCandidates = items;
+
       if (!items.length) {
-        candidatesBody.innerHTML = '<tr><td colspan="4">후보 없음</td></tr>';
-        reviewCandidate.innerHTML = '<option value="">후보 없음</option>';
+        candidatesBody.innerHTML = '<tr><td colspan="5">No candidates returned.</td></tr>';
+        reviewCandidate.innerHTML = '<option value="">No candidate selected</option>';
         return;
       }
 
-      candidatesBody.innerHTML = items.map(item => `
+      candidatesBody.innerHTML = items.map((item) => `
         <tr>
           <td>${item.title}</td>
           <td><span class="badge">${item.source}</span></td>
           <td>${item.year}</td>
-          <td>${item.status}</td>
+          <td><span class="status">${item.status}</span></td>
+          <td><button class="table-button ghost" data-candidate-id="${item.id}">Select</button></td>
         </tr>
       `).join("");
 
-      const reviewItems = items.filter(item => item.canonical_record_id === item.id || item.canonical_record_id === null);
+      document.querySelectorAll("[data-candidate-id]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          reviewCandidate.value = button.dataset.candidateId;
+          await loadCandidateDetail(button.dataset.candidateId);
+        });
+      });
+
+      const reviewItems = items.filter(
+        (item) => item.canonical_record_id === item.id || item.canonical_record_id === null
+      );
+
       if (!reviewItems.length) {
-        reviewCandidate.innerHTML = '<option value="">후보 없음</option>';
+        reviewCandidate.innerHTML = '<option value="">No canonical candidate available</option>';
         return;
       }
 
       const previousValue = reviewCandidate.value;
-      reviewCandidate.innerHTML = reviewItems.map(item => `
+      reviewCandidate.innerHTML = reviewItems.map((item) => `
         <option value="${item.id}">${item.title} (${item.source}, ${item.year}, ${item.status})</option>
       `).join("");
 
-      if (reviewItems.some(item => item.id === previousValue)) {
+      if (reviewItems.some((item) => item.id === previousValue)) {
         reviewCandidate.value = previousValue;
+      } else {
+        reviewCandidate.value = reviewItems[0].id;
       }
     }
 
     function renderSearches(items) {
       if (!items.length) {
-        searchesBody.innerHTML = '<tr><td colspan="3">아직 검색 없음</td></tr>';
+        searchesBody.innerHTML = '<tr><td colspan="4">No searches available.</td></tr>';
         return;
       }
-      searchesBody.innerHTML = items.slice(0, 8).map(item => `
+
+      searchesBody.innerHTML = items.slice(0, 10).map((item) => `
         <tr>
           <td>${item.id}</td>
           <td>${item.query_text}</td>
           <td>${item.status}</td>
+          <td><button class="table-button ghost" data-search-id="${item.id}">Open</button></td>
         </tr>
       `).join("");
+
+      document.querySelectorAll("[data-search-id]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          lastSearchId = button.dataset.searchId;
+          await refreshSearchState(lastSearchId);
+        });
+      });
     }
 
-    async function loadSearches() {
-      const res = await fetch("http://127.0.0.1:8000/api/search-requests");
-      const payload = await res.json();
+    function renderPrismaFlow(payload) {
+      const stageOrder = ["identification", "screening", "retrieval", "eligibility", "included"];
+      const stageLabels = {
+        identification: "Identification",
+        screening: "Screening",
+        retrieval: "Retrieval",
+        eligibility: "Eligibility",
+        included: "Included"
+      };
+
+      const groups = stageOrder.map((stage) => ({
+        stage,
+        label: stageLabels[stage],
+        nodes: payload.nodes.filter((node) => node.stage === stage)
+      })).filter((group) => group.nodes.length);
+
+      prismaFlow.innerHTML = groups.map((group) => `
+        <div class="flow-stage">
+          <div class="flow-stage-title">${group.label}</div>
+          ${group.nodes.map((node) => `
+            <div class="flow-node">
+              <div class="flow-count">${node.count}</div>
+              <div class="flow-label">${node.label}</div>
+              <div class="flow-desc">${node.description}</div>
+            </div>
+          `).join("")}
+        </div>
+      `).join("");
+
+      prismaEdges.innerHTML = payload.edges.length
+        ? payload.edges.map((edge) => `
+            <li>${edge.source} -> ${edge.target}: ${edge.count} (${edge.label})</li>
+          `).join("")
+        : "<li>No edge data available.</li>";
+
+      prismaReasons.innerHTML = payload.exclusion_reasons.length
+        ? payload.exclusion_reasons.map((reason) => `
+            <li>${reason.reason_code}: ${reason.count}</li>
+          `).join("")
+        : "<li>No exclusion reasons recorded.</li>";
+    }
+
+    async function fetchJson(path, options) {
+      const response = await fetch(`${apiBase}${path}`, options);
+      if (!response.ok) {
+        const detail = await response.text();
+        throw new Error(`${response.status} ${response.statusText}: ${detail}`);
+      }
+      return response.json();
+    }
+
+    async function loadSearches(autoOpenLatest = false) {
+      const payload = await fetchJson("/search-requests");
       renderSearches(payload);
+
+      if (autoOpenLatest && !lastSearchId && payload.length) {
+        lastSearchId = payload[0].id;
+        await refreshSearchState(lastSearchId);
+      }
     }
 
     async function loadCandidateDetail(candidateId) {
       if (!candidateId) {
-        candidateDetail.textContent = "후보를 선택하면 상세 정보를 불러옵니다.";
+        candidateDetail.textContent = "Choose a candidate to inspect its detail payload.";
         return;
       }
-      const res = await fetch(`http://127.0.0.1:8000/api/candidates/${candidateId}`);
-      const payload = await res.json();
+
+      const payload = await fetchJson(`/candidates/${candidateId}`);
       candidateDetail.textContent = JSON.stringify(payload, null, 2);
     }
 
     async function loadReviewQueue() {
       if (!lastSearchId) {
-        reviewQueue.textContent = "검색 실행 전";
+        reviewQueue.textContent = "Run or open a search request first.";
         return;
       }
-      const res = await fetch(`http://127.0.0.1:8000/api/search-requests/${lastSearchId}/review-queue`);
-      const payload = await res.json();
+
+      const payload = await fetchJson(`/search-requests/${lastSearchId}/review-queue`);
       reviewQueue.textContent = JSON.stringify(payload, null, 2);
     }
 
+    async function loadPrismaFlow() {
+      if (!lastSearchId) {
+        prismaFlow.innerHTML = '<div class="flow-stage">Run a search to render flow nodes.</div>';
+        prismaEdges.innerHTML = "<li>No edge data available.</li>";
+        prismaReasons.innerHTML = "<li>No exclusion reasons recorded.</li>";
+        return;
+      }
+
+      const payload = await fetchJson(`/search-requests/${lastSearchId}/prisma/flow`);
+      renderPrismaFlow(payload);
+    }
+
     async function refreshSearchState(searchId) {
-      const summaryRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${searchId}/summary`);
-      const summaryJson = await summaryRes.json();
-
-      const prismaRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${searchId}/prisma`);
-      const prismaJson = await prismaRes.json();
-
-      const candidatesRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${searchId}/candidates`);
-      const candidatesJson = await candidatesRes.json();
+      const [summaryJson, prismaJson, candidatesJson] = await Promise.all([
+        fetchJson(`/search-requests/${searchId}/summary`),
+        fetchJson(`/search-requests/${searchId}/prisma`),
+        fetchJson(`/search-requests/${searchId}/candidates`)
+      ]);
 
       summary.textContent = JSON.stringify(summaryJson, null, 2);
       prisma.textContent = JSON.stringify(prismaJson, null, 2);
+
       renderCandidates(candidatesJson);
-      await loadSearches();
+      await loadSearches(false);
       await loadReviewQueue();
+      await loadPrismaFlow();
       await loadCandidateDetail(reviewCandidate.value);
     }
 
     async function loadExport(kind) {
       if (!lastSearchId) {
-        exportContent.value = "먼저 검색을 실행하세요.";
+        exportContent.value = "Run or open a search request first.";
         return;
       }
-      const map = {
-        candidates: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/candidates.csv`,
-        screening: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/screening-log.json`,
-        prisma: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/prisma-counts.json`,
-        meta: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/meta-analysis-ready.csv`,
-        audit: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/audit-report.md`
+
+      const routes = {
+        candidates: `/search-requests/${lastSearchId}/exports/candidates.csv`,
+        screening: `/search-requests/${lastSearchId}/exports/screening-log.json`,
+        prisma: `/search-requests/${lastSearchId}/exports/prisma-counts.json`,
+        prismaFlow: `/search-requests/${lastSearchId}/exports/prisma-flow.json`,
+        meta: `/search-requests/${lastSearchId}/exports/meta-analysis-ready.csv`,
+        audit: `/search-requests/${lastSearchId}/exports/audit-report.md`
       };
-      const res = await fetch(map[kind]);
-      const payload = await res.json();
+
+      const payload = await fetchJson(routes[kind]);
       exportContent.value = payload.content;
     }
 
     function selectedCandidate() {
-      return currentCandidates.find(item => item.id === reviewCandidate.value) || null;
+      return currentCandidates.find((item) => item.id === reviewCandidate.value) || null;
     }
-
-    runButton.addEventListener("click", async () => {
-      result.textContent = "요청 중...";
-      summary.textContent = "요약 대기 중...";
-      prisma.textContent = "집계 대기 중...";
-      reviewResult.textContent = "수동 선별 대기 중...";
-      reviewQueue.textContent = "검토 큐 생성 중...";
-      candidateDetail.textContent = "후보 상세 대기 중...";
-      extraction.textContent = "추출 대기 중...";
-      exportContent.value = "Export 생성 대기 중...";
-
-      try {
-        const createRes = await fetch("http://127.0.0.1:8000/api/search-requests", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query_text: document.getElementById("query").value })
-        });
-        const created = await createRes.json();
-        lastSearchId = created.id;
-
-        const runRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/run`, {
-          method: "POST"
-        });
-        const executed = await runRes.json();
-
-        result.textContent = JSON.stringify(executed, null, 2);
-        await refreshSearchState(created.id);
-        await loadExport("candidates");
-      } catch (error) {
-        result.textContent = String(error);
-        summary.textContent = "오류 발생";
-        prisma.textContent = "오류 발생";
-        reviewResult.textContent = "오류 발생";
-        reviewQueue.textContent = "오류 발생";
-        candidateDetail.textContent = "오류 발생";
-        candidatesBody.innerHTML = '<tr><td colspan="4">오류 발생</td></tr>';
-      }
-    });
 
     async function submitDecision(decision) {
       const candidate = selectedCandidate();
       if (!candidate) {
-        reviewResult.textContent = "후보를 먼저 선택하세요.";
+        reviewResult.textContent = "Select a candidate before submitting a decision.";
         return;
       }
 
@@ -348,61 +692,116 @@
         reviewed_by: "dashboard"
       };
 
-      const res = await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/decision`, {
+      const response = await fetchJson(`/candidates/${candidate.id}/decision`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const response = await res.json();
+
       reviewResult.textContent = JSON.stringify(response, null, 2);
       await refreshSearchState(lastSearchId);
       await loadExport("screening");
     }
 
+    runButton.addEventListener("click", async () => {
+      result.textContent = "Submitting search request...";
+      summary.textContent = "Loading summary...";
+      prisma.textContent = "Loading PRISMA counts...";
+      prismaFlow.innerHTML = '<div class="flow-stage">Building PRISMA flow...</div>';
+      prismaEdges.innerHTML = "<li>Building edge list...</li>";
+      prismaReasons.innerHTML = "<li>Building exclusion summary...</li>";
+      reviewResult.textContent = "Waiting for manual screening response...";
+      reviewQueue.textContent = "Loading review queue...";
+      candidateDetail.textContent = "Loading candidate detail...";
+      extraction.textContent = "Waiting for extraction...";
+      exportContent.value = "Waiting for export preview...";
+
+      try {
+        const created = await fetchJson("/search-requests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query_text: queryInput.value })
+        });
+        lastSearchId = created.id;
+
+        const executed = await fetchJson(`/search-requests/${created.id}/run`, {
+          method: "POST"
+        });
+
+        result.textContent = JSON.stringify(executed, null, 2);
+        await refreshSearchState(created.id);
+        await loadExport("candidates");
+      } catch (error) {
+        result.textContent = String(error);
+        summary.textContent = "Search execution failed.";
+        prisma.textContent = "Search execution failed.";
+        prismaFlow.innerHTML = '<div class="flow-stage">Search execution failed.</div>';
+        prismaEdges.innerHTML = "<li>Search execution failed.</li>";
+        prismaReasons.innerHTML = "<li>Search execution failed.</li>";
+        reviewResult.textContent = "Search execution failed.";
+        reviewQueue.textContent = "Search execution failed.";
+        candidateDetail.textContent = "Search execution failed.";
+        candidatesBody.innerHTML = '<tr><td colspan="5">Search execution failed.</td></tr>';
+      }
+    });
+
     decisionIncludeButton.addEventListener("click", async () => {
-      try { await submitDecision("include"); } catch (error) { reviewResult.textContent = String(error); }
+      try {
+        await submitDecision("include");
+      } catch (error) {
+        reviewResult.textContent = String(error);
+      }
     });
 
     decisionMaybeButton.addEventListener("click", async () => {
-      try { await submitDecision("needs_human_review"); } catch (error) { reviewResult.textContent = String(error); }
+      try {
+        await submitDecision("needs_human_review");
+      } catch (error) {
+        reviewResult.textContent = String(error);
+      }
     });
 
     decisionExcludeButton.addEventListener("click", async () => {
-      try { await submitDecision("exclude"); } catch (error) { reviewResult.textContent = String(error); }
+      try {
+        await submitDecision("exclude");
+      } catch (error) {
+        reviewResult.textContent = String(error);
+      }
     });
 
     runExtractionButton.addEventListener("click", async () => {
       try {
         const candidate = selectedCandidate();
         if (!candidate) {
-          extraction.textContent = "후보를 먼저 선택하세요.";
+          extraction.textContent = "Select a candidate before running extraction.";
           return;
         }
 
         const selectedFile = fullTextFile.files[0];
+
         if (selectedFile) {
           const formData = new FormData();
           formData.append("file", selectedFile);
-          await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/full-text-file`, {
+          await fetchJson(`/candidates/${candidate.id}/full-text-file`, {
             method: "POST",
             body: formData
           });
         } else {
-          await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/full-text`, {
+          await fetchJson(`/candidates/${candidate.id}/full-text`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              file_name: "demo.txt",
+              file_name: "dashboard-demo.txt",
               mime_type: "text/plain",
               text_content: fullText.value
             })
           });
         }
 
-        const res = await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/extract`, {
+        const payload = await fetchJson(`/candidates/${candidate.id}/extract`, {
           method: "POST"
         });
-        const payload = await res.json();
+
         extraction.textContent = JSON.stringify(payload, null, 2);
         await refreshSearchState(lastSearchId);
         await loadExport("meta");
@@ -412,30 +811,62 @@
     });
 
     exportCsvButton.addEventListener("click", async () => {
-      try { await loadExport("candidates"); } catch (error) { exportContent.value = String(error); }
+      try {
+        await loadExport("candidates");
+      } catch (error) {
+        exportContent.value = String(error);
+      }
     });
 
     exportScreeningButton.addEventListener("click", async () => {
-      try { await loadExport("screening"); } catch (error) { exportContent.value = String(error); }
+      try {
+        await loadExport("screening");
+      } catch (error) {
+        exportContent.value = String(error);
+      }
     });
 
     exportPrismaButton.addEventListener("click", async () => {
-      try { await loadExport("prisma"); } catch (error) { exportContent.value = String(error); }
+      try {
+        await loadExport("prisma");
+      } catch (error) {
+        exportContent.value = String(error);
+      }
+    });
+
+    exportPrismaFlowButton.addEventListener("click", async () => {
+      try {
+        await loadExport("prismaFlow");
+      } catch (error) {
+        exportContent.value = String(error);
+      }
     });
 
     exportMetaButton.addEventListener("click", async () => {
-      try { await loadExport("meta"); } catch (error) { exportContent.value = String(error); }
+      try {
+        await loadExport("meta");
+      } catch (error) {
+        exportContent.value = String(error);
+      }
     });
 
     exportAuditButton.addEventListener("click", async () => {
-      try { await loadExport("audit"); } catch (error) { exportContent.value = String(error); }
+      try {
+        await loadExport("audit");
+      } catch (error) {
+        exportContent.value = String(error);
+      }
     });
 
     reviewCandidate.addEventListener("change", async () => {
-      try { await loadCandidateDetail(reviewCandidate.value); } catch (error) { candidateDetail.textContent = String(error); }
+      try {
+        await loadCandidateDetail(reviewCandidate.value);
+      } catch (error) {
+        candidateDetail.textContent = String(error);
+      }
     });
 
-    loadSearches().catch(() => {});
+    loadSearches(true).catch(() => {});
   </script>
 </body>
 </html>
