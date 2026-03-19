@@ -29,11 +29,12 @@ from app.schemas.search import SearchRequestCreate
 
 
 class SQLAlchemyStore:
-    def __init__(self, database_url: str) -> None:
+    def __init__(self, database_url: str, auto_create_tables: bool = True) -> None:
         self.database_url = self._normalize_url(database_url)
         self.engine = self._create_engine(self.database_url)
         self.SessionLocal = sessionmaker(bind=self.engine, expire_on_commit=False, class_=Session)
-        Base.metadata.create_all(self.engine)
+        if auto_create_tables:
+            Base.metadata.create_all(self.engine)
 
     def _normalize_url(self, database_url: str) -> str:
         if database_url.startswith("sqlite:///"):

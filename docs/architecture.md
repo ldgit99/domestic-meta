@@ -5,6 +5,7 @@
 - `backend/app/main.py`: FastAPI entrypoint
 - `backend/app/repositories/file_store.py`: JSON file-backed repository
 - `backend/app/repositories/sqlalchemy_store.py`: `SQLAlchemy` repository for `PostgreSQL` or `SQLite`
+- `backend/alembic`: Alembic environment and initial relational migration
 - `backend/app/repositories/db_models.py`: relational schema for searches, candidates, decisions, PRISMA, artifacts, and extraction results
 - `backend/app/services/orchestrator.py`: collection, reset-on-rerun, deduplication, title and abstract screening, PRISMA recalculation
 - `backend/app/services/search_management.py`: manual review and full-text registration with PRISMA refresh
@@ -46,7 +47,9 @@
 
 - storage backend is selected by `REPOSITORY_BACKEND`
 - `file` mode persists state under `backend/data/store.json`
-- `sqlalchemy` mode persists state to `DATABASE_URL` and auto-creates tables
+- `sqlalchemy` mode persists state to `DATABASE_URL` and can auto-create tables when enabled
+- `AUTO_CREATE_TABLES` controls whether `SQLAlchemyStore` calls `Base.metadata.create_all(...)`
+- Alembic can manage the same schema through `backend/alembic` and `alembic upgrade head`
 - uploaded files persist under `backend/uploads`
 - rerunning a search clears prior candidates, decisions, PRISMA counts, artifacts, and extraction results for that search
 - `KCI` live collection is attempted only when configured; otherwise the service falls back to stub data
@@ -71,6 +74,6 @@
 ## Next implementation targets
 
 - production-safe `RISS` response mapping
-- migration tooling and operational hardening for `PostgreSQL`
+- deployment validation and rollback procedures for Alembic-managed `PostgreSQL`
 - OCR pipeline and stronger PDF parsing
 - authentication and user-level isolation

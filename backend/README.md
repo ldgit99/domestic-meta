@@ -24,13 +24,31 @@ FastAPI backend for the domestic education meta-analysis prototype.
 
 - `REPOSITORY_BACKEND=file`: JSON persistence under `backend/data/store.json`
 - `REPOSITORY_BACKEND=sqlalchemy`: relational persistence using `DATABASE_URL`
+- `AUTO_CREATE_TABLES=true|false`: dev convenience toggle for `Base.metadata.create_all(...)`
 
 Example:
 
 - `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/rissmeta`
 
-`SQLAlchemy` mode currently auto-creates tables at startup. Operational deployments should add an
-explicit migration workflow next.
+`SQLAlchemy` mode can auto-create tables at startup, but Alembic is now included for explicit
+schema management.
+
+## Alembic migrations
+
+Initial Alembic scaffolding and an initial schema migration are included under `backend/alembic`.
+
+Common commands:
+
+```bash
+cd backend
+alembic upgrade head
+alembic downgrade -1
+```
+
+Recommended usage:
+
+- keep `AUTO_CREATE_TABLES=true` for quick local prototypes
+- set `AUTO_CREATE_TABLES=false` when schema should be managed only through Alembic
 
 ## KCI collection
 
@@ -92,5 +110,5 @@ Uploaded files are stored under `backend/uploads`. TXT is read directly. PDF tex
 ## Next work items
 
 - production-safe RISS field mapping
-- database migration tooling
+- deployment validation for Alembic migrations
 - OCR pipeline and stronger PDF parsing

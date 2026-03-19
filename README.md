@@ -36,6 +36,7 @@ cd backend
 python -m venv .venv
 .venv\Scripts\activate
 pip install -e .
+alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
@@ -57,12 +58,18 @@ Key settings:
 
 - `REPOSITORY_BACKEND=file|sqlalchemy`
 - `DATABASE_URL=postgresql+psycopg://...`
+- `AUTO_CREATE_TABLES=true|false`
 - `KCI_LIVE_ENABLED=true`
 - `RISS_LIVE_ENABLED=true`
 - `OPENAI_API_KEY=...`
 
 When live collection or OpenAI extraction is not configured, the prototype falls back to local
 stub data or heuristic extraction.
+
+If you are using `REPOSITORY_BACKEND=sqlalchemy` for a persistent relational database, prefer:
+
+- `alembic upgrade head` to create or advance schema
+- `AUTO_CREATE_TABLES=false` in shared or production environments
 
 ### Frontend
 
@@ -107,6 +114,6 @@ The dashboard currently supports:
 ## Open items
 
 - production validation of `RISS` endpoint mapping
-- migration tooling for operational `PostgreSQL`
+- deployment pipeline validation for Alembic-based `PostgreSQL` upgrades
 - OCR and stronger PDF parsing
 - authentication and multi-user separation

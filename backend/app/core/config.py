@@ -17,6 +17,7 @@ class Settings(BaseModel):
     store_file: str = str(DATA_DIR / "store.json")
     repository_backend: str = os.getenv("REPOSITORY_BACKEND", "file").lower()
     database_url: str | None = os.getenv("DATABASE_URL")
+    auto_create_tables: bool = os.getenv("AUTO_CREATE_TABLES", "true").lower() == "true"
     kci_live_enabled: bool = os.getenv("KCI_LIVE_ENABLED", "false").lower() == "true"
     kci_api_url: str | None = os.getenv("KCI_API_URL")
     kci_api_key: str | None = os.getenv("KCI_API_KEY")

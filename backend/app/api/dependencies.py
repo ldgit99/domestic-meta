@@ -17,7 +17,10 @@ def _build_store():
     if settings.repository_backend == "sqlalchemy":
         if not settings.database_url:
             raise ValueError("DATABASE_URL must be set when REPOSITORY_BACKEND=sqlalchemy")
-        return SQLAlchemyStore(settings.database_url)
+        return SQLAlchemyStore(
+            settings.database_url,
+            auto_create_tables=settings.auto_create_tables,
+        )
     raise ValueError(f"Unsupported REPOSITORY_BACKEND: {settings.repository_backend}")
 
 
