@@ -25,7 +25,7 @@ The repository already includes research and planning documents plus a working p
 - TXT and PDF full-text ingestion
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries and meta-analysis-ready CSV export
-- export endpoints for candidates, screening, PRISMA, extraction, meta-analysis, and audit reports
+- export endpoints for search manifests, candidates, screening, PRISMA, extraction, meta-analysis, and audit reports
 
 ## Quick start
 
@@ -85,6 +85,7 @@ The dashboard currently supports:
 - uploading TXT or PDF full text
 - running extraction
 - previewing export content
+- exporting a reproducible search manifest with criteria and PRISMA flow payloads
 
 ## Key API endpoints
 
@@ -104,6 +105,7 @@ The dashboard currently supports:
 - `GET /api/search-requests/{id}/prisma`
 - `GET /api/search-requests/{id}/prisma/flow`
 - `GET /api/search-requests/{id}/exports/candidates.csv`
+- `GET /api/search-requests/{id}/exports/search-request.json`
 - `GET /api/search-requests/{id}/exports/screening-log.json`
 - `GET /api/search-requests/{id}/exports/prisma-counts.json`
 - `GET /api/search-requests/{id}/exports/prisma-flow.json`

@@ -1,5 +1,6 @@
 import json
 
+from app.core.constants import FULL_TEXT_STAGE, TITLE_ABSTRACT_STAGE
 from app.models.domain import CandidateRecord, EligibilityDecision, ExtractionResult, PrismaCounts, SearchRequest
 from app.services.effect_size import EffectSizeService
 from app.services.prisma import PrismaService
@@ -12,12 +13,27 @@ class ExportService:
 
     def candidates_csv(self, search_request_id: str, candidates: list[CandidateRecord]) -> dict:
         lines = [
-            "id,source,title,year,document_type,status,canonical_record_id,duplicate_group_id"
+            "id,source,document_type,title,authors,year,journal_or_school,status,doi,url,keywords,canonical_record_id,duplicate_group_id"
         ]
         for item in candidates:
-            title = item.title.replace('"', "'")
             lines.append(
-                f'{item.id},{item.source},"{title}",{item.year},{item.document_type},{item.status},{item.canonical_record_id or ""},{item.duplicate_group_id or ""}'
+                self._csv_line(
+                    [
+                        item.id,
+                        item.source,
+                        item.document_type,
+                        item.title,
+                        "|".join(item.authors),
+                        item.year,
+                        item.journal_or_school,
+                        item.status,
+                        item.doi or "",
+                        item.url or "",
+                        "|".join(item.keywords),
+                        item.canonical_record_id or "",
+                        item.duplicate_group_id or "",
+                    ]
+                )
             )
 
         return {
@@ -30,26 +46,87 @@ class ExportService:
     def screening_log_json(
         self,
         search_request_id: str,
+        candidates: list[CandidateRecord],
         decisions: list[EligibilityDecision],
     ) -> dict:
-        payload = [
-            {
-                "id": item.id,
-                "candidate_record_id": item.candidate_record_id,
-                "stage": item.stage,
-                "decision": item.decision,
-                "reason_code": item.reason_code,
-                "reason_text": item.reason_text,
-                "confidence": item.confidence,
-                "reviewed_by": item.reviewed_by,
-                "created_at": item.created_at,
-            }
-            for item in decisions
-        ]
+        candidate_map = {item.id: item for item in candidates}
+        payload = []
+        for item in sorted(decisions, key=lambda decision: (decision.created_at, decision.stage, decision.id)):
+            candidate = candidate_map.get(item.candidate_record_id)
+            payload.append(
+                {
+                    "id": item.id,
+                    "candidate_record_id": item.candidate_record_id,
+                    "candidate_title": candidate.title if candidate else None,
+                    "candidate_source": candidate.source if candidate else None,
+                    "candidate_year": candidate.year if candidate else None,
+                    "candidate_document_type": candidate.document_type if candidate else None,
+                    "candidate_status": candidate.status if candidate else None,
+                    "stage": item.stage,
+                    "decision": item.decision,
+                    "reason_code": item.reason_code,
+                    "reason_text": item.reason_text,
+                    "confidence": item.confidence,
+                    "reviewed_by": item.reviewed_by,
+                    "created_at": item.created_at,
+                }
+            )
         return {
             "search_request_id": search_request_id,
             "content_type": "application/json",
             "file_name": f"{search_request_id}_screening_log.json",
+            "content": json.dumps(payload, ensure_ascii=False, indent=2),
+        }
+
+    def search_request_manifest_json(
+        self,
+        search_request: SearchRequest,
+        counts: PrismaCounts,
+        candidates: list[CandidateRecord],
+        decisions: list[EligibilityDecision],
+        results: list[ExtractionResult],
+    ) -> dict:
+        payload = {
+            "search_request": {
+                "id": search_request.id,
+                "query_text": search_request.query_text,
+                "expanded_keywords": search_request.expanded_keywords,
+                "year_from": search_request.year_from,
+                "year_to": search_request.year_to,
+                "include_theses": search_request.include_theses,
+                "include_journal_articles": search_request.include_journal_articles,
+                "inclusion_rules": search_request.inclusion_rules,
+                "exclusion_rules": search_request.exclusion_rules,
+                "status": search_request.status,
+                "created_at": search_request.created_at,
+            },
+            "summary": {
+                "candidate_count": len(candidates),
+                "canonical_candidate_count": len(
+                    [item for item in candidates if item.canonical_record_id in {None, item.id}]
+                ),
+                "decision_count": len(decisions),
+                "extraction_count": len(results),
+                "source_counts": self._source_counts(candidates),
+                "status_counts": self._status_counts(candidates),
+            },
+            "prisma_counts": {
+                "identified_records": counts.identified_records,
+                "duplicate_records_removed": counts.duplicate_records_removed,
+                "records_screened": counts.records_screened,
+                "records_excluded": counts.records_excluded,
+                "reports_sought_for_retrieval": counts.reports_sought_for_retrieval,
+                "reports_not_retrieved": counts.reports_not_retrieved,
+                "reports_assessed_for_eligibility": counts.reports_assessed_for_eligibility,
+                "reports_excluded_with_reasons_json": counts.reports_excluded_with_reasons_json,
+                "studies_included_in_review": counts.studies_included_in_review,
+            },
+            "prisma_flow": self.prisma.build_flow(search_request.id, counts),
+        }
+        return {
+            "search_request_id": search_request.id,
+            "content_type": "application/json",
+            "file_name": f"{search_request.id}_search_request.json",
             "content": json.dumps(payload, ensure_ascii=False, indent=2),
         }
 
@@ -111,17 +188,20 @@ class ExportService:
         self,
         search_request_id: str,
         candidates: list[CandidateRecord],
+        decisions: list[EligibilityDecision],
         results: list[ExtractionResult],
     ) -> dict:
         result_map = {item.candidate_id: item for item in results}
+        latest_decision_map = self._latest_decision_map(decisions)
         lines = [
-            "candidate_id,title,year,study_design,is_meta_analytic_ready,recommended_effect_type,computation_method,computed_metric,computed_value,computed_variance,sample_size_total,intervention_or_predictor,comparison,confidence,status,missing_inputs,review_flags"
+            "candidate_id,source,document_type,title,year,latest_decision_stage,latest_decision,study_design,is_meta_analytic_ready,recommended_effect_type,computation_method,computed_metric,computed_value,computed_variance,sample_size_total,intervention_or_predictor,comparison,confidence,status,missing_inputs,review_flags"
         ]
         for candidate in candidates:
             result = result_map.get(candidate.id)
             if result is None:
                 continue
 
+            latest_decision = latest_decision_map.get(candidate.id)
             fields = result.fields_json or {}
             participants = fields.get("participants", {})
             effect = fields.get("effect_size_inputs", {})
@@ -131,8 +211,12 @@ class ExportService:
                 self._csv_line(
                     [
                         candidate.id,
+                        candidate.source,
+                        candidate.document_type,
                         candidate.title,
                         candidate.year,
+                        latest_decision.stage if latest_decision else "",
+                        latest_decision.decision if latest_decision else "",
                         fields.get("study_design", ""),
                         effect.get("is_meta_analytic_ready", False),
                         summary.get("recommended_effect_type") or "",
@@ -167,13 +251,32 @@ class ExportService:
         results: list[ExtractionResult],
     ) -> dict:
         result_map = {item.candidate_id: item for item in results}
-        decision_map = {item.candidate_record_id: item for item in decisions}
+        title_decision_map = self._latest_decision_map(decisions, stage=TITLE_ABSTRACT_STAGE)
+        full_text_decision_map = self._latest_decision_map(decisions, stage=FULL_TEXT_STAGE)
         lines = [
             f"# Audit Report: {search_request.query_text}",
+            "",
+            "## Search Criteria",
             "",
             f"- Search Request ID: `{search_request.id}`",
             f"- Status: `{search_request.status}`",
             f"- Created At: `{search_request.created_at}`",
+            f"- Query Text: `{search_request.query_text}`",
+            f"- Expanded Keywords: {', '.join(search_request.expanded_keywords) if search_request.expanded_keywords else 'None'}",
+            f"- Year Range: {search_request.year_from} to {search_request.year_to}",
+            f"- Include Theses: `{search_request.include_theses}`",
+            f"- Include Journal Articles: `{search_request.include_journal_articles}`",
+            f"- Inclusion Rules: {', '.join(search_request.inclusion_rules) if search_request.inclusion_rules else 'None'}",
+            f"- Exclusion Rules: {', '.join(search_request.exclusion_rules) if search_request.exclusion_rules else 'None'}",
+            "",
+            "## Search Inventory",
+            "",
+            f"- Candidate count: {len(candidates)}",
+            f"- Canonical candidate count: {len([item for item in candidates if item.canonical_record_id in {None, item.id}])}",
+            f"- Decision count: {len(decisions)}",
+            f"- Extraction count: {len(results)}",
+            f"- Source counts: {self._format_mapping(self._source_counts(candidates))}",
+            f"- Status counts: {self._format_mapping(self._status_counts(candidates))}",
             "",
             "## PRISMA Summary",
             "",
@@ -188,12 +291,11 @@ class ExportService:
             "",
             "## Candidate Snapshot",
             "",
-            "| Candidate | Source | Status | Decision | Extraction | Effect | Review Flags |",
-            "| --- | --- | --- | --- | --- | --- | --- |",
+            "| Candidate | Source | Year | Status | TA Decision | FT Decision | Extraction | Effect | Review Flags |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
         ]
 
         for candidate in candidates:
-            decision = decision_map.get(candidate.id)
             extraction = result_map.get(candidate.id)
             summary = self.effect_sizes.summarize(extraction.fields_json if extraction else None)
             computed = summary.get("computed_effect_size") or {}
@@ -204,15 +306,18 @@ class ExportService:
                 effect_label = str(summary.get("recommended_effect_type"))
 
             lines.append(
-                f"| {candidate.title} | {candidate.source} | {candidate.status} | {decision.decision if decision else ''} | {extraction.status if extraction else ''} | {effect_label} | {'; '.join(summary.get('review_flags', []))} |"
+                f"| {candidate.title} | {candidate.source} | {candidate.year} | {candidate.status} | {title_decision_map.get(candidate.id).decision if title_decision_map.get(candidate.id) else ''} | {full_text_decision_map.get(candidate.id).decision if full_text_decision_map.get(candidate.id) else ''} | {extraction.status if extraction else ''} | {effect_label} | {'; '.join(summary.get('review_flags', []))} |"
             )
 
         lines.extend(["", "## Exclusion Reasons", ""])
         if counts.reports_excluded_with_reasons_json:
-            for key, value in counts.reports_excluded_with_reasons_json.items():
+            for key, value in sorted(
+                counts.reports_excluded_with_reasons_json.items(),
+                key=lambda item: (-item[1], item[0]),
+            ):
                 lines.append(f"- `{key}`: {value}")
         else:
-            lines.append("- 없음")
+            lines.append("- None")
 
         return {
             "search_request_id": search_request.id,
@@ -220,6 +325,35 @@ class ExportService:
             "file_name": f"{search_request.id}_audit_report.md",
             "content": "\n".join(lines),
         }
+
+    def _source_counts(self, candidates: list[CandidateRecord]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for candidate in candidates:
+            counts[candidate.source] = counts.get(candidate.source, 0) + 1
+        return counts
+
+    def _status_counts(self, candidates: list[CandidateRecord]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for candidate in candidates:
+            counts[candidate.status] = counts.get(candidate.status, 0) + 1
+        return counts
+
+    def _latest_decision_map(
+        self,
+        decisions: list[EligibilityDecision],
+        stage: str | None = None,
+    ) -> dict[str, EligibilityDecision]:
+        output: dict[str, EligibilityDecision] = {}
+        for item in sorted(decisions, key=lambda decision: (decision.created_at, decision.id)):
+            if stage is not None and item.stage != stage:
+                continue
+            output[item.candidate_record_id] = item
+        return output
+
+    def _format_mapping(self, values: dict[str, int]) -> str:
+        if not values:
+            return "None"
+        return ", ".join(f"{key}={value}" for key, value in sorted(values.items()))
 
     def _csv_line(self, values: list[object]) -> str:
         return ",".join(self._csv_value(value) for value in values)

@@ -368,6 +368,7 @@ interview</textarea>
       </div>
       <div class="actions">
         <button id="run">Run Search</button>
+        <button id="exportManifest" class="secondary">Search Manifest</button>
         <button id="exportCsv" class="secondary">Candidates CSV</button>
         <button id="exportScreening" class="secondary">Screening Log</button>
         <button id="exportPrisma" class="secondary">PRISMA Counts</button>
@@ -518,6 +519,7 @@ interview</textarea>
     const apiBase = "http://127.0.0.1:8000/api";
 
     const runButton = document.getElementById("run");
+    const exportManifestButton = document.getElementById("exportManifest");
     const exportCsvButton = document.getElementById("exportCsv");
     const exportScreeningButton = document.getElementById("exportScreening");
     const exportPrismaButton = document.getElementById("exportPrisma");
@@ -796,6 +798,7 @@ interview</textarea>
       }
 
       const routes = {
+        manifest: `/search-requests/${lastSearchId}/exports/search-request.json`,
         candidates: `/search-requests/${lastSearchId}/exports/candidates.csv`,
         screening: `/search-requests/${lastSearchId}/exports/screening-log.json`,
         prisma: `/search-requests/${lastSearchId}/exports/prisma-counts.json`,
@@ -957,6 +960,14 @@ interview</textarea>
     exportCsvButton.addEventListener("click", async () => {
       try {
         await loadExport("candidates");
+      } catch (error) {
+        exportContent.value = String(error);
+      }
+    });
+
+    exportManifestButton.addEventListener("click", async () => {
+      try {
+        await loadExport("manifest");
       } catch (error) {
         exportContent.value = String(error);
       }

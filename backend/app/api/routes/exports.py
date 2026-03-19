@@ -27,7 +27,32 @@ def export_screening_log_json(
 ) -> ExportPayloadRead:
     if store.get_search_request(search_request_id) is None:
         raise HTTPException(status_code=404, detail="Search request not found")
-    payload = service.screening_log_json(search_request_id, store.list_decisions_for_search(search_request_id))
+    payload = service.screening_log_json(
+        search_request_id,
+        store.list_candidates(search_request_id),
+        store.list_decisions_for_search(search_request_id),
+    )
+    return ExportPayloadRead.model_validate(payload)
+
+
+@router.get("/search-requests/{search_request_id}/exports/search-request.json", response_model=ExportPayloadRead)
+def export_search_request_manifest_json(
+    search_request_id: str,
+    store=Depends(get_store),
+) -> ExportPayloadRead:
+    search_request = store.get_search_request(search_request_id)
+    if search_request is None:
+        raise HTTPException(status_code=404, detail="Search request not found")
+    counts = store.get_prisma_counts(search_request_id)
+    if counts is None:
+        raise HTTPException(status_code=404, detail="PRISMA counts not found")
+    payload = service.search_request_manifest_json(
+        search_request,
+        counts,
+        store.list_candidates(search_request_id),
+        store.list_decisions_for_search(search_request_id),
+        store.list_extraction_results_for_search(search_request_id),
+    )
     return ExportPayloadRead.model_validate(payload)
 
 
@@ -83,6 +108,7 @@ def export_meta_analysis_ready_csv(
     payload = service.meta_analysis_ready_csv(
         search_request_id,
         store.list_candidates(search_request_id),
+        store.list_decisions_for_search(search_request_id),
         store.list_extraction_results_for_search(search_request_id),
     )
     return ExportPayloadRead.model_validate(payload)

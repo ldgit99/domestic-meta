@@ -36,6 +36,7 @@
 - `GET /api/search-requests/{id}/prisma`
 - `GET /api/search-requests/{id}/prisma/flow`
 - `GET /api/search-requests/{id}/exports/candidates.csv`
+- `GET /api/search-requests/{id}/exports/search-request.json`
 - `GET /api/search-requests/{id}/exports/screening-log.json`
 - `GET /api/search-requests/{id}/exports/prisma-counts.json`
 - `GET /api/search-requests/{id}/exports/prisma-flow.json`
@@ -70,6 +71,7 @@
 - upload TXT or PDF full text
 - run extraction and inspect extraction JSON
 - preview export payloads for candidates, screening logs, PRISMA counts, PRISMA flow, meta-analysis CSV, and audit reports
+- preview a reproducible search manifest export with criteria, counts, and PRISMA flow payload
 
 ## Next implementation targets
 
