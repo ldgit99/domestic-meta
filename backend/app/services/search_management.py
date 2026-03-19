@@ -34,6 +34,20 @@ class SearchManagementService:
         )
         self.store.update_candidate(candidate)
         self.refresh_prisma(candidate.search_request_id)
+        self.store.log_event(
+            candidate.search_request_id,
+            "manual_decision_recorded",
+            f"Recorded {payload.stage} decision '{payload.decision}' for candidate '{candidate.title}'.",
+            stage=payload.stage,
+            status="completed",
+            candidate_id=candidate_id,
+            metadata_json={
+                "decision": payload.decision,
+                "reason_code": payload.reason_code,
+                "reviewed_by": payload.reviewed_by,
+                "candidate_status": candidate.status,
+            },
+        )
         return decision
 
     def register_full_text(
@@ -50,6 +64,21 @@ class SearchManagementService:
         candidate.status = self._status_for_artifact(artifact.text_extraction_status)
         self.store.update_candidate(candidate)
         self.refresh_prisma(candidate.search_request_id)
+        self.store.log_event(
+            candidate.search_request_id,
+            "full_text_registered",
+            f"Registered full text '{artifact.file_name}' with text status '{artifact.text_extraction_status}'.",
+            stage="full_text",
+            status="completed" if artifact.text_extraction_status == "available" else "attention",
+            candidate_id=candidate_id,
+            metadata_json={
+                "file_name": artifact.file_name,
+                "mime_type": artifact.mime_type,
+                "text_extraction_status": artifact.text_extraction_status,
+                "stored_path": artifact.stored_path,
+                "candidate_status": candidate.status,
+            },
+        )
         return artifact
 
     def refresh_prisma(self, search_request_id: str) -> None:

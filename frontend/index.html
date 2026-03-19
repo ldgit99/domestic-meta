@@ -376,6 +376,7 @@ interview</textarea>
         <button id="exportPrismaFlow" class="secondary">PRISMA Flow</button>
         <button id="exportMeta" class="secondary">Meta CSV</button>
         <button id="exportAudit" class="secondary">Audit Report</button>
+        <button id="exportEvents" class="secondary">Events Log</button>
       </div>
     </div>
 
@@ -484,6 +485,10 @@ interview</textarea>
         <h2>Review Queue</h2>
         <pre id="reviewQueue">The review queue for the current search appears here.</pre>
       </div>
+      <div class="panel">
+        <h2>Activity Timeline</h2>
+        <pre id="events">Search events will appear here.</pre>
+      </div>
     </div>
 
     <div class="panel">
@@ -550,6 +555,7 @@ interview</textarea>
     const exportPrismaFlowButton = document.getElementById("exportPrismaFlow");
     const exportMetaButton = document.getElementById("exportMeta");
     const exportAuditButton = document.getElementById("exportAudit");
+    const exportEventsButton = document.getElementById("exportEvents");
     const decisionIncludeButton = document.getElementById("decisionInclude");
     const decisionMaybeButton = document.getElementById("decisionMaybe");
     const decisionExcludeButton = document.getElementById("decisionExclude");
@@ -573,6 +579,7 @@ interview</textarea>
     const extraction = document.getElementById("extraction");
     const reviewResult = document.getElementById("reviewResult");
     const reviewQueue = document.getElementById("reviewQueue");
+    const eventsView = document.getElementById("events");
     const candidateDetail = document.getElementById("candidateDetail");
     const candidatesBody = document.getElementById("candidates");
     const searchesBody = document.getElementById("searches");
@@ -674,6 +681,19 @@ interview</textarea>
           await refreshSearchState(lastSearchId);
         });
       });
+    }
+
+    function renderEvents(items) {
+      if (!items.length) {
+        eventsView.textContent = "No search events recorded yet.";
+        return;
+      }
+
+      eventsView.textContent = items.map((item) => {
+        const candidateLabel = item.candidate_id ? ` candidate=${item.candidate_id}` : "";
+        const stageLabel = item.stage ? ` [${item.stage}]` : "";
+        return `${item.created_at} | ${item.status} | ${item.event_type}${stageLabel}${candidateLabel} | ${item.message}`;
+      }).join("\n");
     }
 
     function renderPrismaFlow(payload) {
@@ -799,15 +819,17 @@ interview</textarea>
     }
 
     async function refreshSearchState(searchId) {
-      const [summaryJson, prismaJson, candidatesJson] = await Promise.all([
+      const [summaryJson, prismaJson, candidatesJson, eventsJson] = await Promise.all([
         fetchJson(`/search-requests/${searchId}/summary`),
         fetchJson(`/search-requests/${searchId}/prisma`),
-        fetchJson(`/search-requests/${searchId}/candidates`)
+        fetchJson(`/search-requests/${searchId}/candidates`),
+        fetchJson(`/search-requests/${searchId}/events`)
       ]);
 
       populateSearchForm(summaryJson);
       summary.textContent = JSON.stringify(summaryJson, null, 2);
       prisma.textContent = JSON.stringify(prismaJson, null, 2);
+      renderEvents(eventsJson);
 
       renderCandidates(candidatesJson);
       await loadSearches(false);
@@ -829,7 +851,8 @@ interview</textarea>
         prisma: `/search-requests/${lastSearchId}/exports/prisma-counts.json`,
         prismaFlow: `/search-requests/${lastSearchId}/exports/prisma-flow.json`,
         meta: `/search-requests/${lastSearchId}/exports/meta-analysis-ready.csv`,
-        audit: `/search-requests/${lastSearchId}/exports/audit-report.md`
+        audit: `/search-requests/${lastSearchId}/exports/audit-report.md`,
+        events: `/search-requests/${lastSearchId}/exports/events.json`
       };
 
       const payload = await fetchJson(routes[kind]);
@@ -875,6 +898,7 @@ interview</textarea>
       prismaReasons.innerHTML = "<li>Building exclusion summary...</li>";
       reviewResult.textContent = "Waiting for manual screening response...";
       reviewQueue.textContent = "Loading review queue...";
+      eventsView.textContent = "Loading search events...";
       candidateDetail.textContent = "Loading candidate detail...";
       extraction.textContent = "Waiting for extraction...";
       exportContent.value = "Waiting for export preview...";
@@ -912,6 +936,7 @@ interview</textarea>
         prismaReasons.innerHTML = "<li>Search execution failed.</li>";
         reviewResult.textContent = "Search execution failed.";
         reviewQueue.textContent = "Search execution failed.";
+        eventsView.textContent = "Search execution failed.";
         candidateDetail.textContent = "Search execution failed.";
         candidatesBody.innerHTML = '<tr><td colspan="5">Search execution failed.</td></tr>';
       }
@@ -1052,6 +1077,14 @@ interview</textarea>
     exportAuditButton.addEventListener("click", async () => {
       try {
         await loadExport("audit");
+      } catch (error) {
+        exportContent.value = String(error);
+      }
+    });
+
+    exportEventsButton.addEventListener("click", async () => {
+      try {
+        await loadExport("events");
       } catch (error) {
         exportContent.value = String(error);
       }

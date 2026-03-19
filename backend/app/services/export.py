@@ -6,6 +6,7 @@ from app.models.domain import (
     EligibilityDecision,
     ExtractionResult,
     FullTextArtifact,
+    PipelineEvent,
     PrismaCounts,
     SearchRequest,
 )
@@ -93,6 +94,7 @@ class ExportService:
         decisions: list[EligibilityDecision],
         results: list[ExtractionResult],
         artifacts: list[FullTextArtifact],
+        events: list[PipelineEvent],
     ) -> dict:
         payload = {
             "search_request": {
@@ -115,6 +117,8 @@ class ExportService:
                 ),
                 "decision_count": len(decisions),
                 "extraction_count": len(results),
+                "event_count": len(events),
+                "latest_event_at": events[0].created_at if events else None,
                 "source_counts": self._source_counts(candidates),
                 "status_counts": self._status_counts(candidates),
                 "full_text_status_counts": self._full_text_status_counts(artifacts),
@@ -166,6 +170,32 @@ class ExportService:
             "search_request_id": search_request_id,
             "content_type": "application/json",
             "file_name": f"{search_request_id}_prisma_flow.json",
+            "content": json.dumps(payload, ensure_ascii=False, indent=2),
+        }
+
+    def events_json(
+        self,
+        search_request_id: str,
+        events: list[PipelineEvent],
+    ) -> dict:
+        payload = [
+            {
+                "id": item.id,
+                "search_request_id": item.search_request_id,
+                "event_type": item.event_type,
+                "status": item.status,
+                "message": item.message,
+                "stage": item.stage,
+                "candidate_id": item.candidate_id,
+                "metadata_json": item.metadata_json,
+                "created_at": item.created_at,
+            }
+            for item in sorted(events, key=lambda event: (event.created_at, event.id))
+        ]
+        return {
+            "search_request_id": search_request_id,
+            "content_type": "application/json",
+            "file_name": f"{search_request_id}_events.json",
             "content": json.dumps(payload, ensure_ascii=False, indent=2),
         }
 
@@ -259,6 +289,7 @@ class ExportService:
         decisions: list[EligibilityDecision],
         results: list[ExtractionResult],
         artifacts: list[FullTextArtifact],
+        events: list[PipelineEvent],
     ) -> dict:
         result_map = {item.candidate_id: item for item in results}
         artifact_map = {item.candidate_record_id: item for item in artifacts}
@@ -286,6 +317,8 @@ class ExportService:
             f"- Canonical candidate count: {len([item for item in candidates if item.canonical_record_id in {None, item.id}])}",
             f"- Decision count: {len(decisions)}",
             f"- Extraction count: {len(results)}",
+            f"- Event count: {len(events)}",
+            f"- Latest event at: {events[0].created_at if events else 'None'}",
             f"- Source counts: {self._format_mapping(self._source_counts(candidates))}",
             f"- Status counts: {self._format_mapping(self._status_counts(candidates))}",
             f"- Full-text status counts: {self._format_mapping(self._full_text_status_counts(artifacts))}",
@@ -321,6 +354,16 @@ class ExportService:
             lines.append(
                 f"| {candidate.title} | {candidate.source} | {candidate.year} | {candidate.status} | {artifact.text_extraction_status if artifact else ''} | {title_decision_map.get(candidate.id).decision if title_decision_map.get(candidate.id) else ''} | {full_text_decision_map.get(candidate.id).decision if full_text_decision_map.get(candidate.id) else ''} | {extraction.status if extraction else ''} | {effect_label} | {'; '.join(summary.get('review_flags', []))} |"
             )
+
+        lines.extend(["", "## Recent Activity", ""])
+        if events:
+            for item in sorted(events, key=lambda event: (event.created_at, event.id), reverse=True)[:10]:
+                candidate_label = f" candidate={item.candidate_id}" if item.candidate_id else ""
+                lines.append(
+                    f"- {item.created_at} | {item.status} | {item.event_type}{candidate_label} | {item.message}"
+                )
+        else:
+            lines.append("- None")
 
         lines.extend(["", "## Exclusion Reasons", ""])
         if counts.reports_excluded_with_reasons_json:

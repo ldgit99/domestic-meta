@@ -3,6 +3,7 @@ from app.models.domain import (
     EligibilityDecision,
     ExtractionResult,
     FullTextArtifact,
+    PipelineEvent,
     PrismaCounts,
     SearchRequest,
 )
@@ -139,6 +140,20 @@ def _artifact() -> FullTextArtifact:
     )
 
 
+def _event() -> PipelineEvent:
+    return PipelineEvent(
+        id="ev1",
+        search_request_id="s1",
+        event_type="search_run_completed",
+        status="completed",
+        message="Search orchestration completed successfully.",
+        stage="lifecycle",
+        candidate_id=None,
+        metadata_json={"collected_candidates": 1},
+        created_at="2026-03-20T10:00:00",
+    )
+
+
 def test_audit_report_contains_search_criteria_and_stage_decisions() -> None:
     payload = ExportService().audit_report_markdown(
         _search_request(),
@@ -147,12 +162,14 @@ def test_audit_report_contains_search_criteria_and_stage_decisions() -> None:
         _decisions(),
         [_extraction()],
         [_artifact()],
+        [_event()],
     )
 
     assert "# Audit Report: self-directed learning" in payload["content"]
     assert "Expanded Keywords: achievement, motivation" in payload["content"]
     assert "Status counts: included_full_text=1" in payload["content"]
     assert "Full-text status counts: available=1" in payload["content"]
+    assert "## Recent Activity" in payload["content"]
     assert (
         "| Effects of self-directed learning on achievement | kci | 2024 | "
         "included_full_text | available | include | include | completed |"
@@ -181,7 +198,7 @@ def test_screening_log_json_contains_candidate_metadata() -> None:
     assert '"stage": "full_text"' in payload["content"]
 
 
-def test_search_request_manifest_json_contains_summary_and_prisma_flow() -> None:
+def test_search_request_manifest_json_contains_summary_prisma_flow_and_event_counts() -> None:
     payload = ExportService().search_request_manifest_json(
         _search_request(),
         _counts(),
@@ -189,6 +206,7 @@ def test_search_request_manifest_json_contains_summary_and_prisma_flow() -> None
         _decisions(),
         [_extraction()],
         [_artifact()],
+        [_event()],
     )
 
     assert '"expanded_keywords": [' in payload["content"]
@@ -196,3 +214,4 @@ def test_search_request_manifest_json_contains_summary_and_prisma_flow() -> None
     assert '"full_text_status_counts": {' in payload["content"]
     assert '"prisma_flow": {' in payload["content"]
     assert '"studies_included_in_review": 2' in payload["content"]
+    assert '"event_count": 1' in payload["content"]

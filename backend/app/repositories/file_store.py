@@ -9,6 +9,7 @@ from app.models.domain import (
     EligibilityDecision,
     ExtractionResult,
     FullTextArtifact,
+    PipelineEvent,
     PrismaCounts,
     SearchRequest,
 )
@@ -29,6 +30,7 @@ class FileStore:
             "candidates": {},
             "decisions": {},
             "prisma_counts": {},
+            "pipeline_events": {},
             "full_text_artifacts": {},
             "extraction_results": {},
         }
@@ -67,6 +69,9 @@ class FileStore:
 
     def _deserialize_prisma(self, payload: dict) -> PrismaCounts:
         return PrismaCounts(**payload)
+
+    def _deserialize_event(self, payload: dict) -> PipelineEvent:
+        return PipelineEvent(**payload)
 
     def _deserialize_artifact(self, payload: dict) -> FullTextArtifact:
         return FullTextArtifact(**payload)
@@ -212,6 +217,42 @@ class FileStore:
         raw = self._load_raw()
         raw["prisma_counts"][item.search_request_id] = asdict(item)
         self._save_raw(raw)
+
+    def log_event(
+        self,
+        search_request_id: str,
+        event_type: str,
+        message: str,
+        *,
+        stage: str | None = None,
+        status: str = "info",
+        candidate_id: str | None = None,
+        metadata_json: dict | None = None,
+    ) -> PipelineEvent:
+        raw = self._load_raw()
+        item = PipelineEvent(
+            id=generate_id("event"),
+            search_request_id=search_request_id,
+            event_type=event_type,
+            status=status,
+            message=message,
+            stage=stage,
+            candidate_id=candidate_id,
+            metadata_json=metadata_json or {},
+            created_at=now_iso(),
+        )
+        raw["pipeline_events"][item.id] = asdict(item)
+        self._save_raw(raw)
+        return item
+
+    def list_events(self, search_request_id: str) -> list[PipelineEvent]:
+        raw = self._load_raw()
+        items = [
+            self._deserialize_event(item)
+            for item in raw["pipeline_events"].values()
+            if item["search_request_id"] == search_request_id
+        ]
+        return sorted(items, key=lambda item: (item.created_at, item.id), reverse=True)
 
     def create_full_text_artifact(
         self,

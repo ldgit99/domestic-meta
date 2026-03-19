@@ -27,6 +27,7 @@ The repository already includes research and planning documents plus a working p
 - optional OCR retry through a configurable external command
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries and meta-analysis-ready CSV export
+- pipeline event logging, timeline inspection, and events export
 - export endpoints for search manifests, candidates, screening, PRISMA, extraction, meta-analysis, and audit reports
 
 ## Quick start
@@ -103,6 +104,7 @@ The dashboard currently supports:
 - `POST /api/search-requests`
 - `GET /api/search-requests/{id}`
 - `GET /api/search-requests/{id}/summary`
+- `GET /api/search-requests/{id}/events`
 - `POST /api/search-requests/{id}/run`
 - `GET /api/search-requests/{id}/candidates`
 - `GET /api/search-requests/{id}/review-queue`
@@ -120,6 +122,7 @@ The dashboard currently supports:
 - `GET /api/search-requests/{id}/exports/screening-log.json`
 - `GET /api/search-requests/{id}/exports/prisma-counts.json`
 - `GET /api/search-requests/{id}/exports/prisma-flow.json`
+- `GET /api/search-requests/{id}/exports/events.json`
 - `GET /api/search-requests/{id}/exports/extraction-results.json`
 - `GET /api/search-requests/{id}/exports/meta-analysis-ready.csv`
 - `GET /api/search-requests/{id}/exports/audit-report.md`

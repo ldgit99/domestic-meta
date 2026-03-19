@@ -25,6 +25,7 @@
 - `POST /api/search-requests`
 - `GET /api/search-requests/{id}`
 - `GET /api/search-requests/{id}/summary`
+- `GET /api/search-requests/{id}/events`
 - `POST /api/search-requests/{id}/run`
 - `GET /api/search-requests/{id}/candidates`
 - `GET /api/search-requests/{id}/review-queue`
@@ -42,6 +43,7 @@
 - `GET /api/search-requests/{id}/exports/screening-log.json`
 - `GET /api/search-requests/{id}/exports/prisma-counts.json`
 - `GET /api/search-requests/{id}/exports/prisma-flow.json`
+- `GET /api/search-requests/{id}/exports/events.json`
 - `GET /api/search-requests/{id}/exports/extraction-results.json`
 - `GET /api/search-requests/{id}/exports/meta-analysis-ready.csv`
 - `GET /api/search-requests/{id}/exports/audit-report.md`
@@ -61,6 +63,7 @@
 - failed or empty PDF extraction is persisted as `ocr_required`, which keeps the candidate in review until usable text exists
 - a configurable OCR command can be invoked later to update the stored artifact and candidate status
 - manual screening immediately refreshes PRISMA counts and downstream review state
+- pipeline events are persisted for search creation, orchestration, manual review, OCR, and extraction transitions
 - PRISMA flow payloads are derived from persisted PRISMA counts plus exclusion reason counts
 - extraction uses OpenAI only when configured and otherwise stores heuristic fallback output
 - effect-size readiness is computed from extracted statistics and included in review outputs and exports
@@ -70,6 +73,7 @@
 - create and run a search request
 - open recent searches from persisted storage
 - inspect candidate lists and candidate detail payloads
+- review a search activity timeline with recent pipeline events
 - submit manual title and abstract decisions
 - inspect PRISMA counts and a PRISMA flow payload view
 - upload TXT or PDF full text

@@ -23,6 +23,20 @@ class SearchRequestRead(SearchRequestCreate):
     created_at: str
 
 
+class PipelineEventRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    search_request_id: str
+    event_type: str
+    status: str
+    message: str
+    stage: str | None = None
+    candidate_id: str | None = None
+    metadata_json: dict = Field(default_factory=dict)
+    created_at: str
+
+
 class SearchRequestSummaryRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -39,6 +53,8 @@ class SearchRequestSummaryRead(BaseModel):
     candidate_count: int
     canonical_candidate_count: int
     decision_count: int
+    event_count: int = 0
+    latest_event_at: str | None = None
     source_counts: dict[str, int] = Field(default_factory=dict)
     status_counts: dict[str, int] = Field(default_factory=dict)
     full_text_status_counts: dict[str, int] = Field(default_factory=dict)

@@ -67,6 +67,19 @@ class PrismaCounts:
 
 
 @dataclass
+class PipelineEvent:
+    id: str
+    search_request_id: str
+    event_type: str
+    status: str
+    message: str
+    stage: str | None
+    candidate_id: str | None
+    metadata_json: dict = field(default_factory=dict)
+    created_at: str = ""
+
+
+@dataclass
 class FullTextArtifact:
     id: str
     candidate_record_id: str

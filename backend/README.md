@@ -21,6 +21,7 @@ FastAPI backend for the domestic education meta-analysis prototype.
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries
 - export endpoints including audit and PRISMA flow payloads
+- pipeline event logging for collection, screening, OCR, and extraction actions
 - search manifest export with search criteria, counts, and PRISMA flow payload
 
 ## Repository backend modes
@@ -86,7 +87,9 @@ The current connector accepts JSON, XML, and SPARQL-style `results.bindings` JSO
 ## PRISMA flow endpoints
 
 - `GET /api/search-requests/{id}/prisma/flow`
+- `GET /api/search-requests/{id}/events`
 - `GET /api/search-requests/{id}/exports/prisma-flow.json`
+- `GET /api/search-requests/{id}/exports/events.json`
 - `GET /api/search-requests/{id}/exports/search-request.json`
 
 The flow payload includes:

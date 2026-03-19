@@ -75,6 +75,20 @@ class PrismaCountsModel(Base):
     studies_included_in_review: Mapped[int] = mapped_column(Integer, default=0)
 
 
+class PipelineEventModel(Base):
+    __tablename__ = "pipeline_events"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    search_request_id: Mapped[str] = mapped_column(String(64), index=True)
+    event_type: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(32))
+    message: Mapped[str] = mapped_column(Text)
+    stage: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    candidate_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[str] = mapped_column(String(64))
+
+
 class FullTextArtifactModel(Base):
     __tablename__ = "full_text_artifacts"
 

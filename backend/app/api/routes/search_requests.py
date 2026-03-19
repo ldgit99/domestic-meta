@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.api.dependencies import get_orchestrator, get_store
 from app.repositories.file_store import FileStore
 from app.schemas.search import (
+    PipelineEventRead,
     SearchRequestCreate,
     SearchRequestRead,
     SearchRequestSummaryRead,
@@ -25,6 +26,17 @@ def create_search_request(
     store: FileStore = Depends(get_store),
 ) -> SearchRequestRead:
     created = store.create_search_request(payload)
+    store.log_event(
+        created.id,
+        "search_request_created",
+        f"Created search request for query '{created.query_text}'.",
+        stage="lifecycle",
+        status="completed",
+        metadata_json={
+            "query_text": created.query_text,
+            "expanded_keywords": created.expanded_keywords,
+        },
+    )
     return SearchRequestRead.model_validate(created)
 
 
@@ -50,6 +62,7 @@ def get_search_request_summary(
 
     candidates = store.list_candidates(search_request_id)
     decisions = store.list_decisions_for_search(search_request_id)
+    events = store.list_events(search_request_id)
     canonical_count = len([item for item in candidates if item.canonical_record_id == item.id])
     prisma = store.get_prisma_counts(search_request_id)
     source_counts: dict[str, int] = {}
@@ -79,11 +92,23 @@ def get_search_request_summary(
         candidate_count=len(candidates),
         canonical_candidate_count=canonical_count,
         decision_count=len(decisions),
+        event_count=len(events),
+        latest_event_at=events[0].created_at if events else None,
         source_counts=source_counts,
         status_counts=status_counts,
         full_text_status_counts=full_text_status_counts,
         prisma=prisma,
     )
+
+
+@router.get("/{search_request_id}/events", response_model=list[PipelineEventRead])
+def list_search_request_events(
+    search_request_id: str,
+    store: FileStore = Depends(get_store),
+) -> list[PipelineEventRead]:
+    if store.get_search_request(search_request_id) is None:
+        raise HTTPException(status_code=404, detail="Search request not found")
+    return [PipelineEventRead.model_validate(item) for item in store.list_events(search_request_id)]
 
 
 @router.get("/{search_request_id}/status")

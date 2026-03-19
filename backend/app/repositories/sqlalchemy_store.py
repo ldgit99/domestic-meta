@@ -12,6 +12,7 @@ from app.models.domain import (
     EligibilityDecision,
     ExtractionResult,
     FullTextArtifact,
+    PipelineEvent,
     PrismaCounts,
     SearchRequest,
 )
@@ -21,6 +22,7 @@ from app.repositories.db_models import (
     EligibilityDecisionModel,
     ExtractionResultModel,
     FullTextArtifactModel,
+    PipelineEventModel,
     PrismaCountsModel,
     SearchRequestModel,
 )
@@ -150,6 +152,19 @@ class SQLAlchemyStore:
             fields_json=model.fields_json or {},
             model_name=model.model_name,
             raw_response=model.raw_response or {},
+            created_at=model.created_at,
+        )
+
+    def _to_event(self, model: PipelineEventModel) -> PipelineEvent:
+        return PipelineEvent(
+            id=model.id,
+            search_request_id=model.search_request_id,
+            event_type=model.event_type,
+            status=model.status,
+            message=model.message,
+            stage=model.stage,
+            candidate_id=model.candidate_id,
+            metadata_json=model.metadata_json or {},
             created_at=model.created_at,
         )
 
@@ -403,6 +418,53 @@ class SQLAlchemyStore:
             model.reports_assessed_for_eligibility = item.reports_assessed_for_eligibility
             model.reports_excluded_with_reasons_json = item.reports_excluded_with_reasons_json
             model.studies_included_in_review = item.studies_included_in_review
+
+    def log_event(
+        self,
+        search_request_id: str,
+        event_type: str,
+        message: str,
+        *,
+        stage: str | None = None,
+        status: str = "info",
+        candidate_id: str | None = None,
+        metadata_json: dict | None = None,
+    ) -> PipelineEvent:
+        item = PipelineEvent(
+            id=generate_id("event"),
+            search_request_id=search_request_id,
+            event_type=event_type,
+            status=status,
+            message=message,
+            stage=stage,
+            candidate_id=candidate_id,
+            metadata_json=metadata_json or {},
+            created_at=now_iso(),
+        )
+        with self._session() as session:
+            session.add(
+                PipelineEventModel(
+                    id=item.id,
+                    search_request_id=item.search_request_id,
+                    event_type=item.event_type,
+                    status=item.status,
+                    message=item.message,
+                    stage=item.stage,
+                    candidate_id=item.candidate_id,
+                    metadata_json=item.metadata_json,
+                    created_at=item.created_at,
+                )
+            )
+        return item
+
+    def list_events(self, search_request_id: str) -> list[PipelineEvent]:
+        with self._session() as session:
+            models = session.scalars(
+                select(PipelineEventModel)
+                .where(PipelineEventModel.search_request_id == search_request_id)
+                .order_by(PipelineEventModel.created_at.desc(), PipelineEventModel.id.desc())
+            ).all()
+            return [self._to_event(model) for model in models]
 
     def create_full_text_artifact(
         self,

@@ -5,6 +5,7 @@ from app.models.domain import (
     EligibilityDecision,
     ExtractionResult,
     FullTextArtifact,
+    PipelineEvent,
     PrismaCounts,
     SearchRequest,
 )
@@ -18,6 +19,7 @@ class MemoryStore:
         self.candidates: dict[str, CandidateRecord] = {}
         self.decisions: dict[str, EligibilityDecision] = {}
         self.prisma_counts: dict[str, PrismaCounts] = {}
+        self.pipeline_events: dict[str, PipelineEvent] = {}
         self.full_text_artifacts: dict[str, FullTextArtifact] = {}
         self.extraction_results: dict[str, ExtractionResult] = {}
 
@@ -113,6 +115,35 @@ class MemoryStore:
 
     def update_prisma_counts(self, item: PrismaCounts) -> None:
         self.prisma_counts[item.search_request_id] = item
+
+    def log_event(
+        self,
+        search_request_id: str,
+        event_type: str,
+        message: str,
+        *,
+        stage: str | None = None,
+        status: str = "info",
+        candidate_id: str | None = None,
+        metadata_json: dict | None = None,
+    ) -> PipelineEvent:
+        item = PipelineEvent(
+            id=generate_id("event"),
+            search_request_id=search_request_id,
+            event_type=event_type,
+            status=status,
+            message=message,
+            stage=stage,
+            candidate_id=candidate_id,
+            metadata_json=metadata_json or {},
+            created_at=now_iso(),
+        )
+        self.pipeline_events[item.id] = item
+        return item
+
+    def list_events(self, search_request_id: str) -> list[PipelineEvent]:
+        items = [item for item in self.pipeline_events.values() if item.search_request_id == search_request_id]
+        return sorted(items, key=lambda item: (item.created_at, item.id), reverse=True)
 
     def create_full_text_artifact(
         self,
