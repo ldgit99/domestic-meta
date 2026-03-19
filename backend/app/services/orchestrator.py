@@ -1,5 +1,5 @@
 from app.schemas.search import SearchRunResult
-from app.services.connectors import KCIConnector, RISSStubConnector
+from app.services.connectors import KCIConnector, RISSConnector
 from app.services.deduplication import DeduplicationService
 from app.services.prisma import PrismaService
 from app.services.screening import ScreeningService
@@ -8,7 +8,7 @@ from app.services.screening import ScreeningService
 class SearchOrchestrator:
     def __init__(self, store) -> None:
         self.store = store
-        self.connectors = [KCIConnector(), RISSStubConnector()]
+        self.connectors = [KCIConnector(), RISSConnector()]
         self.deduplication = DeduplicationService()
         self.screening = ScreeningService()
         self.prisma = PrismaService()

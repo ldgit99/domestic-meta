@@ -18,7 +18,7 @@
 - 검색 요청 생성/목록/요약
 - rerun 시 이전 결과 reset
 - KCI live-or-stub 수집 경로
-- RISS 스텁 기반 후보 수집
+- RISS configurable live-or-stub 수집 경로
 - 중복 제거
 - 규칙 기반 1차 선별
 - 대시보드 기반 수동 선별
@@ -48,11 +48,12 @@ uvicorn app.main:app --reload
 런타임 데이터는 `backend/data/store.json`에 저장된다.
 업로드된 원문 파일은 `backend/uploads`에 저장된다.
 
-### Optional KCI / OpenAI config
+### Optional KCI / RISS / OpenAI config
 
-`backend/.env.example`에 있는 값을 환경변수로 채우면 KCI live 요청과 OpenAI 추출을 시도한다.
+`backend/.env.example`에 있는 값을 환경변수로 채우면 KCI live 요청, RISS live 요청, OpenAI 추출을 시도한다.
 
 - KCI가 설정되지 않았거나 요청이 실패하면 스텁 데이터로 fallback 한다.
+- RISS가 설정되지 않았거나 요청이 실패하면 스텁 데이터로 fallback 한다.
 - OpenAI가 설정되지 않았거나 요청이 실패하면 휴리스틱 추출 결과를 저장한다.
 
 ### Frontend
@@ -86,7 +87,7 @@ uvicorn app.main:app --reload
 
 ## 아직 미구현
 
-- 실제 RISS 연동
+- RISS 실운영 엔드포인트별 매핑 검증
 - PDF 파싱 고도화/OCR
 - PostgreSQL / Redis
 - 인증/권한

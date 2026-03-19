@@ -11,7 +11,7 @@
 - `backend/app/services/effect_size.py`: extracted statistics to effect-size-readiness summary
 - `backend/app/services/review.py`: candidate detail assembly and review queue generation
 - `backend/app/services/extraction_workflow.py`: extraction execution and persistence
-- `backend/app/services/connectors.py`: KCI live-or-stub connector plus RISS stub connector
+- `backend/app/services/connectors.py`: KCI live-or-stub connector plus RISS configurable live-or-stub connector
 - `frontend/index.html`: persistent search list, summary, PRISMA, manual review, review queue, file upload, and extraction controls
 
 ## Exposed APIs
@@ -43,6 +43,7 @@
 - uploaded files persist to `backend/uploads`
 - rerunning a search resets prior candidates, decisions, artifacts, PRISMA counts, and extraction results for that search
 - KCI collection uses live mode only when configured; otherwise it falls back to stub data
+- RISS collection uses configured JSON/XML or SPARQL-style live responses when available; otherwise it falls back to stub data
 - document ingestion extracts text from TXT immediately and from PDF through `pypdf` when available
 - manual decisions from the dashboard immediately recalculate PRISMA counts and refresh screening logs
 - extracted group statistics, t-values, and correlations are converted into effect-size readiness summaries
@@ -51,7 +52,7 @@
 
 ## Next implementation target
 
-- real RISS Linked Data integration
+- RISS production endpoint validation and mapping hardening
 - PDF parsing / OCR pipeline
 - PostgreSQL persistence replacing file store
 - richer review UI

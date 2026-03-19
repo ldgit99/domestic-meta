@@ -12,7 +12,7 @@ FastAPI 기반 초기 백엔드 구현이다.
 - PRISMA 집계 조회
 - 규칙 기반 1차 선별
 - KCI live-or-stub 커넥터
-- RISS 스텁 커넥터
+- RISS configurable live-or-stub 커넥터
 - 원문 등록
 - TXT/PDF 업로드와 텍스트 추출
 - OpenAI Responses API 기반 추출 경로
@@ -31,6 +31,23 @@ FastAPI 기반 초기 백엔드 구현이다.
 - `KCI_QUERY_PARAM`
 - `KCI_COUNT_PARAM`
 - `KCI_RESPONSE_FORMAT`
+
+## RISS 연동
+
+기본값은 스텁이다. 아래 환경변수를 설정하면 live 요청을 시도하고, 실패 시 스텁으로 자동 fallback 한다.
+
+- `RISS_LIVE_ENABLED=true`
+- `RISS_API_URL`
+- `RISS_API_KEY`
+- `RISS_API_KEY_PARAM`
+- `RISS_QUERY_PARAM`
+- `RISS_COUNT_PARAM`
+- `RISS_RESPONSE_FORMAT`
+- `RISS_DOCUMENT_TYPE_PARAM`
+- `RISS_THESIS_VALUE`
+- `RISS_JOURNAL_VALUE`
+
+현재 구현은 일반 JSON/XML 응답과 SPARQL 스타일 `results.bindings` JSON을 모두 받을 수 있게 만들어져 있다.
 
 ## OpenAI 추출
 
@@ -58,6 +75,6 @@ FastAPI 기반 초기 백엔드 구현이다.
 
 ## 추후 연결 예정
 
-- 실제 RISS Linked Data 수집기
+- RISS 실운영 엔드포인트별 매핑 보정
 - PostgreSQL 및 Redis
 - PDF OCR 및 정교한 파서
