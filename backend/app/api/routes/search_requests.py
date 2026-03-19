@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_orchestrator, get_store
 from app.repositories.memory import MemoryStore
-from app.schemas.search import SearchRequestCreate, SearchRequestRead, SearchRunResult
+from app.schemas.search import (
+    SearchRequestCreate,
+    SearchRequestRead,
+    SearchRequestSummaryRead,
+    SearchRunResult,
+)
 from app.services.orchestrator import SearchOrchestrator
 
 
@@ -27,6 +32,31 @@ def get_search_request(
     if result is None:
         raise HTTPException(status_code=404, detail="Search request not found")
     return SearchRequestRead.model_validate(result)
+
+
+@router.get("/{search_request_id}/summary", response_model=SearchRequestSummaryRead)
+def get_search_request_summary(
+    search_request_id: str,
+    store: MemoryStore = Depends(get_store),
+) -> SearchRequestSummaryRead:
+    result = store.get_search_request(search_request_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Search request not found")
+
+    candidates = store.list_candidates(search_request_id)
+    decisions = store.list_decisions_for_search(search_request_id)
+    canonical_count = len([item for item in candidates if item.canonical_record_id == item.id])
+    prisma = store.get_prisma_counts(search_request_id)
+
+    return SearchRequestSummaryRead(
+        id=result.id,
+        query_text=result.query_text,
+        status=result.status,
+        candidate_count=len(candidates),
+        canonical_candidate_count=canonical_count,
+        decision_count=len(decisions),
+        prisma=prisma,
+    )
 
 
 @router.get("/{search_request_id}/status")

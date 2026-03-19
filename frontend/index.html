@@ -14,119 +14,30 @@
       --accent-2: #c96f3b;
       --line: #d7d0c4;
     }
-    body {
-      margin: 0;
-      font-family: Georgia, "Noto Serif KR", serif;
-      background: linear-gradient(180deg, #efe8d8 0%, #f7f4ed 100%);
-      color: var(--ink);
-    }
-    .wrap {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 40px 20px 80px;
-    }
-    h1 {
-      margin: 0 0 12px;
-      font-size: 44px;
-      line-height: 1.05;
-    }
-    p.lead {
-      margin: 0 0 24px;
-      color: var(--muted);
-      font-size: 18px;
-    }
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 12px 30px rgba(28, 39, 46, 0.08);
-      margin-bottom: 20px;
-    }
-    .grid {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: 1fr 1fr;
-    }
-    .grid-wide {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: 1.3fr 0.7fr;
-    }
-    label {
-      display: block;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    input, button, textarea {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: white;
-      font: inherit;
-    }
-    textarea {
-      min-height: 160px;
-      resize: vertical;
-    }
-    button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      cursor: pointer;
-      margin-top: 16px;
-    }
-    .secondary {
-      background: var(--accent-2);
-    }
-    pre {
-      white-space: pre-wrap;
-      word-break: break-word;
-      background: #f7f6f1;
-      padding: 16px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      min-height: 180px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      text-align: left;
-      padding: 10px 8px;
-      border-bottom: 1px solid var(--line);
-      vertical-align: top;
-      font-size: 14px;
-    }
-    th {
-      color: var(--muted);
-      font-weight: 600;
-    }
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #e6f0ef;
-      color: var(--accent);
-      font-size: 12px;
-    }
-    @media (max-width: 860px) {
-      .grid, .grid-wide {
-        grid-template-columns: 1fr;
-      }
-      h1 {
-        font-size: 34px;
-      }
-    }
+    body { margin: 0; font-family: Georgia, "Noto Serif KR", serif; background: linear-gradient(180deg, #efe8d8 0%, #f7f4ed 100%); color: var(--ink); }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 20px 80px; }
+    h1 { margin: 0 0 12px; font-size: 44px; line-height: 1.05; }
+    p.lead { margin: 0 0 24px; color: var(--muted); font-size: 18px; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 12px 30px rgba(28, 39, 46, 0.08); margin-bottom: 20px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+    .grid-wide { display: grid; gap: 16px; grid-template-columns: 1.3fr 0.7fr; }
+    label { display: block; font-size: 14px; margin-bottom: 8px; }
+    input, button, textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: white; font: inherit; }
+    textarea { min-height: 160px; resize: vertical; }
+    button { background: var(--accent); color: white; border: none; cursor: pointer; margin-top: 16px; }
+    .secondary { background: var(--accent-2); }
+    pre { white-space: pre-wrap; word-break: break-word; background: #f7f6f1; padding: 16px; border-radius: 12px; border: 1px solid var(--line); min-height: 180px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 14px; }
+    th { color: var(--muted); font-weight: 600; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #e6f0ef; color: var(--accent); font-size: 12px; }
+    @media (max-width: 860px) { .grid, .grid-wide { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>교육학 메타분석 지원 AI 에이전트</h1>
-    <p class="lead">검색 실행, 후보 논문 목록, PRISMA 집계, CSV export까지 확인하는 현재 프로토타입입니다.</p>
+    <p class="lead">검색 실행, 후보 목록, PRISMA 집계, 검색 요약, CSV export까지 확인하는 현재 프로토타입입니다.</p>
 
     <div class="panel">
       <label for="query">검색어</label>
@@ -141,8 +52,8 @@
         <pre id="result">API 실행 전</pre>
       </div>
       <div class="panel">
-        <h2>PRISMA</h2>
-        <pre id="prisma">API 실행 전</pre>
+        <h2>검색 요약</h2>
+        <pre id="summary">API 실행 전</pre>
       </div>
     </div>
 
@@ -168,12 +79,18 @@
         <textarea id="csv">아직 생성되지 않음</textarea>
       </div>
     </div>
+
+    <div class="panel">
+      <h2>PRISMA</h2>
+      <pre id="prisma">API 실행 전</pre>
+    </div>
   </div>
 
   <script>
     const runButton = document.getElementById("run");
     const exportButton = document.getElementById("export");
     const result = document.getElementById("result");
+    const summary = document.getElementById("summary");
     const prisma = document.getElementById("prisma");
     const candidatesBody = document.getElementById("candidates");
     const csvArea = document.getElementById("csv");
@@ -206,6 +123,7 @@
 
     runButton.addEventListener("click", async () => {
       result.textContent = "요청 중...";
+      summary.textContent = "요약 대기 중...";
       prisma.textContent = "집계 대기 중...";
       csvArea.value = "CSV 생성 대기 중...";
 
@@ -223,6 +141,9 @@
         });
         const executed = await runRes.json();
 
+        const summaryRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/summary`);
+        const summaryJson = await summaryRes.json();
+
         const prismaRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/prisma`);
         const prismaJson = await prismaRes.json();
 
@@ -230,11 +151,13 @@
         const candidatesJson = await candidatesRes.json();
 
         result.textContent = JSON.stringify(executed, null, 2);
+        summary.textContent = JSON.stringify(summaryJson, null, 2);
         prisma.textContent = JSON.stringify(prismaJson, null, 2);
         renderCandidates(candidatesJson);
         await loadExport();
       } catch (error) {
         result.textContent = String(error);
+        summary.textContent = "오류 발생";
         prisma.textContent = "오류 발생";
         candidatesBody.innerHTML = '<tr><td colspan="4">오류 발생</td></tr>';
       }

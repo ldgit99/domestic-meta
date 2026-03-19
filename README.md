@@ -2,7 +2,7 @@
 
 교육학 메타분석 지원 AI 에이전트 저장소다.
 
-현재 저장소에는 연구 문서, 구현 계획, 그리고 실제로 실행을 시작할 수 있는 백엔드/프론트엔드 프로토타입이 포함되어 있다.
+현재 저장소에는 연구 문서, 구현 계획, 그리고 실제 구현을 시작할 수 있는 백엔드/프론트엔드 프로토타입이 포함되어 있다.
 
 ## 포함 내용
 
@@ -19,6 +19,7 @@
 - 중복 제거
 - 규칙 기반 1차 선별
 - PRISMA 집계
+- 검색 summary API
 - 후보 목록 조회
 - 후보 CSV export
 - 원문 아티팩트 등록 API
@@ -46,6 +47,7 @@ uvicorn app.main:app --reload
 
 - `POST /api/search-requests`
 - `GET /api/search-requests/{id}`
+- `GET /api/search-requests/{id}/summary`
 - `POST /api/search-requests/{id}/run`
 - `GET /api/search-requests/{id}/candidates`
 - `POST /api/candidates/{id}/decision`

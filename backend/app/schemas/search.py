@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.constants import DEFAULT_YEAR_FROM, DEFAULT_YEAR_TO
+from app.schemas.prisma import PrismaCountsRead
 
 
 class SearchRequestCreate(BaseModel):
@@ -20,6 +21,18 @@ class SearchRequestRead(SearchRequestCreate):
     id: str
     status: str
     created_at: str
+
+
+class SearchRequestSummaryRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    query_text: str
+    status: str
+    candidate_count: int
+    canonical_candidate_count: int
+    decision_count: int
+    prisma: PrismaCountsRead | None = None
 
 
 class SearchRunResult(BaseModel):
