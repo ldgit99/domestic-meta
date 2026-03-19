@@ -13,3 +13,4 @@ node_modules/
 coverage/
 uploads/
 exports/
+backend/data/store.json

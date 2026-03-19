@@ -17,7 +17,7 @@ class PrismaCountsRead(BaseModel):
     studies_included_in_review: int
 
 
-class CandidatesExportRead(BaseModel):
+class ExportPayloadRead(BaseModel):
     search_request_id: str
     content_type: str
     file_name: str

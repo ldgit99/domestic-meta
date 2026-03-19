@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_orchestrator, get_store
-from app.repositories.memory import MemoryStore
+from app.repositories.file_store import FileStore
 from app.schemas.search import (
     SearchRequestCreate,
     SearchRequestRead,
@@ -14,10 +14,15 @@ from app.services.orchestrator import SearchOrchestrator
 router = APIRouter(prefix="/search-requests", tags=["search-requests"])
 
 
+@router.get("", response_model=list[SearchRequestRead])
+def list_search_requests(store: FileStore = Depends(get_store)) -> list[SearchRequestRead]:
+    return [SearchRequestRead.model_validate(item) for item in store.list_search_requests()]
+
+
 @router.post("", response_model=SearchRequestRead)
 def create_search_request(
     payload: SearchRequestCreate,
-    store: MemoryStore = Depends(get_store),
+    store: FileStore = Depends(get_store),
 ) -> SearchRequestRead:
     created = store.create_search_request(payload)
     return SearchRequestRead.model_validate(created)
@@ -26,7 +31,7 @@ def create_search_request(
 @router.get("/{search_request_id}", response_model=SearchRequestRead)
 def get_search_request(
     search_request_id: str,
-    store: MemoryStore = Depends(get_store),
+    store: FileStore = Depends(get_store),
 ) -> SearchRequestRead:
     result = store.get_search_request(search_request_id)
     if result is None:
@@ -37,7 +42,7 @@ def get_search_request(
 @router.get("/{search_request_id}/summary", response_model=SearchRequestSummaryRead)
 def get_search_request_summary(
     search_request_id: str,
-    store: MemoryStore = Depends(get_store),
+    store: FileStore = Depends(get_store),
 ) -> SearchRequestSummaryRead:
     result = store.get_search_request(search_request_id)
     if result is None:
@@ -62,7 +67,7 @@ def get_search_request_summary(
 @router.get("/{search_request_id}/status")
 def get_search_request_status(
     search_request_id: str,
-    store: MemoryStore = Depends(get_store),
+    store: FileStore = Depends(get_store),
 ) -> dict[str, str]:
     result = store.get_search_request(search_request_id)
     if result is None:

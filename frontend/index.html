@@ -15,14 +15,14 @@
       --line: #d7d0c4;
     }
     body { margin: 0; font-family: Georgia, "Noto Serif KR", serif; background: linear-gradient(180deg, #efe8d8 0%, #f7f4ed 100%); color: var(--ink); }
-    .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 20px 80px; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 40px 20px 80px; }
     h1 { margin: 0 0 12px; font-size: 44px; line-height: 1.05; }
     p.lead { margin: 0 0 24px; color: var(--muted); font-size: 18px; }
     .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 12px 30px rgba(28, 39, 46, 0.08); margin-bottom: 20px; }
     .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
-    .grid-wide { display: grid; gap: 16px; grid-template-columns: 1.3fr 0.7fr; }
+    .grid-wide { display: grid; gap: 16px; grid-template-columns: 1.2fr 0.8fr; }
     label { display: block; font-size: 14px; margin-bottom: 8px; }
-    input, button, textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: white; font: inherit; }
+    input, button, textarea, select { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: white; font: inherit; }
     textarea { min-height: 160px; resize: vertical; }
     button { background: var(--accent); color: white; border: none; cursor: pointer; margin-top: 16px; }
     .secondary { background: var(--accent-2); }
@@ -31,19 +31,23 @@
     th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 14px; }
     th { color: var(--muted); font-weight: 600; }
     .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #e6f0ef; color: var(--accent); font-size: 12px; }
-    @media (max-width: 860px) { .grid, .grid-wide { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
+    .actions { display: grid; gap: 12px; grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 860px) { .grid, .grid-wide, .actions { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>교육학 메타분석 지원 AI 에이전트</h1>
-    <p class="lead">검색 실행, 후보 목록, PRISMA 집계, 검색 요약, CSV export까지 확인하는 현재 프로토타입입니다.</p>
+    <p class="lead">지속 저장되는 검색 요청, 후보 목록, PRISMA 집계, JSON/CSV export까지 확인하는 현재 프로토타입입니다.</p>
 
     <div class="panel">
       <label for="query">검색어</label>
       <input id="query" value="협동학습" />
-      <button id="run">검색 실행</button>
-      <button id="export" class="secondary">후보 CSV 보기</button>
+      <div class="actions">
+        <button id="run">검색 실행</button>
+        <button id="exportCsv" class="secondary">후보 CSV 보기</button>
+        <button id="exportPrisma" class="secondary">PRISMA JSON 보기</button>
+      </div>
     </div>
 
     <div class="grid">
@@ -75,25 +79,44 @@
         </table>
       </div>
       <div class="panel">
-        <h2>CSV Export</h2>
-        <textarea id="csv">아직 생성되지 않음</textarea>
+        <h2>최근 검색 요청</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>검색어</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="searches">
+            <tr><td colspan="3">아직 검색 없음</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <div class="panel">
-      <h2>PRISMA</h2>
-      <pre id="prisma">API 실행 전</pre>
+    <div class="grid">
+      <div class="panel">
+        <h2>Export 내용</h2>
+        <textarea id="exportContent">아직 생성되지 않음</textarea>
+      </div>
+      <div class="panel">
+        <h2>PRISMA</h2>
+        <pre id="prisma">API 실행 전</pre>
+      </div>
     </div>
   </div>
 
   <script>
     const runButton = document.getElementById("run");
-    const exportButton = document.getElementById("export");
+    const exportCsvButton = document.getElementById("exportCsv");
+    const exportPrismaButton = document.getElementById("exportPrisma");
     const result = document.getElementById("result");
     const summary = document.getElementById("summary");
     const prisma = document.getElementById("prisma");
     const candidatesBody = document.getElementById("candidates");
-    const csvArea = document.getElementById("csv");
+    const searchesBody = document.getElementById("searches");
+    const exportContent = document.getElementById("exportContent");
     let lastSearchId = null;
 
     function renderCandidates(items) {
@@ -111,21 +134,44 @@
       `).join("");
     }
 
-    async function loadExport() {
-      if (!lastSearchId) {
-        csvArea.value = "먼저 검색을 실행하세요.";
+    function renderSearches(items) {
+      if (!items.length) {
+        searchesBody.innerHTML = '<tr><td colspan="3">아직 검색 없음</td></tr>';
         return;
       }
-      const res = await fetch(`http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/candidates.csv`);
+      searchesBody.innerHTML = items.slice(0, 8).map(item => `
+        <tr>
+          <td>${item.id}</td>
+          <td>${item.query_text}</td>
+          <td>${item.status}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadSearches() {
+      const res = await fetch("http://127.0.0.1:8000/api/search-requests");
       const payload = await res.json();
-      csvArea.value = payload.content;
+      renderSearches(payload);
+    }
+
+    async function loadExport(kind) {
+      if (!lastSearchId) {
+        exportContent.value = "먼저 검색을 실행하세요.";
+        return;
+      }
+      const url = kind === "prisma"
+        ? `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/prisma-counts.json`
+        : `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/candidates.csv`;
+      const res = await fetch(url);
+      const payload = await res.json();
+      exportContent.value = payload.content;
     }
 
     runButton.addEventListener("click", async () => {
       result.textContent = "요청 중...";
       summary.textContent = "요약 대기 중...";
       prisma.textContent = "집계 대기 중...";
-      csvArea.value = "CSV 생성 대기 중...";
+      exportContent.value = "Export 생성 대기 중...";
 
       try {
         const createRes = await fetch("http://127.0.0.1:8000/api/search-requests", {
@@ -154,7 +200,8 @@
         summary.textContent = JSON.stringify(summaryJson, null, 2);
         prisma.textContent = JSON.stringify(prismaJson, null, 2);
         renderCandidates(candidatesJson);
-        await loadExport();
+        await loadSearches();
+        await loadExport("csv");
       } catch (error) {
         result.textContent = String(error);
         summary.textContent = "오류 발생";
@@ -163,13 +210,23 @@
       }
     });
 
-    exportButton.addEventListener("click", async () => {
+    exportCsvButton.addEventListener("click", async () => {
       try {
-        await loadExport();
+        await loadExport("csv");
       } catch (error) {
-        csvArea.value = String(error);
+        exportContent.value = String(error);
       }
     });
+
+    exportPrismaButton.addEventListener("click", async () => {
+      try {
+        await loadExport("prisma");
+      } catch (error) {
+        exportContent.value = String(error);
+      }
+    });
+
+    loadSearches().catch(() => {});
   </script>
 </body>
 </html>

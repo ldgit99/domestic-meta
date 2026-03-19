@@ -14,14 +14,16 @@
 
 ## 현재 구현 범위
 
-- 검색 요청 생성
+- 파일 기반 영속 저장소
+- 검색 요청 생성/목록/요약
 - KCI/RISS 스텁 기반 후보 수집
 - 중복 제거
 - 규칙 기반 1차 선별
 - PRISMA 집계
-- 검색 summary API
 - 후보 목록 조회
 - 후보 CSV export
+- screening log JSON export
+- PRISMA counts JSON export
 - 원문 아티팩트 등록 API
 - 추출 프리뷰 자리표시자 API
 
@@ -39,12 +41,15 @@ uvicorn app.main:app --reload
 
 기본 주소: `http://127.0.0.1:8000`
 
+런타임 데이터는 `backend/data/store.json`에 저장된다.
+
 ### Frontend
 
 `frontend/index.html`을 브라우저에서 열면 된다. 백엔드가 먼저 실행 중이어야 한다.
 
 ## 노출된 API
 
+- `GET /api/search-requests`
 - `POST /api/search-requests`
 - `GET /api/search-requests/{id}`
 - `GET /api/search-requests/{id}/summary`
@@ -55,11 +60,13 @@ uvicorn app.main:app --reload
 - `GET /api/candidates/{id}/extraction`
 - `GET /api/search-requests/{id}/prisma`
 - `GET /api/search-requests/{id}/exports/candidates.csv`
+- `GET /api/search-requests/{id}/exports/screening-log.json`
+- `GET /api/search-requests/{id}/exports/prisma-counts.json`
 
 ## 아직 미구현
 
 - 실제 KCI/RISS 연동
 - OpenAI Responses API 기반 추출
-- 영속 DB
+- PostgreSQL / Redis
 - PDF 파싱/OCR
 - 인증/권한
