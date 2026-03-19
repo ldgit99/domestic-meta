@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CandidateRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     search_request_id: str
     source: str
@@ -32,6 +34,31 @@ class DecisionCreate(BaseModel):
 
 
 class EligibilityDecisionRead(DecisionCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     candidate_record_id: str
     created_at: str
+
+
+class FullTextArtifactCreate(BaseModel):
+    file_name: str
+    source_url: str | None = None
+    mime_type: str = "application/pdf"
+    text_content: str = ""
+
+
+class FullTextArtifactRead(FullTextArtifactCreate):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    candidate_record_id: str
+    text_extraction_status: str
+    created_at: str
+
+
+class ExtractionPreviewRead(BaseModel):
+    candidate_id: str
+    status: str
+    message: str
+    fields: dict

@@ -64,3 +64,15 @@ class PrismaCounts:
     reports_assessed_for_eligibility: int = 0
     reports_excluded_with_reasons_json: dict[str, int] = field(default_factory=dict)
     studies_included_in_review: int = 0
+
+
+@dataclass
+class FullTextArtifact:
+    id: str
+    candidate_record_id: str
+    file_name: str
+    source_url: str | None
+    mime_type: str
+    text_content: str
+    text_extraction_status: str
+    created_at: str

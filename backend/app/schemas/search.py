@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.constants import DEFAULT_YEAR_FROM, DEFAULT_YEAR_TO
 
@@ -15,6 +15,8 @@ class SearchRequestCreate(BaseModel):
 
 
 class SearchRequestRead(SearchRequestCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     status: str
     created_at: str

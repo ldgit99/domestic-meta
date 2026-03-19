@@ -11,6 +11,7 @@
       --ink: #1f2a30;
       --muted: #66757f;
       --accent: #006a6a;
+      --accent-2: #c96f3b;
       --line: #d7d0c4;
     }
     body {
@@ -20,14 +21,14 @@
       color: var(--ink);
     }
     .wrap {
-      max-width: 960px;
+      max-width: 1120px;
       margin: 0 auto;
       padding: 40px 20px 80px;
     }
     h1 {
       margin: 0 0 12px;
       font-size: 44px;
-      line-height: 1.1;
+      line-height: 1.05;
     }
     p.lead {
       margin: 0 0 24px;
@@ -42,12 +43,22 @@
       box-shadow: 0 12px 30px rgba(28, 39, 46, 0.08);
       margin-bottom: 20px;
     }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr 1fr;
+    }
+    .grid-wide {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1.3fr 0.7fr;
+    }
     label {
       display: block;
       font-size: 14px;
       margin-bottom: 8px;
     }
-    input, button {
+    input, button, textarea {
       width: 100%;
       box-sizing: border-box;
       padding: 12px 14px;
@@ -56,6 +67,10 @@
       background: white;
       font: inherit;
     }
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+    }
     button {
       background: var(--accent);
       color: white;
@@ -63,10 +78,8 @@
       cursor: pointer;
       margin-top: 16px;
     }
-    .grid {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: 1fr 1fr;
+    .secondary {
+      background: var(--accent-2);
     }
     pre {
       white-space: pre-wrap;
@@ -75,9 +88,33 @@
       padding: 16px;
       border-radius: 12px;
       border: 1px solid var(--line);
+      min-height: 180px;
     }
-    @media (max-width: 720px) {
-      .grid {
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #e6f0ef;
+      color: var(--accent);
+      font-size: 12px;
+    }
+    @media (max-width: 860px) {
+      .grid, .grid-wide {
         grid-template-columns: 1fr;
       }
       h1 {
@@ -89,12 +126,13 @@
 <body>
   <div class="wrap">
     <h1>교육학 메타분석 지원 AI 에이전트</h1>
-    <p class="lead">검색어를 입력하고 후보 논문 수집, 1차 선별, PRISMA 집계까지 실행하는 최소 프로토타입입니다.</p>
+    <p class="lead">검색 실행, 후보 논문 목록, PRISMA 집계, CSV export까지 확인하는 현재 프로토타입입니다.</p>
 
     <div class="panel">
       <label for="query">검색어</label>
       <input id="query" value="협동학습" />
       <button id="run">검색 실행</button>
+      <button id="export" class="secondary">후보 CSV 보기</button>
     </div>
 
     <div class="grid">
@@ -107,16 +145,69 @@
         <pre id="prisma">API 실행 전</pre>
       </div>
     </div>
+
+    <div class="grid-wide">
+      <div class="panel">
+        <h2>후보 논문</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>제목</th>
+              <th>소스</th>
+              <th>연도</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="candidates">
+            <tr><td colspan="4">API 실행 전</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>CSV Export</h2>
+        <textarea id="csv">아직 생성되지 않음</textarea>
+      </div>
+    </div>
   </div>
 
   <script>
     const runButton = document.getElementById("run");
+    const exportButton = document.getElementById("export");
     const result = document.getElementById("result");
     const prisma = document.getElementById("prisma");
+    const candidatesBody = document.getElementById("candidates");
+    const csvArea = document.getElementById("csv");
+    let lastSearchId = null;
+
+    function renderCandidates(items) {
+      if (!items.length) {
+        candidatesBody.innerHTML = '<tr><td colspan="4">후보 없음</td></tr>';
+        return;
+      }
+      candidatesBody.innerHTML = items.map(item => `
+        <tr>
+          <td>${item.title}</td>
+          <td><span class="badge">${item.source}</span></td>
+          <td>${item.year}</td>
+          <td>${item.status}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadExport() {
+      if (!lastSearchId) {
+        csvArea.value = "먼저 검색을 실행하세요.";
+        return;
+      }
+      const res = await fetch(`http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/candidates.csv`);
+      const payload = await res.json();
+      csvArea.value = payload.content;
+    }
 
     runButton.addEventListener("click", async () => {
       result.textContent = "요청 중...";
       prisma.textContent = "집계 대기 중...";
+      csvArea.value = "CSV 생성 대기 중...";
 
       try {
         const createRes = await fetch("http://127.0.0.1:8000/api/search-requests", {
@@ -125,6 +216,7 @@
           body: JSON.stringify({ query_text: document.getElementById("query").value })
         });
         const created = await createRes.json();
+        lastSearchId = created.id;
 
         const runRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/run`, {
           method: "POST"
@@ -134,11 +226,25 @@
         const prismaRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/prisma`);
         const prismaJson = await prismaRes.json();
 
+        const candidatesRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/candidates`);
+        const candidatesJson = await candidatesRes.json();
+
         result.textContent = JSON.stringify(executed, null, 2);
         prisma.textContent = JSON.stringify(prismaJson, null, 2);
+        renderCandidates(candidatesJson);
+        await loadExport();
       } catch (error) {
         result.textContent = String(error);
         prisma.textContent = "오류 발생";
+        candidatesBody.innerHTML = '<tr><td colspan="4">오류 발생</td></tr>';
+      }
+    });
+
+    exportButton.addEventListener("click", async () => {
+      try {
+        await loadExport();
+      } catch (error) {
+        csvArea.value = String(error);
       }
     });
   </script>

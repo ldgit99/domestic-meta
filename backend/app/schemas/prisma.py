@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PrismaCountsRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     search_request_id: str
     identified_records: int
@@ -13,3 +15,10 @@ class PrismaCountsRead(BaseModel):
     reports_assessed_for_eligibility: int
     reports_excluded_with_reasons_json: dict[str, int] = Field(default_factory=dict)
     studies_included_in_review: int
+
+
+class CandidatesExportRead(BaseModel):
+    search_request_id: str
+    content_type: str
+    file_name: str
+    content: str

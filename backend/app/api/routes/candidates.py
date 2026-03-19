@@ -2,10 +2,19 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_store
 from app.repositories.memory import MemoryStore
-from app.schemas.candidate import CandidateRead, DecisionCreate, EligibilityDecisionRead
+from app.schemas.candidate import (
+    CandidateRead,
+    DecisionCreate,
+    EligibilityDecisionRead,
+    ExtractionPreviewRead,
+    FullTextArtifactCreate,
+    FullTextArtifactRead,
+)
+from app.services.extraction import ExtractionService
 
 
 router = APIRouter(tags=["candidates"])
+extraction_service = ExtractionService()
 
 
 @router.get("/search-requests/{search_request_id}/candidates", response_model=list[CandidateRead])
@@ -28,3 +37,28 @@ def create_decision(
     if created is None:
         raise HTTPException(status_code=404, detail="Candidate not found")
     return EligibilityDecisionRead.model_validate(created)
+
+
+@router.post("/candidates/{candidate_id}/full-text", response_model=FullTextArtifactRead)
+def upload_full_text(
+    candidate_id: str,
+    payload: FullTextArtifactCreate,
+    store: MemoryStore = Depends(get_store),
+) -> FullTextArtifactRead:
+    created = store.create_full_text_artifact(candidate_id, payload)
+    if created is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    return FullTextArtifactRead.model_validate(created)
+
+
+@router.get("/candidates/{candidate_id}/extraction", response_model=ExtractionPreviewRead)
+def preview_extraction(
+    candidate_id: str,
+    store: MemoryStore = Depends(get_store),
+) -> ExtractionPreviewRead:
+    candidate = store.get_candidate(candidate_id)
+    if candidate is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    artifact = store.get_full_text_artifact(candidate_id)
+    payload = extraction_service.preview(candidate, artifact)
+    return ExtractionPreviewRead.model_validate(payload)

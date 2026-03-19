@@ -1,7 +1,13 @@
 from app.core.constants import TITLE_ABSTRACT_STAGE
 from app.core.utils import generate_id, now_iso
-from app.models.domain import CandidateRecord, EligibilityDecision, PrismaCounts, SearchRequest
-from app.schemas.candidate import DecisionCreate
+from app.models.domain import (
+    CandidateRecord,
+    EligibilityDecision,
+    FullTextArtifact,
+    PrismaCounts,
+    SearchRequest,
+)
+from app.schemas.candidate import DecisionCreate, FullTextArtifactCreate
 from app.schemas.search import SearchRequestCreate
 
 
@@ -11,6 +17,7 @@ class MemoryStore:
         self.candidates: dict[str, CandidateRecord] = {}
         self.decisions: dict[str, EligibilityDecision] = {}
         self.prisma_counts: dict[str, PrismaCounts] = {}
+        self.full_text_artifacts: dict[str, FullTextArtifact] = {}
 
     def create_search_request(self, payload: SearchRequestCreate) -> SearchRequest:
         item = SearchRequest(
@@ -82,3 +89,27 @@ class MemoryStore:
 
     def update_prisma_counts(self, item: PrismaCounts) -> None:
         self.prisma_counts[item.search_request_id] = item
+
+    def create_full_text_artifact(
+        self,
+        candidate_id: str,
+        payload: FullTextArtifactCreate,
+    ) -> FullTextArtifact | None:
+        if self.get_candidate(candidate_id) is None:
+            return None
+
+        item = FullTextArtifact(
+            id=generate_id("artifact"),
+            candidate_record_id=candidate_id,
+            file_name=payload.file_name,
+            source_url=payload.source_url,
+            mime_type=payload.mime_type,
+            text_content=payload.text_content,
+            text_extraction_status="available" if payload.text_content else "pending",
+            created_at=now_iso(),
+        )
+        self.full_text_artifacts[candidate_id] = item
+        return item
+
+    def get_full_text_artifact(self, candidate_id: str) -> FullTextArtifact | None:
+        return self.full_text_artifacts.get(candidate_id)
