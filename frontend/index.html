@@ -22,7 +22,7 @@
     .grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
     .grid-wide { display: grid; gap: 16px; grid-template-columns: 1.2fr 0.8fr; }
     label { display: block; font-size: 14px; margin-bottom: 8px; }
-    input, button, textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: white; font: inherit; }
+    input, select, button, textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: white; font: inherit; }
     textarea { min-height: 160px; resize: vertical; }
     button { background: var(--accent); color: white; border: none; cursor: pointer; margin-top: 16px; }
     .secondary { background: var(--accent-2); }
@@ -31,14 +31,15 @@
     th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 14px; }
     th { color: var(--muted); font-weight: 600; }
     .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #e6f0ef; color: var(--accent); font-size: 12px; }
-    .actions { display: grid; gap: 12px; grid-template-columns: repeat(5, 1fr); }
-    @media (max-width: 860px) { .grid, .grid-wide, .actions { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
+    .actions { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .decision-actions { display: grid; gap: 12px; grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 860px) { .grid, .grid-wide, .decision-actions { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>교육학 메타분석 지원 AI 에이전트</h1>
-    <p class="lead">지속 저장되는 검색 요청, PRISMA, export, 그리고 TXT/PDF 업로드 기반 추출까지 확인하는 현재 프로토타입입니다.</p>
+    <p class="lead">지속 저장되는 검색 요청, PRISMA, 스크리닝 로그, 그리고 TXT/PDF 업로드 기반 추출까지 한 화면에서 검토하는 프로토타입입니다.</p>
 
     <div class="panel">
       <label for="query">검색어</label>
@@ -46,6 +47,7 @@
       <div class="actions">
         <button id="run">검색 실행</button>
         <button id="exportCsv" class="secondary">후보 CSV</button>
+        <button id="exportScreening" class="secondary">스크리닝 로그</button>
         <button id="exportPrisma" class="secondary">PRISMA JSON</button>
         <button id="exportMeta" class="secondary">메타분석 CSV</button>
         <button id="exportAudit" class="secondary">감사 리포트</button>
@@ -97,12 +99,31 @@
       </div>
     </div>
 
-    <div class="panel">
-      <h2>원문 업로드 또는 데모 텍스트</h2>
-      <label for="fullTextFile">TXT/PDF 업로드</label>
-      <input id="fullTextFile" type="file" accept=".txt,.pdf,text/plain,application/pdf" />
-      <textarea id="fullText">연구대상은 중학교 2학년 120명이었다. 실험집단 60명과 통제집단 60명으로 구성하였다. 협동학습 기반 수업을 적용한 결과, 학업성취도 사후검사에서 실험집단 평균은 82.4, 표준편차는 10.1이었고 통제집단 평균은 75.2, 표준편차는 11.3이었다. 두 집단 간 차이는 통계적으로 유의하였다(p &lt; .05).</textarea>
-      <button id="runExtraction">첫 후보 원문 등록 또는 파일 업로드 + 추출 실행</button>
+    <div class="grid">
+      <div class="panel">
+        <h2>수동 선별</h2>
+        <label for="reviewCandidate">후보 선택</label>
+        <select id="reviewCandidate">
+          <option value="">후보 없음</option>
+        </select>
+        <label for="reviewReasonCode">제외 사유 코드</label>
+        <input id="reviewReasonCode" placeholder="예: insufficient_statistics" />
+        <label for="reviewReasonText">메모</label>
+        <textarea id="reviewReasonText">자동 선별 결과를 검토한 메모를 남길 수 있습니다.</textarea>
+        <div class="decision-actions">
+          <button id="decisionInclude">포함</button>
+          <button id="decisionMaybe" class="secondary">검토 필요</button>
+          <button id="decisionExclude" class="secondary">제외</button>
+        </div>
+        <pre id="reviewResult">아직 수동 선별을 수행하지 않음</pre>
+      </div>
+      <div class="panel">
+        <h2>원문 업로드 또는 데모 텍스트</h2>
+        <label for="fullTextFile">TXT/PDF 업로드</label>
+        <input id="fullTextFile" type="file" accept=".txt,.pdf,text/plain,application/pdf" />
+        <textarea id="fullText">연구대상은 중학교 2학년 120명이었다. 실험집단 60명과 통제집단 60명으로 구성하였다. 협동학습 기반 수업을 적용한 결과, 학업성취도 사후검사에서 실험집단 평균은 82.4, 표준편차는 10.1이었고 통제집단 평균은 75.2, 표준편차는 11.3이었다. 두 집단 간 차이는 통계적으로 유의하였다(p &lt; .05).</textarea>
+        <button id="runExtraction">선택 후보 원문 등록 또는 파일 업로드 + 추출 실행</button>
+      </div>
     </div>
 
     <div class="grid">
@@ -125,17 +146,25 @@
   <script>
     const runButton = document.getElementById("run");
     const exportCsvButton = document.getElementById("exportCsv");
+    const exportScreeningButton = document.getElementById("exportScreening");
     const exportPrismaButton = document.getElementById("exportPrisma");
     const exportMetaButton = document.getElementById("exportMeta");
     const exportAuditButton = document.getElementById("exportAudit");
+    const decisionIncludeButton = document.getElementById("decisionInclude");
+    const decisionMaybeButton = document.getElementById("decisionMaybe");
+    const decisionExcludeButton = document.getElementById("decisionExclude");
     const runExtractionButton = document.getElementById("runExtraction");
     const result = document.getElementById("result");
     const summary = document.getElementById("summary");
     const prisma = document.getElementById("prisma");
     const extraction = document.getElementById("extraction");
+    const reviewResult = document.getElementById("reviewResult");
     const candidatesBody = document.getElementById("candidates");
     const searchesBody = document.getElementById("searches");
     const exportContent = document.getElementById("exportContent");
+    const reviewCandidate = document.getElementById("reviewCandidate");
+    const reviewReasonCode = document.getElementById("reviewReasonCode");
+    const reviewReasonText = document.getElementById("reviewReasonText");
     const fullText = document.getElementById("fullText");
     const fullTextFile = document.getElementById("fullTextFile");
     let lastSearchId = null;
@@ -145,8 +174,10 @@
       currentCandidates = items;
       if (!items.length) {
         candidatesBody.innerHTML = '<tr><td colspan="4">후보 없음</td></tr>';
+        reviewCandidate.innerHTML = '<option value="">후보 없음</option>';
         return;
       }
+
       candidatesBody.innerHTML = items.map(item => `
         <tr>
           <td>${item.title}</td>
@@ -154,6 +185,11 @@
           <td>${item.year}</td>
           <td>${item.status}</td>
         </tr>
+      `).join("");
+
+      const reviewItems = items.filter(item => item.canonical_record_id === item.id || item.canonical_record_id === null);
+      reviewCandidate.innerHTML = reviewItems.map(item => `
+        <option value="${item.id}">${item.title} (${item.source}, ${item.year}, ${item.status})</option>
       `).join("");
     }
 
@@ -177,6 +213,22 @@
       renderSearches(payload);
     }
 
+    async function refreshSearchState(searchId) {
+      const summaryRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${searchId}/summary`);
+      const summaryJson = await summaryRes.json();
+
+      const prismaRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${searchId}/prisma`);
+      const prismaJson = await prismaRes.json();
+
+      const candidatesRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${searchId}/candidates`);
+      const candidatesJson = await candidatesRes.json();
+
+      summary.textContent = JSON.stringify(summaryJson, null, 2);
+      prisma.textContent = JSON.stringify(prismaJson, null, 2);
+      renderCandidates(candidatesJson);
+      await loadSearches();
+    }
+
     async function loadExport(kind) {
       if (!lastSearchId) {
         exportContent.value = "먼저 검색을 실행하세요.";
@@ -184,6 +236,7 @@
       }
       const map = {
         candidates: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/candidates.csv`,
+        screening: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/screening-log.json`,
         prisma: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/prisma-counts.json`,
         meta: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/meta-analysis-ready.csv`,
         audit: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/audit-report.md`
@@ -193,14 +246,15 @@
       exportContent.value = payload.content;
     }
 
-    function firstCanonicalCandidate() {
-      return currentCandidates.find(item => item.canonical_record_id === item.id) || currentCandidates[0] || null;
+    function selectedCandidate() {
+      return currentCandidates.find(item => item.id === reviewCandidate.value) || null;
     }
 
     runButton.addEventListener("click", async () => {
       result.textContent = "요청 중...";
       summary.textContent = "요약 대기 중...";
       prisma.textContent = "집계 대기 중...";
+      reviewResult.textContent = "수동 선별 대기 중...";
       extraction.textContent = "추출 대기 중...";
       exportContent.value = "Export 생성 대기 중...";
 
@@ -218,34 +272,61 @@
         });
         const executed = await runRes.json();
 
-        const summaryRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/summary`);
-        const summaryJson = await summaryRes.json();
-
-        const prismaRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/prisma`);
-        const prismaJson = await prismaRes.json();
-
-        const candidatesRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/candidates`);
-        const candidatesJson = await candidatesRes.json();
-
         result.textContent = JSON.stringify(executed, null, 2);
-        summary.textContent = JSON.stringify(summaryJson, null, 2);
-        prisma.textContent = JSON.stringify(prismaJson, null, 2);
-        renderCandidates(candidatesJson);
-        await loadSearches();
+        await refreshSearchState(created.id);
         await loadExport("candidates");
       } catch (error) {
         result.textContent = String(error);
         summary.textContent = "오류 발생";
         prisma.textContent = "오류 발생";
+        reviewResult.textContent = "오류 발생";
         candidatesBody.innerHTML = '<tr><td colspan="4">오류 발생</td></tr>';
       }
     });
 
+    async function submitDecision(decision) {
+      const candidate = selectedCandidate();
+      if (!candidate) {
+        reviewResult.textContent = "후보를 먼저 선택하세요.";
+        return;
+      }
+
+      const payload = {
+        stage: "title_abstract",
+        decision,
+        reason_code: reviewReasonCode.value || null,
+        reason_text: reviewReasonText.value || null,
+        reviewed_by: "dashboard"
+      };
+
+      const res = await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/decision`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const response = await res.json();
+      reviewResult.textContent = JSON.stringify(response, null, 2);
+      await refreshSearchState(lastSearchId);
+      await loadExport("screening");
+    }
+
+    decisionIncludeButton.addEventListener("click", async () => {
+      try { await submitDecision("include"); } catch (error) { reviewResult.textContent = String(error); }
+    });
+
+    decisionMaybeButton.addEventListener("click", async () => {
+      try { await submitDecision("needs_human_review"); } catch (error) { reviewResult.textContent = String(error); }
+    });
+
+    decisionExcludeButton.addEventListener("click", async () => {
+      try { await submitDecision("exclude"); } catch (error) { reviewResult.textContent = String(error); }
+    });
+
     runExtractionButton.addEventListener("click", async () => {
       try {
-        const candidate = firstCanonicalCandidate();
+        const candidate = selectedCandidate();
         if (!candidate) {
-          extraction.textContent = "먼저 검색을 실행해 후보를 만드세요.";
+          extraction.textContent = "후보를 먼저 선택하세요.";
           return;
         }
 
@@ -274,6 +355,7 @@
         });
         const payload = await res.json();
         extraction.textContent = JSON.stringify(payload, null, 2);
+        await refreshSearchState(lastSearchId);
         await loadExport("meta");
       } catch (error) {
         extraction.textContent = String(error);
@@ -282,6 +364,10 @@
 
     exportCsvButton.addEventListener("click", async () => {
       try { await loadExport("candidates"); } catch (error) { exportContent.value = String(error); }
+    });
+
+    exportScreeningButton.addEventListener("click", async () => {
+      try { await loadExport("screening"); } catch (error) { exportContent.value = String(error); }
     });
 
     exportPrismaButton.addEventListener("click", async () => {

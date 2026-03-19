@@ -21,6 +21,7 @@
 - RISS 스텁 기반 후보 수집
 - 중복 제거
 - 규칙 기반 1차 선별
+- 대시보드 기반 수동 선별
 - PRISMA 집계
 - 원문 아티팩트 등록
 - TXT/PDF 업로드 기반 원문 저장
@@ -55,6 +56,8 @@ uvicorn app.main:app --reload
 ### Frontend
 
 `frontend/index.html`을 브라우저에서 열면 된다. 백엔드가 먼저 실행 중이어야 한다.
+
+현재 프론트엔드는 검색 실행, 수동 선별, TXT/PDF 업로드, 추출 실행, PRISMA/스크리닝/audit export 조회까지 한 화면에서 확인하는 형태다.
 
 ## 노출된 API
 
