@@ -28,10 +28,19 @@ class SearchRequestSummaryRead(BaseModel):
 
     id: str
     query_text: str
+    expanded_keywords: list[str] = Field(default_factory=list)
+    year_from: int
+    year_to: int
+    include_theses: bool
+    include_journal_articles: bool
+    inclusion_rules: list[str] = Field(default_factory=list)
+    exclusion_rules: list[str] = Field(default_factory=list)
     status: str
     candidate_count: int
     canonical_candidate_count: int
     decision_count: int
+    source_counts: dict[str, int] = Field(default_factory=dict)
+    status_counts: dict[str, int] = Field(default_factory=dict)
     prisma: PrismaCountsRead | None = None
 
 

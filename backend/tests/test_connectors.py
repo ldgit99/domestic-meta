@@ -2,23 +2,25 @@ import json
 
 from app.core.config import settings
 from app.models.domain import SearchRequest
-from app.services.connectors import RISSConnector, RISSLiveConnector
+from app.services.connectors import KCIStubConnector, RISSConnector, RISSLiveConnector
 
 
-def _request() -> SearchRequest:
-    return SearchRequest(
-        id="s1",
-        query_text="협동학습",
-        expanded_keywords=[],
-        year_from=2010,
-        year_to=2026,
-        include_theses=True,
-        include_journal_articles=True,
-        inclusion_rules=[],
-        exclusion_rules=[],
-        status="created",
-        created_at="now",
-    )
+def _request(**overrides) -> SearchRequest:
+    payload = {
+        "id": "s1",
+        "query_text": "self-directed learning",
+        "expanded_keywords": [],
+        "year_from": 2010,
+        "year_to": 2026,
+        "include_theses": True,
+        "include_journal_articles": True,
+        "inclusion_rules": [],
+        "exclusion_rules": [],
+        "status": "created",
+        "created_at": "now",
+    }
+    payload.update(overrides)
+    return SearchRequest(**payload)
 
 
 def test_riss_connector_falls_back_to_stub_when_live_disabled() -> None:
@@ -42,14 +44,14 @@ def test_riss_live_connector_parses_sparql_style_json_bindings() -> None:
             "results": {
                 "bindings": [
                     {
-                        "title": {"type": "literal", "value": "협동학습의 효과"},
-                        "author": {"type": "literal", "value": "홍길동;김연구"},
+                        "title": {"type": "literal", "value": "Self-directed learning effects"},
+                        "author": {"type": "literal", "value": "Kim, Lee"},
                         "year": {"type": "literal", "value": "2023"},
-                        "school": {"type": "literal", "value": "서울대학교"},
+                        "school": {"type": "literal", "value": "Seoul National University"},
                         "type": {"type": "literal", "value": "dissertation"},
                         "url": {"type": "uri", "value": "https://example.org/riss/live-1"},
-                        "keyword": {"type": "literal", "value": "협동학습;학업성취도"},
-                        "description": {"type": "literal", "value": "평균과 표준편차를 보고한 학위논문"},
+                        "keyword": {"type": "literal", "value": "self-directed learning, achievement"},
+                        "description": {"type": "literal", "value": "Reports means and standard deviations."},
                     }
                 ]
             }
@@ -60,7 +62,29 @@ def test_riss_live_connector_parses_sparql_style_json_bindings() -> None:
     candidate = RISSLiveConnector()._candidate_from_mapping(items[0], _request())
 
     assert len(items) == 1
-    assert candidate.title == "협동학습의 효과"
+    assert candidate.title == "Self-directed learning effects"
     assert candidate.document_type == "thesis"
-    assert candidate.journal_or_school == "서울대학교"
-    assert candidate.keywords == ["협동학습", "학업성취도"]
+    assert candidate.journal_or_school == "Seoul National University"
+    assert candidate.keywords == ["self-directed learning", "achievement"]
+
+
+def test_stub_connectors_respect_year_range_and_document_flags() -> None:
+    thesis_only = _request(include_journal_articles=False, include_theses=True, year_from=2022, year_to=2022)
+    journal_only = _request(include_journal_articles=True, include_theses=False, year_from=2020, year_to=2020)
+
+    riss_thesis_items = list(RISSConnector().collect(thesis_only))
+    kci_items = list(KCIStubConnector().collect(journal_only))
+
+    assert len(riss_thesis_items) == 1
+    assert riss_thesis_items[0].document_type == "thesis"
+    assert kci_items == []
+
+
+def test_connector_query_text_uses_expanded_keywords() -> None:
+    connector = KCIStubConnector()
+
+    query = connector._build_query_text(
+        _request(expanded_keywords=["achievement", "motivation", "achievement"])
+    )
+
+    assert query == "self-directed learning achievement motivation"

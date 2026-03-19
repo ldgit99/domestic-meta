@@ -1,3 +1,4 @@
+from app.core.constants import DECISION_EXCLUDE, DECISION_INCLUDE, DECISION_MAYBE, DECISION_REVIEW
 from app.schemas.search import SearchRunResult
 from app.services.connectors import KCIConnector, RISSConnector
 from app.services.deduplication import DeduplicationService
@@ -32,9 +33,9 @@ class SearchOrchestrator:
         for candidate in self.store.list_candidates(search_request_id):
             if candidate.canonical_record_id != candidate.id:
                 continue
-            decision = self.screening.screen_title_abstract(candidate)
+            decision = self.screening.screen_title_abstract(candidate, request=request)
             self.store.save_decision(decision)
-            candidate.status = "screened_title_abstract"
+            candidate.status = self._status_for_screening(decision.decision)
             self.store.update_candidate(candidate)
             screened_count += 1
 
@@ -56,3 +57,12 @@ class SearchOrchestrator:
             screened_candidates=screened_count,
             duplicates_removed=duplicates_removed,
         )
+
+    def _status_for_screening(self, decision: str) -> str:
+        if decision == DECISION_INCLUDE:
+            return "selected_for_full_text"
+        if decision == DECISION_EXCLUDE:
+            return "excluded_title_abstract"
+        if decision in {DECISION_MAYBE, DECISION_REVIEW}:
+            return "needs_review_title_abstract"
+        return "screened_title_abstract"

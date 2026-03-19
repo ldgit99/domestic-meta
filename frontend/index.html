@@ -93,6 +93,37 @@
       margin-top: 16px;
     }
 
+    .form-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .inline-options {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: white;
+    }
+
+    .checkbox-row input {
+      width: auto;
+      margin: 0;
+    }
+
+    .compact {
+      min-height: 96px;
+    }
+
     .decision-actions {
       display: grid;
       gap: 12px;
@@ -272,7 +303,9 @@
     @media (max-width: 960px) {
       .grid,
       .grid-wide,
-      .decision-actions {
+      .decision-actions,
+      .form-grid,
+      .inline-options {
         grid-template-columns: 1fr;
       }
 
@@ -292,8 +325,47 @@
     </p>
 
     <div class="panel">
-      <label for="query">Search Query</label>
-      <input id="query" value="self-directed learning" />
+      <div class="form-grid">
+        <div>
+          <label for="query">Search Query</label>
+          <input id="query" value="self-directed learning" />
+        </div>
+        <div>
+          <label for="expandedKeywords">Expanded Keywords</label>
+          <textarea id="expandedKeywords" class="compact">achievement
+motivation</textarea>
+        </div>
+        <div class="inline-options">
+          <div>
+            <label for="yearFrom">Year From</label>
+            <input id="yearFrom" type="number" value="2018" />
+          </div>
+          <div>
+            <label for="yearTo">Year To</label>
+            <input id="yearTo" type="number" value="2026" />
+          </div>
+        </div>
+        <div class="inline-options">
+          <label class="checkbox-row" for="includeTheses">
+            <input id="includeTheses" type="checkbox" checked />
+            <span>Include theses</span>
+          </label>
+          <label class="checkbox-row" for="includeJournals">
+            <input id="includeJournals" type="checkbox" checked />
+            <span>Include journal articles</span>
+          </label>
+        </div>
+        <div>
+          <label for="inclusionRules">Inclusion Rules</label>
+          <textarea id="inclusionRules" class="compact">achievement
+control group</textarea>
+        </div>
+        <div>
+          <label for="exclusionRules">Exclusion Rules</label>
+          <textarea id="exclusionRules" class="compact">qualitative
+interview</textarea>
+        </div>
+      </div>
       <div class="actions">
         <button id="run">Run Search</button>
         <button id="exportCsv" class="secondary">Candidates CSV</button>
@@ -458,6 +530,13 @@
     const runExtractionButton = document.getElementById("runExtraction");
 
     const queryInput = document.getElementById("query");
+    const expandedKeywordsInput = document.getElementById("expandedKeywords");
+    const yearFromInput = document.getElementById("yearFrom");
+    const yearToInput = document.getElementById("yearTo");
+    const includeThesesInput = document.getElementById("includeTheses");
+    const includeJournalsInput = document.getElementById("includeJournals");
+    const inclusionRulesInput = document.getElementById("inclusionRules");
+    const exclusionRulesInput = document.getElementById("exclusionRules");
     const result = document.getElementById("result");
     const summary = document.getElementById("summary");
     const prisma = document.getElementById("prisma");
@@ -480,6 +559,24 @@
 
     let lastSearchId = null;
     let currentCandidates = [];
+
+    function parseList(value) {
+      return value
+        .split(/\r?\n|,/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    function populateSearchForm(payload) {
+      queryInput.value = payload.query_text || "";
+      expandedKeywordsInput.value = (payload.expanded_keywords || []).join("\n");
+      yearFromInput.value = payload.year_from ?? "";
+      yearToInput.value = payload.year_to ?? "";
+      includeThesesInput.checked = Boolean(payload.include_theses);
+      includeJournalsInput.checked = Boolean(payload.include_journal_articles);
+      inclusionRulesInput.value = (payload.inclusion_rules || []).join("\n");
+      exclusionRulesInput.value = (payload.exclusion_rules || []).join("\n");
+    }
 
     function renderCandidates(items) {
       currentCandidates = items;
@@ -546,6 +643,7 @@
       document.querySelectorAll("[data-search-id]").forEach((button) => {
         button.addEventListener("click", async () => {
           lastSearchId = button.dataset.searchId;
+          await loadSearchRequestConfig(lastSearchId);
           await refreshSearchState(lastSearchId);
         });
       });
@@ -612,6 +710,15 @@
       }
     }
 
+    async function loadSearchRequestConfig(searchId) {
+      if (!searchId) {
+        return;
+      }
+
+      const payload = await fetchJson(`/search-requests/${searchId}`);
+      populateSearchForm(payload);
+    }
+
     async function loadCandidateDetail(candidateId) {
       if (!candidateId) {
         candidateDetail.textContent = "Choose a candidate to inspect its detail payload.";
@@ -671,6 +778,7 @@
         fetchJson(`/search-requests/${searchId}/candidates`)
       ]);
 
+      populateSearchForm(summaryJson);
       summary.textContent = JSON.stringify(summaryJson, null, 2);
       prisma.textContent = JSON.stringify(prismaJson, null, 2);
 
@@ -747,7 +855,16 @@
         const created = await fetchJson("/search-requests", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query_text: queryInput.value })
+          body: JSON.stringify({
+            query_text: queryInput.value,
+            expanded_keywords: parseList(expandedKeywordsInput.value),
+            year_from: Number(yearFromInput.value || 2010),
+            year_to: Number(yearToInput.value || 2026),
+            include_theses: includeThesesInput.checked,
+            include_journal_articles: includeJournalsInput.checked,
+            inclusion_rules: parseList(inclusionRulesInput.value),
+            exclusion_rules: parseList(exclusionRulesInput.value)
+          })
         });
         lastSearchId = created.id;
 

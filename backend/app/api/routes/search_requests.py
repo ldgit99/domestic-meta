@@ -52,14 +52,29 @@ def get_search_request_summary(
     decisions = store.list_decisions_for_search(search_request_id)
     canonical_count = len([item for item in candidates if item.canonical_record_id == item.id])
     prisma = store.get_prisma_counts(search_request_id)
+    source_counts: dict[str, int] = {}
+    status_counts: dict[str, int] = {}
+
+    for candidate in candidates:
+        source_counts[candidate.source] = source_counts.get(candidate.source, 0) + 1
+        status_counts[candidate.status] = status_counts.get(candidate.status, 0) + 1
 
     return SearchRequestSummaryRead(
         id=result.id,
         query_text=result.query_text,
+        expanded_keywords=result.expanded_keywords,
+        year_from=result.year_from,
+        year_to=result.year_to,
+        include_theses=result.include_theses,
+        include_journal_articles=result.include_journal_articles,
+        inclusion_rules=result.inclusion_rules,
+        exclusion_rules=result.exclusion_rules,
         status=result.status,
         candidate_count=len(candidates),
         canonical_candidate_count=canonical_count,
         decision_count=len(decisions),
+        source_counts=source_counts,
+        status_counts=status_counts,
         prisma=prisma,
     )
 

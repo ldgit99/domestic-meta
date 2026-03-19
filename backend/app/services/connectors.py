@@ -16,6 +16,16 @@ class BaseConnector:
     def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
         raise NotImplementedError
 
+    def _build_query_text(self, request: SearchRequest) -> str:
+        values = [request.query_text, *request.expanded_keywords]
+        deduped: list[str] = []
+        for value in values:
+            normalized = str(value).strip()
+            if not normalized or normalized in deduped:
+                continue
+            deduped.append(normalized)
+        return " ".join(deduped)
+
     def _split_values(self, value: object, default: list[str] | None = None) -> list[str]:
         if value is None:
             return default or []
@@ -99,6 +109,15 @@ class BaseConnector:
                 output.append(mapping)
         return output
 
+    def _matches_request(self, candidate: CandidateRecord, request: SearchRequest) -> bool:
+        if candidate.year and (candidate.year < request.year_from or candidate.year > request.year_to):
+            return False
+        if candidate.document_type == "thesis" and not request.include_theses:
+            return False
+        if candidate.document_type == "journal_article" and not request.include_journal_articles:
+            return False
+        return True
+
 
 class KCIStubConnector(BaseConnector):
     source_name = SOURCE_KCI
@@ -107,19 +126,22 @@ class KCIStubConnector(BaseConnector):
         if not request.include_journal_articles:
             return []
 
-        query = request.query_text
-        return [
+        query = self._build_query_text(request)
+        items = [
             CandidateRecord(
                 id=generate_id("cand"),
                 search_request_id=request.id,
                 source=self.source_name,
                 source_record_id="kci-001",
-                title=f"{query}이 학업성취도에 미치는 효과",
-                authors=["김연구", "박분석"],
+                title=f"{query} intervention effects on academic achievement",
+                authors=["Kim", "Park"],
                 year=2022,
-                journal_or_school="교육평가연구",
-                abstract="중학생 대상 비교집단 연구로 사전-사후 평균과 표준편차를 보고하였다.",
-                keywords=[query, "학업성취도", "비교집단"],
+                journal_or_school="Korean Journal of Education",
+                abstract=(
+                    "A quantitative study comparing intervention and control groups with means "
+                    "and standard deviations."
+                ),
+                keywords=[query, "achievement", "control group"],
                 doi="10.0000/example-001",
                 url="https://example.org/kci/001",
                 document_type="journal_article",
@@ -132,12 +154,12 @@ class KCIStubConnector(BaseConnector):
                 search_request_id=request.id,
                 source=self.source_name,
                 source_record_id="kci-002",
-                title=f"{query} 관련 질적 사례연구",
-                authors=["이질적"],
+                title=f"Qualitative reflections on {query}",
+                authors=["Lee"],
                 year=2021,
-                journal_or_school="교육방법연구",
-                abstract="면담과 참여관찰을 활용한 질적 사례연구이다.",
-                keywords=[query, "질적연구"],
+                journal_or_school="Educational Methods Review",
+                abstract="An interview-based qualitative study of classroom experiences.",
+                keywords=[query, "qualitative"],
                 doi=None,
                 url="https://example.org/kci/002",
                 document_type="journal_article",
@@ -146,6 +168,7 @@ class KCIStubConnector(BaseConnector):
                 status="collected",
             ),
         ]
+        return [item for item in items if self._matches_request(item, request)]
 
 
 class KCILiveConnector(BaseConnector):
@@ -159,7 +182,7 @@ class KCILiveConnector(BaseConnector):
 
         params = {
             settings.kci_api_key_param: settings.kci_api_key,
-            settings.kci_query_param: request.query_text,
+            settings.kci_query_param: self._build_query_text(request),
             settings.kci_count_param: "20",
         }
         url = f"{settings.kci_api_url}?{urllib.parse.urlencode(params)}"
@@ -173,17 +196,19 @@ class KCILiveConnector(BaseConnector):
             records = self._parse_json_records(payload)
         else:
             records = self._parse_xml_records(payload)
-        return [self._candidate_from_mapping(item, request) for item in records]
+
+        candidates = [self._candidate_from_mapping(item, request) for item in records]
+        return [item for item in candidates if self._matches_request(item, request)]
 
     def _candidate_from_mapping(self, item: dict, request: SearchRequest) -> CandidateRecord:
         title = (
             item.get("title")
             or item.get("articleTitle")
             or item.get("journalTitle")
-            or f"{request.query_text} 관련 KCI 논문"
+            or f"{request.query_text} related KCI article"
         )
         authors = item.get("authors") or item.get("author") or item.get("creator") or ""
-        author_list = self._split_values(authors, default=["미상"])
+        author_list = self._split_values(authors, default=["unknown"])
         year = self._parse_year(item.get("year") or item.get("pubYear") or item.get("publicationYear"))
 
         keywords = item.get("keywords") or item.get("keyword") or request.query_text
@@ -232,7 +257,7 @@ class RISSStubConnector(BaseConnector):
     source_name = SOURCE_RISS
 
     def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
-        query = request.query_text
+        query = self._build_query_text(request)
         items: list[CandidateRecord] = []
 
         if request.include_theses:
@@ -242,12 +267,12 @@ class RISSStubConnector(BaseConnector):
                     search_request_id=request.id,
                     source=self.source_name,
                     source_record_id="riss-001",
-                    title=f"{query}이 학업성취도에 미치는 효과",
-                    authors=["김연구"],
+                    title=f"{query} effects on academic achievement",
+                    authors=["Kim"],
                     year=2022,
-                    journal_or_school="A대학교 교육대학원",
-                    abstract="실험집단과 통제집단의 사전-사후 검사 결과를 제시한 학위논문이다.",
-                    keywords=[query, "실험연구", "학위논문"],
+                    journal_or_school="Graduate School of Education",
+                    abstract="A thesis reporting pretest and posttest group comparisons.",
+                    keywords=[query, "thesis", "experimental"],
                     doi=None,
                     url="https://example.org/riss/001",
                     document_type="thesis",
@@ -264,12 +289,12 @@ class RISSStubConnector(BaseConnector):
                     search_request_id=request.id,
                     source=self.source_name,
                     source_record_id="riss-002",
-                    title=f"{query} 프로그램의 교육효과 분석",
-                    authors=["최연구"],
+                    title=f"{query} program evaluation",
+                    authors=["Choi"],
                     year=2020,
-                    journal_or_school="교육공학연구",
-                    abstract="교육 프로그램 적용 후 비교집단의 평균 차이를 보고한 학술논문이다.",
-                    keywords=[query, "교육효과", "학술논문"],
+                    journal_or_school="Journal of Educational Engineering",
+                    abstract="A journal article comparing intervention and control group means.",
+                    keywords=[query, "journal article", "evaluation"],
                     doi=None,
                     url="https://example.org/riss/002",
                     document_type="journal_article",
@@ -279,7 +304,7 @@ class RISSStubConnector(BaseConnector):
                 )
             )
 
-        return items
+        return [item for item in items if self._matches_request(item, request)]
 
 
 class RISSLiveConnector(BaseConnector):
@@ -289,7 +314,7 @@ class RISSLiveConnector(BaseConnector):
         if not settings.riss_live_enabled or not settings.riss_api_url:
             return []
 
-        params: dict[str, str] = {settings.riss_query_param: request.query_text}
+        params: dict[str, str] = {settings.riss_query_param: self._build_query_text(request)}
         if settings.riss_api_key and settings.riss_api_key_param:
             params[settings.riss_api_key_param] = settings.riss_api_key
         if settings.riss_count_param:
@@ -324,7 +349,7 @@ class RISSLiveConnector(BaseConnector):
             item.get("title")
             or item.get("riss.title")
             or item.get("dc:title")
-            or f"{request.query_text} 관련 RISS 논문"
+            or f"{request.query_text} related RISS record"
         )
         authors = (
             item.get("authors")
@@ -333,7 +358,7 @@ class RISSLiveConnector(BaseConnector):
             or item.get("dc:creator")
             or ""
         )
-        author_list = self._split_values(authors, default=["미상"])
+        author_list = self._split_values(authors, default=["unknown"])
         year = self._parse_year(
             item.get("year")
             or item.get("pubYear")
@@ -397,16 +422,9 @@ class RISSLiveConnector(BaseConnector):
                 "collection",
             ]
         ).lower()
-        if any(token in raw_type for token in ["thesis", "dissertation", "학위", "석사", "박사"]):
+        if any(token in raw_type for token in ["thesis", "dissertation", "masters", "doctoral"]):
             return "thesis"
         return "journal_article"
-
-    def _matches_request(self, candidate: CandidateRecord, request: SearchRequest) -> bool:
-        if candidate.document_type == "thesis" and not request.include_theses:
-            return False
-        if candidate.document_type == "journal_article" and not request.include_journal_articles:
-            return False
-        return True
 
 
 class RISSConnector(BaseConnector):
