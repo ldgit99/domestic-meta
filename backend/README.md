@@ -28,6 +28,7 @@ FastAPI backend for the domestic education meta-analysis prototype.
 - `REPOSITORY_BACKEND=file`: JSON persistence under `backend/data/store.json`
 - `REPOSITORY_BACKEND=sqlalchemy`: relational persistence using `DATABASE_URL`
 - `AUTO_CREATE_TABLES=true|false`: dev convenience toggle for `Base.metadata.create_all(...)`
+- `CORS_ALLOW_ORIGINS=http://localhost:3000,http://127.0.0.1:5500`
 
 Example:
 
@@ -113,6 +114,28 @@ Otherwise it stores a heuristic fallback extraction.
 - `OCR_COMMAND_TEMPLATE`
 - `OCR_TIMEOUT_SECONDS`
 - `OCR_MIN_TEXT_LENGTH`
+
+## Running tests
+
+```bash
+cd backend
+pip install -e .[test]
+pytest tests
+```
+
+## Containerized run
+
+From repository root:
+
+```bash
+docker compose up --build
+```
+
+The provided compose stack uses:
+
+- `postgres` for `DATABASE_URL`
+- `backend` with `REPOSITORY_BACKEND=sqlalchemy`
+- `frontend` with an Nginx reverse proxy from `/api` to the backend
 
 ## Full-text ingestion endpoints
 

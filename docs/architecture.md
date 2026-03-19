@@ -79,6 +79,13 @@
 - preview export payloads for candidates, screening logs, PRISMA counts, PRISMA flow, meta-analysis CSV, and audit reports
 - preview a reproducible search manifest export with criteria, counts, and PRISMA flow payload
 
+## Deployment and verification slice
+
+- `docker-compose.yml` runs `frontend`, `backend`, and `postgres` as a local integration stack
+- `backend/Dockerfile` packages the FastAPI service and is paired with `alembic upgrade head` in compose startup
+- `frontend/Dockerfile` and `frontend/nginx.conf` serve the static dashboard and reverse-proxy `/api` to the backend container
+- `.github/workflows/ci.yml` runs backend tests inside the `backend` working directory with editable installs
+- the dashboard now resolves its API base from same-origin hosting by default and falls back to `http://127.0.0.1:8000/api` only under `file://`
 ## Next implementation targets
 
 - production-safe `RISS` response mapping

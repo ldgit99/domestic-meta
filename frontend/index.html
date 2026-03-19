@@ -525,7 +525,22 @@ interview</textarea>
   </div>
 
   <script>
-    const apiBase = "http://127.0.0.1:8000/api";
+    function resolveApiBase() {
+      if (window.location.protocol === "file:") {
+        return "http://127.0.0.1:8000/api";
+      }
+
+      if (window.localStorage) {
+        const override = window.localStorage.getItem("domesticMetaApiBase");
+        if (override) {
+          return override.replace(/\/$/, "");
+        }
+      }
+
+      return `${window.location.origin}/api`;
+    }
+
+    const apiBase = resolveApiBase();
 
     const runButton = document.getElementById("run");
     const exportManifestButton = document.getElementById("exportManifest");

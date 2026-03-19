@@ -65,6 +65,7 @@ Key settings:
 - `RISS_LIVE_ENABLED=true`
 - `OPENAI_API_KEY=...`
 - `OCR_COMMAND_TEMPLATE=tesseract {input_path} stdout -l kor+eng`
+- `CORS_ALLOW_ORIGINS=http://localhost:3000,http://127.0.0.1:5500`
 
 When live collection or OpenAI extraction is not configured, the prototype falls back to local
 stub data or heuristic extraction.
@@ -79,6 +80,8 @@ If you are using `REPOSITORY_BACKEND=sqlalchemy` for a persistent relational dat
 ### Frontend
 
 Open `frontend/index.html` in a browser while the backend is running.
+When the page is served through a web server, it defaults to `window.location.origin + "/api"`.
+When opened from `file://`, it falls back to `http://127.0.0.1:8000/api`.
 
 The dashboard currently supports:
 
@@ -120,6 +123,33 @@ The dashboard currently supports:
 - `GET /api/search-requests/{id}/exports/extraction-results.json`
 - `GET /api/search-requests/{id}/exports/meta-analysis-ready.csv`
 - `GET /api/search-requests/{id}/exports/audit-report.md`
+
+## Docker
+
+Run the full stack with:
+
+```bash
+docker compose up --build
+```
+
+Services:
+
+- `frontend`: `http://127.0.0.1:8080`
+- `backend`: internal API served behind the frontend reverse proxy
+- `postgres`: persistent relational database for `SQLAlchemy` mode
+
+The bundled frontend container proxies `/api` to the backend container, so no manual API base
+override is needed in that setup.
+
+## CI
+
+GitHub Actions now runs backend tests on pushes and pull requests with:
+
+```bash
+cd backend
+pip install -e .[test]
+pytest tests
+```
 
 ## Open items
 

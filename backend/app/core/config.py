@@ -11,6 +11,11 @@ DATA_DIR = BASE_DIR / "data"
 class Settings(BaseModel):
     app_name: str = "RISS Meta Agent API"
     environment: str = os.getenv("APP_ENV", "development")
+    cors_allow_origins: list[str] = [
+        item.strip()
+        for item in os.getenv("CORS_ALLOW_ORIGINS", "http://127.0.0.1:8000,http://localhost:8000,http://127.0.0.1:5500,http://localhost:5500").split(",")
+        if item.strip()
+    ]
     uploads_dir: str = str(BASE_DIR / "uploads")
     exports_dir: str = str(BASE_DIR / "exports")
     data_dir: str = str(DATA_DIR)
