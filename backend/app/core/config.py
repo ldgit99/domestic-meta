@@ -15,6 +15,8 @@ class Settings(BaseModel):
     exports_dir: str = str(BASE_DIR / "exports")
     data_dir: str = str(DATA_DIR)
     store_file: str = str(DATA_DIR / "store.json")
+    repository_backend: str = os.getenv("REPOSITORY_BACKEND", "file").lower()
+    database_url: str | None = os.getenv("DATABASE_URL")
     kci_live_enabled: bool = os.getenv("KCI_LIVE_ENABLED", "false").lower() == "true"
     kci_api_url: str | None = os.getenv("KCI_API_URL")
     kci_api_key: str | None = os.getenv("KCI_API_KEY")

@@ -6,6 +6,7 @@ FastAPI 기반 초기 백엔드 구현이다.
 
 - 검색 요청 생성 및 조회
 - 파일 기반 영속 저장소
+- 선택 가능한 `SQLAlchemy/PostgreSQL` 저장소
 - rerun-safe 수집 실행
 - 후보 논문 조회
 - 후보 상세와 검토 큐 API
@@ -19,6 +20,17 @@ FastAPI 기반 초기 백엔드 구현이다.
 - 효과크기 계산 가능성 요약
 - 휴리스틱 fallback 추출
 - audit report export
+
+## 저장소 모드
+
+- `REPOSITORY_BACKEND=file`: 기존 JSON 파일 저장소 사용
+- `REPOSITORY_BACKEND=sqlalchemy`: `DATABASE_URL` 기반 데이터베이스 저장소 사용
+
+예시:
+
+- `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/rissmeta`
+
+현재 SQLAlchemy 저장소는 앱 시작 시 테이블을 자동 생성한다. 운영 환경에서는 추후 마이그레이션 체계로 바꾸는 것이 맞다.
 
 ## KCI 연동
 
@@ -76,5 +88,5 @@ FastAPI 기반 초기 백엔드 구현이다.
 ## 추후 연결 예정
 
 - RISS 실운영 엔드포인트별 매핑 보정
-- PostgreSQL 및 Redis
+- PostgreSQL 마이그레이션 도입
 - PDF OCR 및 정교한 파서

@@ -1,5 +1,6 @@
 from app.core.config import settings
 from app.repositories.file_store import FileStore
+from app.repositories.sqlalchemy_store import SQLAlchemyStore
 from app.services.document_ingestion import DocumentIngestionService
 from app.services.effect_size import EffectSizeService
 from app.services.extraction import ExtractionService
@@ -10,7 +11,17 @@ from app.services.review import ReviewService
 from app.services.search_management import SearchManagementService
 
 
-_store = FileStore(settings.store_file)
+def _build_store():
+    if settings.repository_backend == "file":
+        return FileStore(settings.store_file)
+    if settings.repository_backend == "sqlalchemy":
+        if not settings.database_url:
+            raise ValueError("DATABASE_URL must be set when REPOSITORY_BACKEND=sqlalchemy")
+        return SQLAlchemyStore(settings.database_url)
+    raise ValueError(f"Unsupported REPOSITORY_BACKEND: {settings.repository_backend}")
+
+
+_store = _build_store()
 _prisma_service = PrismaService()
 _document_ingestion = DocumentIngestionService()
 _effect_size_service = EffectSizeService()
@@ -21,7 +32,7 @@ _extraction_workflow = ExtractionWorkflowService(store=_store, extraction_servic
 _review_service = ReviewService(store=_store, effect_size_service=_effect_size_service)
 
 
-def get_store() -> FileStore:
+def get_store():
     return _store
 
 

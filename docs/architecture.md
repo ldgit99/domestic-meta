@@ -4,6 +4,8 @@
 
 - `backend/app/main.py`: FastAPI entrypoint
 - `backend/app/repositories/file_store.py`: JSON file-backed repository
+- `backend/app/repositories/sqlalchemy_store.py`: SQLAlchemy-backed repository for PostgreSQL or SQLite
+- `backend/app/repositories/db_models.py`: relational schema for search requests, candidates, decisions, PRISMA, artifacts, and extraction results
 - `backend/app/services/orchestrator.py`: collection, rerun reset, deduplication, title/abstract screening, PRISMA recalculation
 - `backend/app/services/search_management.py`: manual review and full-text registration with PRISMA refresh
 - `backend/app/services/document_ingestion.py`: uploaded TXT/PDF persistence and text extraction
@@ -39,7 +41,9 @@
 
 ## Runtime behavior
 
-- search requests persist to `backend/data/store.json`
+- repository mode is selected by `REPOSITORY_BACKEND`
+- `file` mode persists to `backend/data/store.json`
+- `sqlalchemy` mode persists to `DATABASE_URL` and auto-creates tables at startup
 - uploaded files persist to `backend/uploads`
 - rerunning a search resets prior candidates, decisions, artifacts, PRISMA counts, and extraction results for that search
 - KCI collection uses live mode only when configured; otherwise it falls back to stub data
@@ -52,7 +56,7 @@
 
 ## Next implementation target
 
+- PostgreSQL migration workflow and operational hardening
 - RISS production endpoint validation and mapping hardening
 - PDF parsing / OCR pipeline
-- PostgreSQL persistence replacing file store
 - richer review UI
