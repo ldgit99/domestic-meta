@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RISS Meta Agent</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --panel: #fffaf0;
+      --ink: #1f2a30;
+      --muted: #66757f;
+      --accent: #006a6a;
+      --line: #d7d0c4;
+    }
+    body {
+      margin: 0;
+      font-family: Georgia, "Noto Serif KR", serif;
+      background: linear-gradient(180deg, #efe8d8 0%, #f7f4ed 100%);
+      color: var(--ink);
+    }
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 44px;
+      line-height: 1.1;
+    }
+    p.lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(28, 39, 46, 0.08);
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    input, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: white;
+      font: inherit;
+    }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr 1fr;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #f7f6f1;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+    }
+    @media (max-width: 720px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      h1 {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>교육학 메타분석 지원 AI 에이전트</h1>
+    <p class="lead">검색어를 입력하고 후보 논문 수집, 1차 선별, PRISMA 집계까지 실행하는 최소 프로토타입입니다.</p>
+
+    <div class="panel">
+      <label for="query">검색어</label>
+      <input id="query" value="협동학습" />
+      <button id="run">검색 실행</button>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>실행 결과</h2>
+        <pre id="result">API 실행 전</pre>
+      </div>
+      <div class="panel">
+        <h2>PRISMA</h2>
+        <pre id="prisma">API 실행 전</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const runButton = document.getElementById("run");
+    const result = document.getElementById("result");
+    const prisma = document.getElementById("prisma");
+
+    runButton.addEventListener("click", async () => {
+      result.textContent = "요청 중...";
+      prisma.textContent = "집계 대기 중...";
+
+      try {
+        const createRes = await fetch("http://127.0.0.1:8000/api/search-requests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query_text: document.getElementById("query").value })
+        });
+        const created = await createRes.json();
+
+        const runRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/run`, {
+          method: "POST"
+        });
+        const executed = await runRes.json();
+
+        const prismaRes = await fetch(`http://127.0.0.1:8000/api/search-requests/${created.id}/prisma`);
+        const prismaJson = await prismaRes.json();
+
+        result.textContent = JSON.stringify(executed, null, 2);
+        prisma.textContent = JSON.stringify(prismaJson, null, 2);
+      } catch (error) {
+        result.textContent = String(error);
+        prisma.textContent = "오류 발생";
+      }
+    });
+  </script>
+</body>
+</html>
