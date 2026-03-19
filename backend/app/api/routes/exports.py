@@ -73,3 +73,24 @@ def export_meta_analysis_ready_csv(
         store.list_extraction_results_for_search(search_request_id),
     )
     return ExportPayloadRead.model_validate(payload)
+
+
+@router.get("/search-requests/{search_request_id}/exports/audit-report.md", response_model=ExportPayloadRead)
+def export_audit_report(
+    search_request_id: str,
+    store: FileStore = Depends(get_store),
+) -> ExportPayloadRead:
+    search_request = store.get_search_request(search_request_id)
+    if search_request is None:
+        raise HTTPException(status_code=404, detail="Search request not found")
+    counts = store.get_prisma_counts(search_request_id)
+    if counts is None:
+        raise HTTPException(status_code=404, detail="PRISMA counts not found")
+    payload = service.audit_report_markdown(
+        search_request,
+        counts,
+        store.list_candidates(search_request_id),
+        store.list_decisions_for_search(search_request_id),
+        store.list_extraction_results_for_search(search_request_id),
+    )
+    return ExportPayloadRead.model_validate(payload)

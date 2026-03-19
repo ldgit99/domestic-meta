@@ -13,8 +13,10 @@ FastAPI 기반 초기 백엔드 구현이다.
 - KCI live-or-stub 커넥터
 - RISS 스텁 커넥터
 - 원문 등록
+- TXT/PDF 업로드와 텍스트 추출
 - OpenAI Responses API 기반 추출 경로
 - 휴리스틱 fallback 추출
+- audit report export
 
 ## KCI 연동
 
@@ -37,6 +39,13 @@ FastAPI 기반 초기 백엔드 구현이다.
 - `OPENAI_RESPONSES_URL`
 
 설정이 없거나 요청이 실패하면 휴리스틱 추출 결과를 저장한다.
+
+## 원문 업로드
+
+- `POST /api/candidates/{id}/full-text`: JSON 본문으로 직접 텍스트 등록
+- `POST /api/candidates/{id}/full-text-file`: `multipart/form-data` 파일 업로드
+
+업로드 파일은 `backend/uploads`에 저장되며, `txt`는 UTF-8 기준으로 읽고 `pdf`는 `pypdf`가 설치된 경우 텍스트 추출을 시도한다.
 
 ## 추후 연결 예정
 

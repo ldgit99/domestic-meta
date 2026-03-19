@@ -46,6 +46,7 @@ class FullTextArtifactCreate(BaseModel):
     source_url: str | None = None
     mime_type: str = "application/pdf"
     text_content: str = ""
+    stored_path: str | None = None
 
 
 class FullTextArtifactRead(FullTextArtifactCreate):

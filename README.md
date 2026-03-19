@@ -23,9 +23,10 @@
 - 규칙 기반 1차 선별
 - PRISMA 집계
 - 원문 아티팩트 등록
+- TXT/PDF 업로드 기반 원문 저장
 - OpenAI Responses API 기반 추출 경로
 - OpenAI 미설정 시 휴리스틱 fallback 추출
-- 후보/스크리닝/PRISMA/추출 export
+- 후보/스크리닝/PRISMA/추출/audit report export
 
 ## 빠른 시작
 
@@ -42,6 +43,7 @@ uvicorn app.main:app --reload
 기본 주소: `http://127.0.0.1:8000`
 
 런타임 데이터는 `backend/data/store.json`에 저장된다.
+업로드된 원문 파일은 `backend/uploads`에 저장된다.
 
 ### Optional KCI / OpenAI config
 
@@ -64,6 +66,7 @@ uvicorn app.main:app --reload
 - `GET /api/search-requests/{id}/candidates`
 - `POST /api/candidates/{id}/decision`
 - `POST /api/candidates/{id}/full-text`
+- `POST /api/candidates/{id}/full-text-file`
 - `POST /api/candidates/{id}/extract`
 - `GET /api/candidates/{id}/extraction`
 - `GET /api/search-requests/{id}/prisma`
@@ -72,10 +75,11 @@ uvicorn app.main:app --reload
 - `GET /api/search-requests/{id}/exports/prisma-counts.json`
 - `GET /api/search-requests/{id}/exports/extraction-results.json`
 - `GET /api/search-requests/{id}/exports/meta-analysis-ready.csv`
+- `GET /api/search-requests/{id}/exports/audit-report.md`
 
 ## 아직 미구현
 
 - 실제 RISS 연동
-- PDF 파싱/OCR
+- PDF 파싱 고도화/OCR
 - PostgreSQL / Redis
 - 인증/권한

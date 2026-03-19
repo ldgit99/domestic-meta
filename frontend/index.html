@@ -31,14 +31,14 @@
     th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 14px; }
     th { color: var(--muted); font-weight: 600; }
     .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #e6f0ef; color: var(--accent); font-size: 12px; }
-    .actions { display: grid; gap: 12px; grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .actions { display: grid; gap: 12px; grid-template-columns: repeat(5, 1fr); }
     @media (max-width: 860px) { .grid, .grid-wide, .actions { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>교육학 메타분석 지원 AI 에이전트</h1>
-    <p class="lead">지속 저장되는 검색 요청, PRISMA, export, 그리고 데모 원문 기반 추출까지 확인하는 현재 프로토타입입니다.</p>
+    <p class="lead">지속 저장되는 검색 요청, PRISMA, export, 그리고 TXT/PDF 업로드 기반 추출까지 확인하는 현재 프로토타입입니다.</p>
 
     <div class="panel">
       <label for="query">검색어</label>
@@ -48,6 +48,7 @@
         <button id="exportCsv" class="secondary">후보 CSV</button>
         <button id="exportPrisma" class="secondary">PRISMA JSON</button>
         <button id="exportMeta" class="secondary">메타분석 CSV</button>
+        <button id="exportAudit" class="secondary">감사 리포트</button>
       </div>
     </div>
 
@@ -97,9 +98,11 @@
     </div>
 
     <div class="panel">
-      <h2>데모 원문 텍스트</h2>
+      <h2>원문 업로드 또는 데모 텍스트</h2>
+      <label for="fullTextFile">TXT/PDF 업로드</label>
+      <input id="fullTextFile" type="file" accept=".txt,.pdf,text/plain,application/pdf" />
       <textarea id="fullText">연구대상은 중학교 2학년 120명이었다. 실험집단 60명과 통제집단 60명으로 구성하였다. 협동학습 기반 수업을 적용한 결과, 학업성취도 사후검사에서 실험집단 평균은 82.4, 표준편차는 10.1이었고 통제집단 평균은 75.2, 표준편차는 11.3이었다. 두 집단 간 차이는 통계적으로 유의하였다(p &lt; .05).</textarea>
-      <button id="runExtraction">첫 후보 원문 등록 + 추출 실행</button>
+      <button id="runExtraction">첫 후보 원문 등록 또는 파일 업로드 + 추출 실행</button>
     </div>
 
     <div class="grid">
@@ -124,6 +127,7 @@
     const exportCsvButton = document.getElementById("exportCsv");
     const exportPrismaButton = document.getElementById("exportPrisma");
     const exportMetaButton = document.getElementById("exportMeta");
+    const exportAuditButton = document.getElementById("exportAudit");
     const runExtractionButton = document.getElementById("runExtraction");
     const result = document.getElementById("result");
     const summary = document.getElementById("summary");
@@ -133,6 +137,7 @@
     const searchesBody = document.getElementById("searches");
     const exportContent = document.getElementById("exportContent");
     const fullText = document.getElementById("fullText");
+    const fullTextFile = document.getElementById("fullTextFile");
     let lastSearchId = null;
     let currentCandidates = [];
 
@@ -180,7 +185,8 @@
       const map = {
         candidates: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/candidates.csv`,
         prisma: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/prisma-counts.json`,
-        meta: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/meta-analysis-ready.csv`
+        meta: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/meta-analysis-ready.csv`,
+        audit: `http://127.0.0.1:8000/api/search-requests/${lastSearchId}/exports/audit-report.md`
       };
       const res = await fetch(map[kind]);
       const payload = await res.json();
@@ -242,15 +248,27 @@
           extraction.textContent = "먼저 검색을 실행해 후보를 만드세요.";
           return;
         }
-        await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/full-text`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            file_name: "demo.txt",
-            mime_type: "text/plain",
-            text_content: fullText.value
-          })
-        });
+
+        const selectedFile = fullTextFile.files[0];
+        if (selectedFile) {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+          await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/full-text-file`, {
+            method: "POST",
+            body: formData
+          });
+        } else {
+          await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/full-text`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              file_name: "demo.txt",
+              mime_type: "text/plain",
+              text_content: fullText.value
+            })
+          });
+        }
+
         const res = await fetch(`http://127.0.0.1:8000/api/candidates/${candidate.id}/extract`, {
           method: "POST"
         });
@@ -272,6 +290,10 @@
 
     exportMetaButton.addEventListener("click", async () => {
       try { await loadExport("meta"); } catch (error) { exportContent.value = String(error); }
+    });
+
+    exportAuditButton.addEventListener("click", async () => {
+      try { await loadExport("audit"); } catch (error) { exportContent.value = String(error); }
     });
 
     loadSearches().catch(() => {});

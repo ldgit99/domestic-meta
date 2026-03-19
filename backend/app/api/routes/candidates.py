@@ -1,6 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from app.api.dependencies import get_extraction_service, get_extraction_workflow, get_search_management, get_store
+from app.api.dependencies import (
+    get_document_ingestion,
+    get_extraction_service,
+    get_extraction_workflow,
+    get_search_management,
+    get_store,
+)
 from app.repositories.file_store import FileStore
 from app.schemas.candidate import (
     CandidateRead,
@@ -10,6 +16,7 @@ from app.schemas.candidate import (
     FullTextArtifactCreate,
     FullTextArtifactRead,
 )
+from app.services.document_ingestion import DocumentIngestionService
 from app.services.extraction import ExtractionService
 from app.services.extraction_workflow import ExtractionWorkflowService
 from app.services.search_management import SearchManagementService
@@ -50,6 +57,26 @@ def upload_full_text(
     payload: FullTextArtifactCreate,
     search_management: SearchManagementService = Depends(get_search_management),
 ) -> FullTextArtifactRead:
+    created = search_management.register_full_text(candidate_id, payload)
+    if created is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    return FullTextArtifactRead.model_validate(created)
+
+
+@router.post("/candidates/{candidate_id}/full-text-file", response_model=FullTextArtifactRead)
+async def upload_full_text_file(
+    candidate_id: str,
+    file: UploadFile = File(...),
+    ingestion: DocumentIngestionService = Depends(get_document_ingestion),
+    search_management: SearchManagementService = Depends(get_search_management),
+) -> FullTextArtifactRead:
+    content = await file.read()
+    payload = ingestion.ingest_bytes(
+        candidate_id=candidate_id,
+        file_name=file.filename or "upload.bin",
+        content_type=file.content_type or "application/octet-stream",
+        content=content,
+    )
     created = search_management.register_full_text(candidate_id, payload)
     if created is None:
         raise HTTPException(status_code=404, detail="Candidate not found")

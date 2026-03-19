@@ -76,6 +76,7 @@ class FullTextArtifact:
     text_content: str
     text_extraction_status: str
     created_at: str
+    stored_path: str | None = None
 
 
 @dataclass

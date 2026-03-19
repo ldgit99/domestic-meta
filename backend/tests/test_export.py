@@ -1,8 +1,22 @@
-from app.models.domain import CandidateRecord, ExtractionResult
+from app.models.domain import CandidateRecord, EligibilityDecision, ExtractionResult, PrismaCounts, SearchRequest
 from app.services.export import ExportService
 
 
-def test_meta_analysis_ready_csv_contains_extraction_rows() -> None:
+def test_audit_report_contains_prisma_and_candidate_rows() -> None:
+    search_request = SearchRequest(
+        id="s1",
+        query_text="협동학습",
+        expanded_keywords=[],
+        year_from=2010,
+        year_to=2026,
+        include_theses=True,
+        include_journal_articles=True,
+        inclusion_rules=[],
+        exclusion_rules=[],
+        status="completed",
+        created_at="now",
+    )
+    counts = PrismaCounts(id="p1", search_request_id="s1", identified_records=3, records_screened=2)
     candidate = CandidateRecord(
         id="c1",
         search_request_id="s1",
@@ -21,29 +35,30 @@ def test_meta_analysis_ready_csv_contains_extraction_rows() -> None:
         raw_payload={},
         status="extracted",
     )
+    decision = EligibilityDecision(
+        id="d1",
+        candidate_record_id="c1",
+        stage="title_abstract",
+        decision="include",
+        reason_code=None,
+        reason_text=None,
+        confidence="medium",
+        reviewed_by="agent",
+        created_at="now",
+    )
     extraction = ExtractionResult(
         id="e1",
         candidate_id="c1",
         status="completed",
         message="ok",
-        fields_json={
-            "study_design": "group_comparison",
-            "participants": {"population": "", "sample_size_total": "120", "groups": []},
-            "intervention_or_predictor": "협동학습",
-            "comparison": "강의식 수업",
-            "outcomes": [],
-            "statistics": [],
-            "effect_size_inputs": {"is_meta_analytic_ready": True, "effect_type_candidates": ["standardized_mean_difference"]},
-            "evidence_spans": [],
-            "confidence": "medium",
-        },
-        model_name="gpt-4o-mini",
+        fields_json={},
+        model_name=None,
         raw_response={},
         created_at="now",
     )
 
-    payload = ExportService().meta_analysis_ready_csv("s1", [candidate], [extraction])
+    payload = ExportService().audit_report_markdown(search_request, counts, [candidate], [decision], [extraction])
 
-    assert "candidate_id,title,year" in payload["content"]
-    assert "c1" in payload["content"]
-    assert "group_comparison" in payload["content"]
+    assert "# Audit Report: 협동학습" in payload["content"]
+    assert "Identified records: 3" in payload["content"]
+    assert "협동학습이 학업성취도에 미치는 효과" in payload["content"]

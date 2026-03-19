@@ -131,6 +131,7 @@ class MemoryStore:
             text_content=payload.text_content,
             text_extraction_status="available" if payload.text_content else "pending",
             created_at=now_iso(),
+            stored_path=payload.stored_path,
         )
         self.full_text_artifacts[candidate_id] = item
         return item

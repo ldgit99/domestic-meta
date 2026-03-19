@@ -1,6 +1,6 @@
 import json
 
-from app.models.domain import CandidateRecord, EligibilityDecision, ExtractionResult, PrismaCounts
+from app.models.domain import CandidateRecord, EligibilityDecision, ExtractionResult, PrismaCounts, SearchRequest
 
 
 class ExportService:
@@ -120,5 +120,60 @@ class ExportService:
             "search_request_id": search_request_id,
             "content_type": "text/csv",
             "file_name": f"{search_request_id}_meta_analysis_ready.csv",
+            "content": "\n".join(lines),
+        }
+
+    def audit_report_markdown(
+        self,
+        search_request: SearchRequest,
+        counts: PrismaCounts,
+        candidates: list[CandidateRecord],
+        decisions: list[EligibilityDecision],
+        results: list[ExtractionResult],
+    ) -> dict:
+        result_map = {item.candidate_id: item for item in results}
+        decision_map = {item.candidate_record_id: item for item in decisions}
+        lines = [
+            f"# Audit Report: {search_request.query_text}",
+            "",
+            f"- Search Request ID: `{search_request.id}`",
+            f"- Status: `{search_request.status}`",
+            f"- Created At: `{search_request.created_at}`",
+            "",
+            "## PRISMA Summary",
+            "",
+            f"- Identified records: {counts.identified_records}",
+            f"- Duplicate records removed: {counts.duplicate_records_removed}",
+            f"- Records screened: {counts.records_screened}",
+            f"- Records excluded: {counts.records_excluded}",
+            f"- Reports sought for retrieval: {counts.reports_sought_for_retrieval}",
+            f"- Reports not retrieved: {counts.reports_not_retrieved}",
+            f"- Reports assessed for eligibility: {counts.reports_assessed_for_eligibility}",
+            f"- Studies included in review: {counts.studies_included_in_review}",
+            "",
+            "## Candidate Snapshot",
+            "",
+            "| Candidate | Source | Status | Decision | Extraction |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+
+        for candidate in candidates:
+            decision = decision_map.get(candidate.id)
+            extraction = result_map.get(candidate.id)
+            lines.append(
+                f"| {candidate.title} | {candidate.source} | {candidate.status} | {decision.decision if decision else ''} | {extraction.status if extraction else ''} |"
+            )
+
+        lines.extend(["", "## Exclusion Reasons", ""])
+        if counts.reports_excluded_with_reasons_json:
+            for key, value in counts.reports_excluded_with_reasons_json.items():
+                lines.append(f"- `{key}`: {value}")
+        else:
+            lines.append("- 없음")
+
+        return {
+            "search_request_id": search_request.id,
+            "content_type": "text/markdown",
+            "file_name": f"{search_request.id}_audit_report.md",
             "content": "\n".join(lines),
         }
