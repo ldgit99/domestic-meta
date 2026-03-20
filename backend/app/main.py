@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import settings
 from app.api.router import api_router
+from app.core.config import settings
 
 
 app = FastAPI(
@@ -22,6 +22,43 @@ app.add_middleware(
 app.include_router(api_router)
 
 
+def _service_index(base_path: str = "") -> dict[str, object]:
+    return {
+        "name": app.title,
+        "version": app.version,
+        "status": "ok",
+        "api_base": f"{base_path}/api" if base_path else "/api",
+        "docs_url": "/docs",
+        "openapi_url": "/openapi.json",
+        "health_urls": ["/health", "/api/health"],
+        "key_endpoints": [
+            "/api/search-requests",
+            "/api/search-requests/{id}/run",
+            "/api/search-requests/{id}/summary",
+            "/api/search-requests/{id}/candidates",
+            "/api/candidates/{id}",
+            "/api/candidates/{id}/extract",
+        ],
+    }
+
+
+@app.get("/")
+def root() -> dict[str, object]:
+    return _service_index()
+
+
+@app.get("/api")
+def api_root() -> dict[str, object]:
+    payload = _service_index()
+    payload["message"] = "Use /docs for interactive API docs or call the listed /api endpoints directly."
+    return payload
+
+
 @app.get("/health")
 def healthcheck() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.get("/api/health")
+def api_healthcheck() -> dict[str, str]:
     return {"status": "ok"}

@@ -23,6 +23,10 @@
 
 ## Exposed APIs
 
+- `GET /`
+- `GET /api`
+- `GET /health`
+- `GET /api/health`
 - `GET /api/search-requests`
 - `POST /api/search-requests`
 - `GET /api/search-requests/{id}`

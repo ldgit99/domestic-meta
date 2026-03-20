@@ -129,6 +129,13 @@ Otherwise it stores a heuristic fallback extraction with an attached quality ass
 - `OCR_TIMEOUT_SECONDS`
 - `OCR_MIN_TEXT_LENGTH`
 
+Quick manual checks after `uvicorn app.main:app --reload`:
+
+- `http://127.0.0.1:8000/`
+- `http://127.0.0.1:8000/api`
+- `http://127.0.0.1:8000/api/health`
+- `http://127.0.0.1:8000/docs`
+
 ## Running tests
 
 ```bash

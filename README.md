@@ -45,6 +45,12 @@ uvicorn app.main:app --reload
 
 Default API base: `http://127.0.0.1:8000`
 
+Quick checks:
+
+- `http://127.0.0.1:8000/`
+- `http://127.0.0.1:8000/api`
+- `http://127.0.0.1:8000/docs`
+
 The file-backed repository persists under `backend/data/store.json`.
 Uploaded full-text artifacts persist under `backend/uploads`.
 
