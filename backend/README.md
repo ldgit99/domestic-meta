@@ -21,6 +21,7 @@ FastAPI backend for the domestic education meta-analysis prototype.
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries
 - extraction quality assessment with evidence coverage and sample-size checks
+- manual extraction override persistence with event logging
 - export endpoints including audit and PRISMA flow payloads
 - pipeline event logging for collection, screening, OCR, and extraction actions
 - search manifest export with search criteria, counts, and PRISMA flow payload
@@ -92,6 +93,7 @@ The current connector accepts JSON, XML, and SPARQL-style `results.bindings` JSO
 - `GET /api/search-requests/{id}/exports/prisma-flow.json`
 - `GET /api/search-requests/{id}/exports/events.json`
 - `GET /api/search-requests/{id}/exports/search-request.json`
+- `PUT /api/candidates/{id}/extraction`
 
 The flow payload includes:
 
@@ -111,7 +113,7 @@ The search manifest export includes:
 ## OpenAI extraction
 
 When configured, the backend attempts `Responses API` extraction with structured JSON output.
-Otherwise it stores a heuristic fallback extraction with an attached quality assessment payload.
+Otherwise it stores a heuristic fallback extraction with an attached quality assessment payload. A manual override endpoint can then persist reviewed extraction JSON and recalculate its quality score.
 
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL_EXTRACTION`

@@ -71,6 +71,14 @@ class ExtractionResultRead(BaseModel):
     created_at: str | None = None
 
 
+class ExtractionResultUpdate(BaseModel):
+    fields_json: dict = Field(default_factory=dict)
+    status: str = Field(default="manual_override")
+    message: str = Field(default="Manual extraction override saved.")
+    reviewed_by: str = Field(default="human")
+    notes: str | None = None
+
+
 class OCRRunRead(BaseModel):
     candidate_id: str
     status: str

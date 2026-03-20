@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from app.api.dependencies import (
     get_document_ingestion,
+    get_extraction_management,
     get_extraction_service,
     get_extraction_workflow,
     get_ocr_service,
@@ -17,12 +18,14 @@ from app.schemas.candidate import (
     DecisionCreate,
     EligibilityDecisionRead,
     ExtractionResultRead,
+    ExtractionResultUpdate,
     FullTextArtifactCreate,
     FullTextArtifactRead,
     OCRRunRead,
 )
 from app.services.document_ingestion import DocumentIngestionService
 from app.services.extraction import ExtractionService
+from app.services.extraction_management import ExtractionManagementService
 from app.services.extraction_workflow import ExtractionWorkflowService
 from app.services.ocr import OCRService
 from app.services.review import ReviewService
@@ -130,6 +133,18 @@ def run_extraction(
     extraction_workflow: ExtractionWorkflowService = Depends(get_extraction_workflow),
 ) -> ExtractionResultRead:
     created = extraction_workflow.run(candidate_id)
+    if created is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    return ExtractionResultRead.model_validate(created)
+
+
+@router.put("/candidates/{candidate_id}/extraction", response_model=ExtractionResultRead)
+def save_manual_extraction(
+    candidate_id: str,
+    payload: ExtractionResultUpdate,
+    extraction_management: ExtractionManagementService = Depends(get_extraction_management),
+) -> ExtractionResultRead:
+    created = extraction_management.save_manual_result(candidate_id, payload)
     if created is None:
         raise HTTPException(status_code=404, detail="Candidate not found")
     return ExtractionResultRead.model_validate(created)

@@ -4,6 +4,7 @@ from app.repositories.sqlalchemy_store import SQLAlchemyStore
 from app.services.document_ingestion import DocumentIngestionService
 from app.services.effect_size import EffectSizeService
 from app.services.extraction import ExtractionService
+from app.services.extraction_management import ExtractionManagementService
 from app.services.extraction_workflow import ExtractionWorkflowService
 from app.services.ocr import OCRService
 from app.services.orchestrator import SearchOrchestrator
@@ -46,6 +47,10 @@ _extraction_workflow = ExtractionWorkflowService(
     extraction_service=_extraction_service,
     ocr_service=_ocr_service,
 )
+_extraction_management = ExtractionManagementService(
+    store=_store,
+    quality_service=_quality_service,
+)
 _review_service = ReviewService(
     store=_store,
     effect_size_service=_effect_size_service,
@@ -83,6 +88,10 @@ def get_extraction_service() -> ExtractionService:
 
 def get_extraction_workflow() -> ExtractionWorkflowService:
     return _extraction_workflow
+
+
+def get_extraction_management() -> ExtractionManagementService:
+    return _extraction_management
 
 
 def get_ocr_service() -> OCRService:

@@ -521,6 +521,37 @@ interview</textarea>
         <h2>Extraction Result</h2>
         <pre id="extraction">Extraction responses will appear here.</pre>
       </div>
+      <div class="panel">
+        <h2>Manual Extraction Override</h2>
+        <label for="manualExtractionMessage">Override Message</label>
+        <input id="manualExtractionMessage" value="Manual extraction override saved." />
+        <label for="manualExtractionJson">Extraction JSON</label>
+        <textarea id="manualExtractionJson">{
+  "study_design": "group_comparison",
+  "participants": {
+    "sample_size_total": "",
+    "groups": []
+  },
+  "intervention_or_predictor": "",
+  "comparison": "",
+  "outcomes": [],
+  "timepoints": [],
+  "statistics": [],
+  "effect_size_inputs": {
+    "is_meta_analytic_ready": false,
+    "effect_type_candidates": [],
+    "recommended_effect_type": "",
+    "computation_method": "",
+    "correlation_coefficient": "",
+    "missing_inputs": []
+  },
+  "evidence_spans": [],
+  "confidence": "medium"
+}</textarea>
+        <div class="actions" style="margin-top:14px;">
+          <button id="saveExtractionOverride" class="ghost">Save Manual Extraction</button>
+        </div>
+      </div>
     </div>
 
     <div class="panel">
@@ -561,6 +592,7 @@ interview</textarea>
     const decisionExcludeButton = document.getElementById("decisionExclude");
     const runOcrButton = document.getElementById("runOcr");
     const runExtractionButton = document.getElementById("runExtraction");
+    const saveExtractionOverrideButton = document.getElementById("saveExtractionOverride");
 
     const queryInput = document.getElementById("query");
     const expandedKeywordsInput = document.getElementById("expandedKeywords");
@@ -590,6 +622,8 @@ interview</textarea>
     const reviewReasonText = document.getElementById("reviewReasonText");
     const fullText = document.getElementById("fullText");
     const fullTextFile = document.getElementById("fullTextFile");
+    const manualExtractionMessage = document.getElementById("manualExtractionMessage");
+    const manualExtractionJson = document.getElementById("manualExtractionJson");
 
     let lastSearchId = null;
     let currentCandidates = [];
@@ -766,15 +800,43 @@ interview</textarea>
       populateSearchForm(payload);
     }
 
+    function populateManualExtractionEditor(detailPayload) {
+      const extractionPayload = detailPayload?.extraction_result?.fields_json;
+      manualExtractionJson.value = JSON.stringify(extractionPayload || {
+        study_design: "group_comparison",
+        participants: { sample_size_total: "", groups: [] },
+        intervention_or_predictor: "",
+        comparison: "",
+        outcomes: [],
+        timepoints: [],
+        statistics: [],
+        effect_size_inputs: {
+          is_meta_analytic_ready: false,
+          effect_type_candidates: [],
+          recommended_effect_type: "",
+          computation_method: "",
+          correlation_coefficient: "",
+          missing_inputs: []
+        },
+        evidence_spans: [],
+        confidence: "medium"
+      }, null, 2);
+      manualExtractionMessage.value = detailPayload?.extraction_result?.status === "manual_override"
+        ? (detailPayload.extraction_result.message || "Manual extraction override saved.")
+        : "Manual extraction override saved.";
+    }
+
     async function loadCandidateDetail(candidateId) {
       if (!candidateId) {
         candidateDetail.textContent = "Choose a candidate to inspect its detail payload.";
+        populateManualExtractionEditor(null);
         return;
       }
 
       const payload = await fetchJson(`/candidates/${candidateId}`);
       reviewStage.value = suggestReviewStage(payload);
       candidateDetail.textContent = JSON.stringify(payload, null, 2);
+      populateManualExtractionEditor(payload);
     }
 
     function suggestReviewStage(detailPayload) {
@@ -1016,6 +1078,33 @@ interview</textarea>
 
         const payload = await fetchJson(`/candidates/${candidate.id}/extract`, {
           method: "POST"
+        });
+
+        extraction.textContent = JSON.stringify(payload, null, 2);
+        await refreshSearchState(lastSearchId);
+        await loadExport("meta");
+      } catch (error) {
+        extraction.textContent = String(error);
+      }
+    });
+
+    saveExtractionOverrideButton.addEventListener("click", async () => {
+      try {
+        const candidate = selectedCandidate();
+        if (!candidate) {
+          extraction.textContent = "Select a candidate before saving a manual extraction override.";
+          return;
+        }
+
+        const payload = await fetchJson(`/candidates/${candidate.id}/extraction`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fields_json: JSON.parse(manualExtractionJson.value),
+            message: manualExtractionMessage.value || "Manual extraction override saved.",
+            reviewed_by: "dashboard",
+            notes: "Saved from dashboard"
+          })
         });
 
         extraction.textContent = JSON.stringify(payload, null, 2);

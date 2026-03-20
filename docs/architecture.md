@@ -15,6 +15,7 @@
 - `backend/app/services/review.py`: candidate detail assembly and review queue generation
 - `backend/app/services/extraction.py`: OpenAI `Responses API` extraction plus heuristic fallback
 - `backend/app/services/extraction_workflow.py`: extraction execution and persistence
+- `backend/app/services/extraction_management.py`: manual extraction override persistence and audit logging
 - `backend/app/services/effect_size.py`: effect-size-readiness summaries
 - `backend/app/services/quality.py`: extraction quality scoring, evidence coverage checks, and sample-size consistency checks
 - `backend/app/services/connectors.py`: `KCI` and `RISS` live-or-stub connectors
@@ -36,6 +37,7 @@
 - `POST /api/candidates/{id}/full-text-file`
 - `POST /api/candidates/{id}/ocr`
 - `POST /api/candidates/{id}/extract`
+- `PUT /api/candidates/{id}/extraction`
 - `GET /api/candidates/{id}/extraction`
 - `GET /api/search-requests/{id}/prisma`
 - `GET /api/search-requests/{id}/prisma/flow`
@@ -69,6 +71,7 @@
 - extraction uses OpenAI only when configured and otherwise stores heuristic fallback output
 - effect-size readiness is computed from extracted statistics and included in review outputs and exports
 - extraction results carry a `quality_assessment` payload that feeds review priority, manifests, audit reports, and meta-analysis exports
+- reviewed extraction JSON can be manually overridden without losing audit metadata, and the override is logged as a pipeline event
 
 ## Current dashboard behavior
 
@@ -82,6 +85,7 @@
 - surface OCR-needed states through candidate detail, review queue, summary payloads, and exports
 - trigger OCR retries against stored full-text files
 - run extraction and inspect extraction JSON
+- edit extraction JSON for the selected candidate and save a manual override back to the backend
 - surface extraction quality scores and warnings in candidate detail and review outputs
 - preview export payloads for candidates, screening logs, PRISMA counts, PRISMA flow, meta-analysis CSV, and audit reports
 - preview a reproducible search manifest export with criteria, counts, and PRISMA flow payload
