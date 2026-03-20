@@ -1,7 +1,8 @@
-from app.models.domain import (
+﻿from app.models.domain import (
     CandidateRecord,
     EligibilityDecision,
     ExtractionResult,
+    ExtractionRevision,
     FullTextArtifact,
     PipelineEvent,
     PrismaCounts,
@@ -142,6 +143,38 @@ def _extraction() -> ExtractionResult:
     )
 
 
+def _revisions() -> list[ExtractionRevision]:
+    extraction = _extraction()
+    return [
+        ExtractionRevision(
+            id="r1",
+            extraction_result_id=extraction.id,
+            candidate_id=extraction.candidate_id,
+            search_request_id="s1",
+            revision_index=1,
+            status="completed",
+            message="Initial extraction",
+            fields_json=extraction.fields_json,
+            model_name="gpt",
+            raw_response={"source": "openai"},
+            created_at="2026-03-20T10:00:00",
+        ),
+        ExtractionRevision(
+            id="r2",
+            extraction_result_id=extraction.id,
+            candidate_id=extraction.candidate_id,
+            search_request_id="s1",
+            revision_index=2,
+            status="manual_override",
+            message="Manual correction",
+            fields_json=extraction.fields_json,
+            model_name="manual_override",
+            raw_response={"manual_override": {"reviewed_by": "dashboard"}},
+            created_at="2026-03-20T10:10:00",
+        ),
+    ]
+
+
 def _artifact() -> FullTextArtifact:
     return FullTextArtifact(
         id="a1",
@@ -170,13 +203,14 @@ def _event() -> PipelineEvent:
     )
 
 
-def test_audit_report_contains_search_criteria_stage_decisions_and_quality_summary() -> None:
+def test_audit_report_contains_search_criteria_stage_decisions_quality_summary_and_revision_count() -> None:
     payload = ExportService().audit_report_markdown(
         _search_request(),
         _counts(),
         [_candidate()],
         _decisions(),
         [_extraction()],
+        _revisions(),
         [_artifact()],
         [_event()],
     )
@@ -186,13 +220,10 @@ def test_audit_report_contains_search_criteria_stage_decisions_and_quality_summa
     assert "Status counts: included_full_text=1" in payload["content"]
     assert "Full-text status counts: available=1" in payload["content"]
     assert "Quality score counts: high=1" in payload["content"]
+    assert "Extraction revision count: 2" in payload["content"]
     assert "## Recent Activity" in payload["content"]
-    assert "QA Score | QA Warnings" in payload["content"]
-    assert (
-        "| Effects of self-directed learning on achievement | kci | 2024 | "
-        "included_full_text | available | include | include | completed |"
-    ) in payload["content"]
-    assert "| high |  |" in payload["content"]
+    assert "QA Score | Revisions | QA Warnings" in payload["content"]
+    assert "| high | 2 |" in payload["content"]
 
 
 def test_meta_analysis_ready_csv_contains_decision_and_quality_columns() -> None:
@@ -213,6 +244,15 @@ def test_meta_analysis_ready_csv_contains_decision_and_quality_columns() -> None
     assert "high" in payload["content"]
 
 
+def test_extraction_revisions_json_contains_revision_metadata() -> None:
+    payload = ExportService().extraction_revisions_json("s1", _revisions())
+
+    assert '"revision_index": 1' in payload["content"]
+    assert '"revision_index": 2' in payload["content"]
+    assert '"model_name": "manual_override"' in payload["content"]
+    assert '"candidate_id": "c1"' in payload["content"]
+
+
 def test_screening_log_json_contains_candidate_metadata() -> None:
     payload = ExportService().screening_log_json("s1", [_candidate()], _decisions())
 
@@ -221,13 +261,14 @@ def test_screening_log_json_contains_candidate_metadata() -> None:
     assert '"stage": "full_text"' in payload["content"]
 
 
-def test_search_request_manifest_json_contains_summary_prisma_flow_event_counts_and_quality_counts() -> None:
+def test_search_request_manifest_json_contains_summary_prisma_flow_event_counts_quality_counts_and_revision_counts() -> None:
     payload = ExportService().search_request_manifest_json(
         _search_request(),
         _counts(),
         [_candidate()],
         _decisions(),
         [_extraction()],
+        _revisions(),
         [_artifact()],
         [_event()],
     )
@@ -236,6 +277,7 @@ def test_search_request_manifest_json_contains_summary_prisma_flow_event_counts_
     assert '"source_counts": {' in payload["content"]
     assert '"full_text_status_counts": {' in payload["content"]
     assert '"quality_score_counts": {' in payload["content"]
+    assert '"extraction_revision_count": 2' in payload["content"]
     assert '"high": 1' in payload["content"]
     assert '"prisma_flow": {' in payload["content"]
     assert '"studies_included_in_review": 2' in payload["content"]

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+﻿from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_store
 from app.schemas.prisma import ExportPayloadRead
@@ -62,6 +62,7 @@ def export_search_request_manifest_json(
         candidates,
         store.list_decisions_for_search(search_request_id),
         store.list_extraction_results_for_search(search_request_id),
+        store.list_extraction_revisions_for_search(search_request_id),
         _artifacts_for_candidates(store, candidates),
         store.list_events(search_request_id),
     )
@@ -121,6 +122,20 @@ def export_extraction_results_json(
     return ExportPayloadRead.model_validate(payload)
 
 
+@router.get("/search-requests/{search_request_id}/exports/extraction-revisions.json", response_model=ExportPayloadRead)
+def export_extraction_revisions_json(
+    search_request_id: str,
+    store=Depends(get_store),
+) -> ExportPayloadRead:
+    if store.get_search_request(search_request_id) is None:
+        raise HTTPException(status_code=404, detail="Search request not found")
+    payload = service.extraction_revisions_json(
+        search_request_id,
+        store.list_extraction_revisions_for_search(search_request_id),
+    )
+    return ExportPayloadRead.model_validate(payload)
+
+
 @router.get("/search-requests/{search_request_id}/exports/meta-analysis-ready.csv", response_model=ExportPayloadRead)
 def export_meta_analysis_ready_csv(
     search_request_id: str,
@@ -155,6 +170,7 @@ def export_audit_report(
         candidates,
         store.list_decisions_for_search(search_request_id),
         store.list_extraction_results_for_search(search_request_id),
+        store.list_extraction_revisions_for_search(search_request_id),
         _artifacts_for_candidates(store, candidates),
         store.list_events(search_request_id),
     )

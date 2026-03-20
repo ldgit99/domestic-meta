@@ -11,6 +11,7 @@ from app.models.domain import (
     CandidateRecord,
     EligibilityDecision,
     ExtractionResult,
+    ExtractionRevision,
     FullTextArtifact,
     PipelineEvent,
     PrismaCounts,
@@ -21,6 +22,7 @@ from app.repositories.db_models import (
     CandidateRecordModel,
     EligibilityDecisionModel,
     ExtractionResultModel,
+    ExtractionRevisionModel,
     FullTextArtifactModel,
     PipelineEventModel,
     PrismaCountsModel,
@@ -155,6 +157,21 @@ class SQLAlchemyStore:
             created_at=model.created_at,
         )
 
+    def _to_extraction_revision(self, model: ExtractionRevisionModel) -> ExtractionRevision:
+        return ExtractionRevision(
+            id=model.id,
+            extraction_result_id=model.extraction_result_id,
+            candidate_id=model.candidate_id,
+            search_request_id=model.search_request_id,
+            revision_index=model.revision_index,
+            status=model.status,
+            message=model.message,
+            fields_json=model.fields_json or {},
+            model_name=model.model_name,
+            raw_response=model.raw_response or {},
+            created_at=model.created_at,
+        )
+
     def _to_event(self, model: PipelineEventModel) -> PipelineEvent:
         return PipelineEvent(
             id=model.id,
@@ -219,6 +236,9 @@ class SQLAlchemyStore:
                 )
                 session.execute(
                     delete(ExtractionResultModel).where(ExtractionResultModel.candidate_id.in_(candidate_ids))
+                )
+                session.execute(
+                    delete(ExtractionRevisionModel).where(ExtractionRevisionModel.candidate_id.in_(candidate_ids))
                 )
                 session.execute(delete(CandidateRecordModel).where(CandidateRecordModel.id.in_(candidate_ids)))
 
@@ -526,10 +546,15 @@ class SQLAlchemyStore:
             existing = session.scalar(
                 select(ExtractionResultModel).where(ExtractionResultModel.candidate_id == item.candidate_id)
             )
+            candidate = session.get(CandidateRecordModel, item.candidate_id)
+            if not item.id:
+                item.id = generate_id("extract")
+            if not item.created_at:
+                item.created_at = now_iso()
             if existing is None:
                 session.add(
                     ExtractionResultModel(
-                        id=item.id or generate_id("extract"),
+                        id=item.id,
                         candidate_id=item.candidate_id,
                         status=item.status,
                         message=item.message,
@@ -547,6 +572,29 @@ class SQLAlchemyStore:
                 existing.model_name = item.model_name
                 existing.raw_response = item.raw_response
                 existing.created_at = item.created_at
+
+            if candidate is not None:
+                last_revision = session.scalar(
+                    select(ExtractionRevisionModel)
+                    .where(ExtractionRevisionModel.candidate_id == item.candidate_id)
+                    .order_by(ExtractionRevisionModel.revision_index.desc())
+                )
+                revision_index = (last_revision.revision_index + 1) if last_revision else 1
+                session.add(
+                    ExtractionRevisionModel(
+                        id=generate_id("revision"),
+                        extraction_result_id=item.id,
+                        candidate_id=item.candidate_id,
+                        search_request_id=candidate.search_request_id,
+                        revision_index=revision_index,
+                        status=item.status,
+                        message=item.message,
+                        fields_json=item.fields_json,
+                        model_name=item.model_name,
+                        raw_response=item.raw_response,
+                        created_at=item.created_at,
+                    )
+                )
         return item
 
     def get_extraction_result(self, candidate_id: str) -> ExtractionResult | None:
@@ -567,3 +615,25 @@ class SQLAlchemyStore:
                 select(ExtractionResultModel).where(ExtractionResultModel.candidate_id.in_(candidate_ids))
             ).all()
             return [self._to_extraction(model) for model in models]
+
+    def list_extraction_revisions(self, candidate_id: str) -> list[ExtractionRevision]:
+        with self._session() as session:
+            models = session.scalars(
+                select(ExtractionRevisionModel)
+                .where(ExtractionRevisionModel.candidate_id == candidate_id)
+                .order_by(ExtractionRevisionModel.revision_index.asc(), ExtractionRevisionModel.id.asc())
+            ).all()
+            return [self._to_extraction_revision(model) for model in models]
+
+    def list_extraction_revisions_for_search(self, search_request_id: str) -> list[ExtractionRevision]:
+        with self._session() as session:
+            models = session.scalars(
+                select(ExtractionRevisionModel)
+                .where(ExtractionRevisionModel.search_request_id == search_request_id)
+                .order_by(
+                    ExtractionRevisionModel.candidate_id.asc(),
+                    ExtractionRevisionModel.revision_index.asc(),
+                    ExtractionRevisionModel.id.asc(),
+                )
+            ).all()
+            return [self._to_extraction_revision(model) for model in models]

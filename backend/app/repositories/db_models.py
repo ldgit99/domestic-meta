@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Boolean, Integer, String, Text
+﻿from sqlalchemy import JSON, Boolean, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -108,6 +108,22 @@ class ExtractionResultModel(Base):
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     candidate_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    status: Mapped[str] = mapped_column(String(32))
+    message: Mapped[str] = mapped_column(Text)
+    fields_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    model_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    raw_response: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+
+class ExtractionRevisionModel(Base):
+    __tablename__ = "extraction_revisions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    extraction_result_id: Mapped[str] = mapped_column(String(64), index=True)
+    candidate_id: Mapped[str] = mapped_column(String(64), index=True)
+    search_request_id: Mapped[str] = mapped_column(String(64), index=True)
+    revision_index: Mapped[int] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(String(32))
     message: Mapped[str] = mapped_column(Text)
     fields_json: Mapped[dict] = mapped_column(JSON, default=dict)

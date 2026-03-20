@@ -21,7 +21,7 @@ FastAPI backend for the domestic education meta-analysis prototype.
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries
 - extraction quality assessment with evidence coverage and sample-size checks
-- manual extraction override persistence with event logging
+- extraction revision persistence for every saved extraction result`r`n- manual extraction override persistence with event logging
 - export endpoints including audit and PRISMA flow payloads
 - pipeline event logging for collection, screening, OCR, and extraction actions
 - search manifest export with search criteria, counts, and PRISMA flow payload
@@ -94,6 +94,8 @@ The current connector accepts JSON, XML, and SPARQL-style `results.bindings` JSO
 - `GET /api/search-requests/{id}/exports/events.json`
 - `GET /api/search-requests/{id}/exports/search-request.json`
 - `PUT /api/candidates/{id}/extraction`
+- `GET /api/candidates/{id}/extraction-history`
+- `GET /api/search-requests/{id}/exports/extraction-revisions.json`
 
 The flow payload includes:
 
@@ -104,7 +106,7 @@ The flow payload includes:
 The search manifest export includes:
 
 - original search request criteria
-- candidate, decision, and extraction counts
+- candidate, decision, extraction, and extraction revision counts
 - source and status distributions
 - full-text text-status distributions
 - extraction quality score distributions
@@ -113,7 +115,7 @@ The search manifest export includes:
 ## OpenAI extraction
 
 When configured, the backend attempts `Responses API` extraction with structured JSON output.
-Otherwise it stores a heuristic fallback extraction with an attached quality assessment payload. A manual override endpoint can then persist reviewed extraction JSON and recalculate its quality score.
+Otherwise it stores a heuristic fallback extraction with an attached quality assessment payload. Every saved extraction result is also appended to a revision history so the dashboard and exports can audit automatic runs and later manual overrides.
 
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL_EXTRACTION`

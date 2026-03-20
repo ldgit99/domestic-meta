@@ -1,9 +1,10 @@
-from app.core.constants import TITLE_ABSTRACT_STAGE
+﻿from app.core.constants import TITLE_ABSTRACT_STAGE
 from app.core.utils import generate_id, now_iso
 from app.models.domain import (
     CandidateRecord,
     EligibilityDecision,
     ExtractionResult,
+    ExtractionRevision,
     FullTextArtifact,
     PipelineEvent,
     PrismaCounts,
@@ -22,6 +23,7 @@ class MemoryStore:
         self.pipeline_events: dict[str, PipelineEvent] = {}
         self.full_text_artifacts: dict[str, FullTextArtifact] = {}
         self.extraction_results: dict[str, ExtractionResult] = {}
+        self.extraction_revisions: dict[str, ExtractionRevision] = {}
 
     def list_search_requests(self) -> list[SearchRequest]:
         return sorted(self.search_requests.values(), key=lambda item: item.created_at, reverse=True)
@@ -57,6 +59,11 @@ class MemoryStore:
             key: value
             for key, value in self.decisions.items()
             if value.candidate_record_id not in candidate_ids
+        }
+        self.extraction_revisions = {
+            key: value
+            for key, value in self.extraction_revisions.items()
+            if value.candidate_id not in candidate_ids
         }
         existing = self.prisma_counts.get(search_request_id)
         prisma_id = existing.id if existing else generate_id("prisma")
@@ -172,7 +179,12 @@ class MemoryStore:
         return self.full_text_artifacts.get(candidate_id)
 
     def save_extraction_result(self, item: ExtractionResult) -> ExtractionResult:
+        if not item.id:
+            item.id = generate_id("extract")
+        if not item.created_at:
+            item.created_at = now_iso()
         self.extraction_results[item.candidate_id] = item
+        self._record_extraction_revision(item)
         return item
 
     def get_extraction_result(self, candidate_id: str) -> ExtractionResult | None:
@@ -181,3 +193,35 @@ class MemoryStore:
     def list_extraction_results_for_search(self, search_request_id: str) -> list[ExtractionResult]:
         candidate_ids = {item.id for item in self.list_candidates(search_request_id)}
         return [item for item in self.extraction_results.values() if item.candidate_id in candidate_ids]
+
+    def list_extraction_revisions(self, candidate_id: str) -> list[ExtractionRevision]:
+        items = [item for item in self.extraction_revisions.values() if item.candidate_id == candidate_id]
+        return sorted(items, key=lambda item: (item.revision_index, item.created_at or "", item.id))
+
+    def list_extraction_revisions_for_search(self, search_request_id: str) -> list[ExtractionRevision]:
+        items = [
+            item
+            for item in self.extraction_revisions.values()
+            if item.search_request_id == search_request_id
+        ]
+        return sorted(items, key=lambda item: (item.candidate_id, item.revision_index, item.created_at or "", item.id))
+
+    def _record_extraction_revision(self, item: ExtractionResult) -> None:
+        candidate = self.get_candidate(item.candidate_id)
+        if candidate is None:
+            return
+        existing = self.list_extraction_revisions(item.candidate_id)
+        revision = ExtractionRevision(
+            id=generate_id("revision"),
+            extraction_result_id=item.id,
+            candidate_id=item.candidate_id,
+            search_request_id=candidate.search_request_id,
+            revision_index=len(existing) + 1,
+            status=item.status,
+            message=item.message,
+            fields_json=item.fields_json,
+            model_name=item.model_name,
+            raw_response=item.raw_response,
+            created_at=item.created_at or now_iso(),
+        )
+        self.extraction_revisions[revision.id] = revision

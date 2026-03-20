@@ -6,7 +6,7 @@
 - `backend/app/repositories/file_store.py`: JSON file-backed repository
 - `backend/app/repositories/sqlalchemy_store.py`: `SQLAlchemy` repository for `PostgreSQL` or `SQLite`
 - `backend/alembic`: Alembic environment and initial relational migration
-- `backend/app/repositories/db_models.py`: relational schema for searches, candidates, decisions, PRISMA, artifacts, and extraction results
+- `backend/app/repositories/db_models.py`: relational schema for searches, candidates, decisions, PRISMA, artifacts, extraction results, and extraction revisions
 - `backend/app/services/orchestrator.py`: collection, reset-on-rerun, deduplication, title and abstract screening, PRISMA recalculation
 - `backend/app/services/search_management.py`: manual review and full-text registration with PRISMA refresh
 - `backend/app/services/document_ingestion.py`: uploaded TXT and PDF persistence plus text extraction
@@ -39,6 +39,7 @@
 - `POST /api/candidates/{id}/extract`
 - `PUT /api/candidates/{id}/extraction`
 - `GET /api/candidates/{id}/extraction`
+- `GET /api/candidates/{id}/extraction-history`
 - `GET /api/search-requests/{id}/prisma`
 - `GET /api/search-requests/{id}/prisma/flow`
 - `GET /api/search-requests/{id}/exports/candidates.csv`
@@ -48,6 +49,7 @@
 - `GET /api/search-requests/{id}/exports/prisma-flow.json`
 - `GET /api/search-requests/{id}/exports/events.json`
 - `GET /api/search-requests/{id}/exports/extraction-results.json`
+- `GET /api/search-requests/{id}/exports/extraction-revisions.json`
 - `GET /api/search-requests/{id}/exports/meta-analysis-ready.csv`
 - `GET /api/search-requests/{id}/exports/audit-report.md`
 
@@ -59,7 +61,7 @@
 - `AUTO_CREATE_TABLES` controls whether `SQLAlchemyStore` calls `Base.metadata.create_all(...)`
 - Alembic can manage the same schema through `backend/alembic` and `alembic upgrade head`
 - uploaded files persist under `backend/uploads`
-- rerunning a search clears prior candidates, decisions, PRISMA counts, artifacts, and extraction results for that search
+- rerunning a search clears prior candidates, decisions, PRISMA counts, artifacts, extraction results, and extraction revision history for that search
 - `KCI` live collection is attempted only when configured; otherwise the service falls back to stub data
 - `RISS` live collection is attempted only when configured; otherwise the service falls back to stub data
 - document ingestion extracts text from TXT directly and from PDF through `pypdf` when available
@@ -71,6 +73,7 @@
 - extraction uses OpenAI only when configured and otherwise stores heuristic fallback output
 - effect-size readiness is computed from extracted statistics and included in review outputs and exports
 - extraction results carry a `quality_assessment` payload that feeds review priority, manifests, audit reports, and meta-analysis exports
+- every saved extraction result is appended to an extraction revision history for search-level export and candidate-level inspection
 - reviewed extraction JSON can be manually overridden without losing audit metadata, and the override is logged as a pipeline event
 
 ## Current dashboard behavior
@@ -85,9 +88,10 @@
 - surface OCR-needed states through candidate detail, review queue, summary payloads, and exports
 - trigger OCR retries against stored full-text files
 - run extraction and inspect extraction JSON
+- inspect extraction revision history for the selected candidate
 - edit extraction JSON for the selected candidate and save a manual override back to the backend
 - surface extraction quality scores and warnings in candidate detail and review outputs
-- preview export payloads for candidates, screening logs, PRISMA counts, PRISMA flow, meta-analysis CSV, and audit reports
+- preview export payloads for candidates, screening logs, PRISMA counts, PRISMA flow, extraction revisions, meta-analysis CSV, and audit reports
 - preview a reproducible search manifest export with criteria, counts, and PRISMA flow payload
 
 ## Deployment and verification slice

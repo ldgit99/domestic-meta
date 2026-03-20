@@ -115,6 +115,7 @@ def test_export_service_events_json_and_manifest_include_event_summary() -> None
         [],
         [],
         [],
+        [],
         [event],
     )
 

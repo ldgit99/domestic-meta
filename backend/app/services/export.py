@@ -1,10 +1,11 @@
-import json
+﻿import json
 
 from app.core.constants import FULL_TEXT_STAGE, TITLE_ABSTRACT_STAGE
 from app.models.domain import (
     CandidateRecord,
     EligibilityDecision,
     ExtractionResult,
+    ExtractionRevision,
     FullTextArtifact,
     PipelineEvent,
     PrismaCounts,
@@ -95,6 +96,7 @@ class ExportService:
         candidates: list[CandidateRecord],
         decisions: list[EligibilityDecision],
         results: list[ExtractionResult],
+        revisions: list[ExtractionRevision],
         artifacts: list[FullTextArtifact],
         events: list[PipelineEvent],
     ) -> dict:
@@ -119,6 +121,7 @@ class ExportService:
                 ),
                 "decision_count": len(decisions),
                 "extraction_count": len(results),
+                "extraction_revision_count": len(revisions),
                 "event_count": len(events),
                 "latest_event_at": events[0].created_at if events else None,
                 "source_counts": self._source_counts(candidates),
@@ -226,6 +229,34 @@ class ExportService:
             "content": json.dumps(payload, ensure_ascii=False, indent=2),
         }
 
+    def extraction_revisions_json(
+        self,
+        search_request_id: str,
+        revisions: list[ExtractionRevision],
+    ) -> dict:
+        payload = [
+            {
+                "id": item.id,
+                "extraction_result_id": item.extraction_result_id,
+                "candidate_id": item.candidate_id,
+                "search_request_id": item.search_request_id,
+                "revision_index": item.revision_index,
+                "status": item.status,
+                "message": item.message,
+                "fields_json": item.fields_json,
+                "model_name": item.model_name,
+                "raw_response": item.raw_response,
+                "created_at": item.created_at,
+            }
+            for item in revisions
+        ]
+        return {
+            "search_request_id": search_request_id,
+            "content_type": "application/json",
+            "file_name": f"{search_request_id}_extraction_revisions.json",
+            "content": json.dumps(payload, ensure_ascii=False, indent=2),
+        }
+
     def meta_analysis_ready_csv(
         self,
         search_request_id: str,
@@ -295,6 +326,7 @@ class ExportService:
         candidates: list[CandidateRecord],
         decisions: list[EligibilityDecision],
         results: list[ExtractionResult],
+        revisions: list[ExtractionRevision],
         artifacts: list[FullTextArtifact],
         events: list[PipelineEvent],
     ) -> dict:
@@ -324,6 +356,7 @@ class ExportService:
             f"- Canonical candidate count: {len([item for item in candidates if item.canonical_record_id in {None, item.id}])}",
             f"- Decision count: {len(decisions)}",
             f"- Extraction count: {len(results)}",
+            f"- Extraction revision count: {len(revisions)}",
             f"- Event count: {len(events)}",
             f"- Latest event at: {events[0].created_at if events else 'None'}",
             f"- Source counts: {self._format_mapping(self._source_counts(candidates))}",
@@ -344,10 +377,11 @@ class ExportService:
             "",
             "## Candidate Snapshot",
             "",
-            "| Candidate | Source | Year | Status | FT Text Status | TA Decision | FT Decision | Extraction | Effect | QA Score | QA Warnings | Review Flags |",
-            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+            "| Candidate | Source | Year | Status | FT Text Status | TA Decision | FT Decision | Extraction | Effect | QA Score | Revisions | QA Warnings | Review Flags |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
         ]
 
+        revision_counts = self._revision_counts(revisions)
         for candidate in candidates:
             extraction = result_map.get(candidate.id)
             artifact = artifact_map.get(candidate.id)
@@ -362,7 +396,7 @@ class ExportService:
                 effect_label = str(summary.get("recommended_effect_type"))
 
             lines.append(
-                f"| {candidate.title} | {candidate.source} | {candidate.year} | {candidate.status} | {artifact.text_extraction_status if artifact else ''} | {title_decision_map.get(candidate.id).decision if title_decision_map.get(candidate.id) else ''} | {full_text_decision_map.get(candidate.id).decision if full_text_decision_map.get(candidate.id) else ''} | {extraction.status if extraction else ''} | {effect_label} | {quality.get('score', '')} | {'; '.join(quality.get('warnings') or [])} | {'; '.join(summary.get('review_flags', []))} |"
+                f"| {candidate.title} | {candidate.source} | {candidate.year} | {candidate.status} | {artifact.text_extraction_status if artifact else ''} | {title_decision_map.get(candidate.id).decision if title_decision_map.get(candidate.id) else ''} | {full_text_decision_map.get(candidate.id).decision if full_text_decision_map.get(candidate.id) else ''} | {extraction.status if extraction else ''} | {effect_label} | {quality.get('score', '')} | {revision_counts.get(candidate.id, 0)} | {'; '.join(quality.get('warnings') or [])} | {'; '.join(summary.get('review_flags', []))} |"
             )
 
         lines.extend(["", "## Recent Activity", ""])
@@ -416,6 +450,12 @@ class ExportService:
             quality = self._quality_payload(result.fields_json)
             score = str(quality.get("score") or "unknown")
             counts[score] = counts.get(score, 0) + 1
+        return counts
+
+    def _revision_counts(self, revisions: list[ExtractionRevision]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for revision in revisions:
+            counts[revision.candidate_id] = counts.get(revision.candidate_id, 0) + 1
         return counts
 
     def _quality_payload(self, fields: dict | None) -> dict:

@@ -1,4 +1,4 @@
-import json
+﻿import json
 from dataclasses import asdict
 from pathlib import Path
 
@@ -8,6 +8,7 @@ from app.models.domain import (
     CandidateRecord,
     EligibilityDecision,
     ExtractionResult,
+    ExtractionRevision,
     FullTextArtifact,
     PipelineEvent,
     PrismaCounts,
@@ -33,6 +34,7 @@ class FileStore:
             "pipeline_events": {},
             "full_text_artifacts": {},
             "extraction_results": {},
+            "extraction_revisions": {},
         }
 
     def _load_raw(self) -> dict:
@@ -79,6 +81,9 @@ class FileStore:
     def _deserialize_extraction(self, payload: dict) -> ExtractionResult:
         return ExtractionResult(**payload)
 
+    def _deserialize_extraction_revision(self, payload: dict) -> ExtractionRevision:
+        return ExtractionRevision(**payload)
+
     def list_search_requests(self) -> list[SearchRequest]:
         raw = self._load_raw()
         items = [self._deserialize_search_request(item) for item in raw["search_requests"].values()]
@@ -124,6 +129,11 @@ class FileStore:
             key: value
             for key, value in raw["decisions"].items()
             if value["candidate_record_id"] not in candidate_ids
+        }
+        raw["extraction_revisions"] = {
+            key: value
+            for key, value in raw["extraction_revisions"].items()
+            if value["candidate_id"] not in candidate_ids
         }
         existing = raw["prisma_counts"].get(search_request_id)
         prisma_id = existing["id"] if existing else generate_id("prisma")
@@ -286,7 +296,14 @@ class FileStore:
 
     def save_extraction_result(self, item: ExtractionResult) -> ExtractionResult:
         raw = self._load_raw()
+        if not item.id:
+            item.id = generate_id("extract")
+        if not item.created_at:
+            item.created_at = now_iso()
         raw["extraction_results"][item.candidate_id] = asdict(item)
+        revision = self._build_extraction_revision(raw, item)
+        if revision is not None:
+            raw["extraction_revisions"][revision.id] = asdict(revision)
         self._save_raw(raw)
         return item
 
@@ -307,3 +324,46 @@ class FileStore:
             for key, item in raw["extraction_results"].items()
             if key in candidate_ids
         ]
+
+    def list_extraction_revisions(self, candidate_id: str) -> list[ExtractionRevision]:
+        raw = self._load_raw()
+        items = [
+            self._deserialize_extraction_revision(item)
+            for item in raw["extraction_revisions"].values()
+            if item["candidate_id"] == candidate_id
+        ]
+        return sorted(items, key=lambda item: (item.revision_index, item.created_at or "", item.id))
+
+    def list_extraction_revisions_for_search(self, search_request_id: str) -> list[ExtractionRevision]:
+        raw = self._load_raw()
+        items = [
+            self._deserialize_extraction_revision(item)
+            for item in raw["extraction_revisions"].values()
+            if item["search_request_id"] == search_request_id
+        ]
+        return sorted(items, key=lambda item: (item.candidate_id, item.revision_index, item.created_at or "", item.id))
+
+    def _build_extraction_revision(self, raw: dict, item: ExtractionResult) -> ExtractionRevision | None:
+        candidate = raw["candidates"].get(item.candidate_id)
+        if candidate is None:
+            return None
+        revision_index = 1 + len(
+            [
+                value
+                for value in raw["extraction_revisions"].values()
+                if value["candidate_id"] == item.candidate_id
+            ]
+        )
+        return ExtractionRevision(
+            id=generate_id("revision"),
+            extraction_result_id=item.id,
+            candidate_id=item.candidate_id,
+            search_request_id=candidate["search_request_id"],
+            revision_index=revision_index,
+            status=item.status,
+            message=item.message,
+            fields_json=item.fields_json,
+            model_name=item.model_name,
+            raw_response=item.raw_response,
+            created_at=item.created_at or now_iso(),
+        )

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+﻿from pydantic import BaseModel, ConfigDict, Field
 
 
 class CandidateRead(BaseModel):
@@ -68,6 +68,22 @@ class ExtractionResultRead(BaseModel):
     message: str
     fields_json: dict = Field(default_factory=dict)
     model_name: str | None = None
+    created_at: str | None = None
+
+
+class ExtractionRevisionRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    extraction_result_id: str
+    candidate_id: str
+    search_request_id: str
+    revision_index: int
+    status: str
+    message: str
+    fields_json: dict = Field(default_factory=dict)
+    model_name: str | None = None
+    raw_response: dict = Field(default_factory=dict)
     created_at: str | None = None
 
 

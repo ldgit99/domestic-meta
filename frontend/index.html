@@ -377,6 +377,7 @@ interview</textarea>
         <button id="exportMeta" class="secondary">Meta CSV</button>
         <button id="exportAudit" class="secondary">Audit Report</button>
         <button id="exportEvents" class="secondary">Events Log</button>
+        <button id="exportRevisionHistory" class="secondary">Extraction History</button>
       </div>
     </div>
 
@@ -489,6 +490,10 @@ interview</textarea>
         <h2>Activity Timeline</h2>
         <pre id="events">Search events will appear here.</pre>
       </div>
+      <div class="panel">
+        <h2>Extraction History</h2>
+        <pre id="extractionHistory">Choose a candidate to inspect extraction revisions.</pre>
+      </div>
     </div>
 
     <div class="panel">
@@ -587,6 +592,7 @@ interview</textarea>
     const exportMetaButton = document.getElementById("exportMeta");
     const exportAuditButton = document.getElementById("exportAudit");
     const exportEventsButton = document.getElementById("exportEvents");
+    const exportRevisionHistoryButton = document.getElementById("exportRevisionHistory");
     const decisionIncludeButton = document.getElementById("decisionInclude");
     const decisionMaybeButton = document.getElementById("decisionMaybe");
     const decisionExcludeButton = document.getElementById("decisionExclude");
@@ -612,6 +618,7 @@ interview</textarea>
     const reviewResult = document.getElementById("reviewResult");
     const reviewQueue = document.getElementById("reviewQueue");
     const eventsView = document.getElementById("events");
+    const extractionHistory = document.getElementById("extractionHistory");
     const candidateDetail = document.getElementById("candidateDetail");
     const candidatesBody = document.getElementById("candidates");
     const searchesBody = document.getElementById("searches");
@@ -858,6 +865,16 @@ interview</textarea>
       return "title_abstract";
     }
 
+    async function loadExtractionHistory(candidateId) {
+      if (!candidateId) {
+        extractionHistory.textContent = "Choose a candidate to inspect extraction revisions.";
+        return;
+      }
+
+      const payload = await fetchJson(`/candidates/${candidateId}/extraction-history`);
+      extractionHistory.textContent = JSON.stringify(payload, null, 2);
+    }
+
     async function loadReviewQueue() {
       if (!lastSearchId) {
         reviewQueue.textContent = "Run or open a search request first.";
@@ -914,7 +931,8 @@ interview</textarea>
         prismaFlow: `/search-requests/${lastSearchId}/exports/prisma-flow.json`,
         meta: `/search-requests/${lastSearchId}/exports/meta-analysis-ready.csv`,
         audit: `/search-requests/${lastSearchId}/exports/audit-report.md`,
-        events: `/search-requests/${lastSearchId}/exports/events.json`
+        events: `/search-requests/${lastSearchId}/exports/events.json`,
+        revisions: `/search-requests/${lastSearchId}/exports/extraction-revisions.json`
       };
 
       const payload = await fetchJson(routes[kind]);
@@ -961,6 +979,7 @@ interview</textarea>
       reviewResult.textContent = "Waiting for manual screening response...";
       reviewQueue.textContent = "Loading review queue...";
       eventsView.textContent = "Loading search events...";
+      extractionHistory.textContent = "Loading extraction revisions...";
       candidateDetail.textContent = "Loading candidate detail...";
       extraction.textContent = "Waiting for extraction...";
       exportContent.value = "Waiting for export preview...";
@@ -999,6 +1018,7 @@ interview</textarea>
         reviewResult.textContent = "Search execution failed.";
         reviewQueue.textContent = "Search execution failed.";
         eventsView.textContent = "Search execution failed.";
+        extractionHistory.textContent = "Search execution failed.";
         candidateDetail.textContent = "Search execution failed.";
         candidatesBody.innerHTML = '<tr><td colspan="5">Search execution failed.</td></tr>';
       }
@@ -1174,6 +1194,14 @@ interview</textarea>
     exportEventsButton.addEventListener("click", async () => {
       try {
         await loadExport("events");
+      } catch (error) {
+        exportContent.value = String(error);
+      }
+    });
+
+    exportRevisionHistoryButton.addEventListener("click", async () => {
+      try {
+        await loadExport("revisions");
       } catch (error) {
         exportContent.value = String(error);
       }

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+﻿from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from app.api.dependencies import (
     get_document_ingestion,
@@ -19,6 +19,7 @@ from app.schemas.candidate import (
     EligibilityDecisionRead,
     ExtractionResultRead,
     ExtractionResultUpdate,
+    ExtractionRevisionRead,
     FullTextArtifactCreate,
     FullTextArtifactRead,
     OCRRunRead,
@@ -163,3 +164,15 @@ def preview_extraction(
     artifact = store.get_full_text_artifact(candidate_id)
     payload = extraction_service.preview(candidate, artifact, existing=existing)
     return ExtractionResultRead.model_validate(payload)
+
+
+@router.get("/candidates/{candidate_id}/extraction-history", response_model=list[ExtractionRevisionRead])
+def get_extraction_history(
+    candidate_id: str,
+    store: FileStore = Depends(get_store),
+) -> list[ExtractionRevisionRead]:
+    candidate = store.get_candidate(candidate_id)
+    if candidate is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    payload = store.list_extraction_revisions(candidate_id)
+    return [ExtractionRevisionRead.model_validate(item) for item in payload]

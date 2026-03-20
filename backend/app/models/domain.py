@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+﻿from dataclasses import dataclass, field
 
 
 @dataclass
@@ -96,6 +96,21 @@ class FullTextArtifact:
 class ExtractionResult:
     id: str
     candidate_id: str
+    status: str
+    message: str
+    fields_json: dict
+    model_name: str | None
+    raw_response: dict = field(default_factory=dict)
+    created_at: str | None = None
+
+
+@dataclass
+class ExtractionRevision:
+    id: str
+    extraction_result_id: str
+    candidate_id: str
+    search_request_id: str
+    revision_index: int
     status: str
     message: str
     fields_json: dict
