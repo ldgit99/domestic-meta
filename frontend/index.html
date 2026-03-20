@@ -494,6 +494,10 @@ interview</textarea>
         <h2>Extraction History</h2>
         <pre id="extractionHistory">Choose a candidate to inspect extraction revisions.</pre>
       </div>
+      <div class="panel">
+        <h2>Revision Comparison</h2>
+        <pre id="revisionComparison">Choose a revision to compare with the current extraction.</pre>
+      </div>
     </div>
 
     <div class="panel">
@@ -627,6 +631,7 @@ interview</textarea>
     const reviewQueue = document.getElementById("reviewQueue");
     const eventsView = document.getElementById("events");
     const extractionHistory = document.getElementById("extractionHistory");
+    const revisionComparison = document.getElementById("revisionComparison");
     const candidateDetail = document.getElementById("candidateDetail");
     const candidatesBody = document.getElementById("candidates");
     const searchesBody = document.getElementById("searches");
@@ -848,6 +853,7 @@ interview</textarea>
       if (!candidateId) {
         candidateDetail.textContent = "Choose a candidate to inspect its detail payload.";
         extractionHistory.textContent = "Choose a candidate to inspect extraction revisions.";
+        revisionComparison.textContent = "Choose a revision to compare with the current extraction.";
         currentExtractionHistory = [];
         populateRevisionRestoreOptions([]);
         populateManualExtractionEditor(null);
@@ -914,9 +920,29 @@ interview</textarea>
       syncRestoreRevisionMessage();
     }
 
+    async function loadRevisionComparison(candidateId) {
+      if (!candidateId) {
+        revisionComparison.textContent = "Choose a revision to compare with the current extraction.";
+        return;
+      }
+
+      const revision = selectedRevision();
+      if (!revision) {
+        revisionComparison.textContent = "No extraction revision selected.";
+        return;
+      }
+
+      try {
+        const payload = await fetchJson(`/candidates/${candidateId}/extraction-history/${revision.id}/compare-current`);
+        revisionComparison.textContent = JSON.stringify(payload, null, 2);
+      } catch (error) {
+        revisionComparison.textContent = String(error);
+      }
+    }
     async function loadExtractionHistory(candidateId) {
       if (!candidateId) {
         extractionHistory.textContent = "Choose a candidate to inspect extraction revisions.";
+        revisionComparison.textContent = "Choose a revision to compare with the current extraction.";
         currentExtractionHistory = [];
         populateRevisionRestoreOptions([]);
         return;
@@ -925,6 +951,7 @@ interview</textarea>
       const payload = await fetchJson(`/candidates/${candidateId}/extraction-history`);
       extractionHistory.textContent = JSON.stringify(payload, null, 2);
       populateRevisionRestoreOptions(payload);
+      await loadRevisionComparison(candidateId);
     }
 
     async function loadReviewQueue() {
@@ -1032,6 +1059,7 @@ interview</textarea>
       reviewQueue.textContent = "Loading review queue...";
       eventsView.textContent = "Loading search events...";
       extractionHistory.textContent = "Loading extraction revisions...";
+      revisionComparison.textContent = "Loading revision comparison...";
       populateRevisionRestoreOptions([]);
       candidateDetail.textContent = "Loading candidate detail...";
       extraction.textContent = "Waiting for extraction...";
@@ -1072,6 +1100,7 @@ interview</textarea>
         reviewQueue.textContent = "Search execution failed.";
         eventsView.textContent = "Search execution failed.";
         extractionHistory.textContent = "Search execution failed.";
+        revisionComparison.textContent = "Search execution failed.";
         populateRevisionRestoreOptions([]);
         candidateDetail.textContent = "Search execution failed.";
         candidatesBody.innerHTML = '<tr><td colspan="5">Search execution failed.</td></tr>';
@@ -1295,8 +1324,9 @@ interview</textarea>
       }
     });
 
-    revisionToRestore.addEventListener("change", () => {
+    revisionToRestore.addEventListener("change", async () => {
       syncRestoreRevisionMessage();
+      await loadRevisionComparison(reviewCandidate.value);
     });
 
     reviewCandidate.addEventListener("change", async () => {

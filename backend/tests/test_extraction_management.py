@@ -1,4 +1,4 @@
-﻿from app.models.domain import CandidateRecord, ExtractionResult
+from app.models.domain import CandidateRecord, ExtractionResult
 from app.repositories.memory import MemoryStore
 from app.schemas.candidate import ExtractionResultUpdate, ExtractionRevisionRestoreCreate
 from app.schemas.search import SearchRequestCreate
@@ -205,3 +205,46 @@ def test_restore_revision_raises_for_missing_revision() -> None:
         assert str(exc) == "Extraction revision not found"
     else:
         raise AssertionError("Expected LookupError for a missing extraction revision")
+def test_compare_revision_to_current_reports_field_differences() -> None:
+    store = MemoryStore()
+    created = store.create_search_request(SearchRequestCreate(query_text="feedback"))
+    candidate = _candidate(created.id)
+    store.add_candidates([candidate])
+    service = ExtractionManagementService(store=store, quality_service=QualityAssessmentService())
+
+    store.save_extraction_result(
+        ExtractionResult(
+            id="e1",
+            candidate_id=candidate.id,
+            status="completed",
+            message="initial extraction",
+            fields_json=_fields("80", "80.0", "75.0", "heuristic", "medium"),
+            model_name="gpt",
+            raw_response={"source": "openai"},
+            created_at="2026-03-20T10:00:00",
+        )
+    )
+    store.save_extraction_result(
+        ExtractionResult(
+            id="e1",
+            candidate_id=candidate.id,
+            status="manual_override",
+            message="corrected extraction",
+            fields_json=_fields("120", "82.4", "75.2", "manual", "high"),
+            model_name="manual_override",
+            raw_response={"manual_override": {"reviewed_by": "dashboard"}},
+            created_at="2026-03-20T10:10:00",
+        )
+    )
+
+    revisions = store.list_extraction_revisions(candidate.id)
+    comparison = service.compare_revision_to_current(candidate.id, revisions[0].id)
+
+    assert comparison is not None
+    assert comparison["revision_index"] == 1
+    assert comparison["changed_field_count"] >= 4
+    paths = {item["field_path"]: item for item in comparison["differences"]}
+    assert paths["meta.status"]["current_value"] == "manual_override"
+    assert paths["meta.status"]["revision_value"] == "completed"
+    assert paths["participants.sample_size_total"]["current_value"] == "120"
+    assert paths["participants.sample_size_total"]["revision_value"] == "80"

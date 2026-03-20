@@ -55,13 +55,7 @@ class ExtractionManagementService:
         if candidate is None:
             return None
 
-        revision = next(
-            (item for item in self.store.list_extraction_revisions(candidate_id) if item.id == revision_id),
-            None,
-        )
-        if revision is None:
-            raise LookupError("Extraction revision not found")
-
+        revision = self._get_revision(candidate_id, revision_id)
         existing = self.store.get_extraction_result(candidate_id)
         fields = self._build_fields(revision.fields_json, existing=None)
         timestamp = now_iso()
@@ -93,6 +87,35 @@ class ExtractionManagementService:
                 "restored_revision_model_name": revision.model_name,
             },
         )
+
+    def compare_revision_to_current(self, candidate_id: str, revision_id: str) -> dict | None:
+        candidate = self.store.get_candidate(candidate_id)
+        if candidate is None:
+            return None
+
+        current = self.store.get_extraction_result(candidate_id)
+        if current is None:
+            raise LookupError("Current extraction result not found")
+
+        revision = self._get_revision(candidate_id, revision_id)
+        differences = self._diff_result(current, revision)
+        return {
+            "candidate_id": candidate_id,
+            "current_extraction_id": current.id,
+            "revision_id": revision.id,
+            "revision_index": revision.revision_index,
+            "changed_field_count": len(differences),
+            "differences": differences,
+        }
+
+    def _get_revision(self, candidate_id: str, revision_id: str):
+        revision = next(
+            (item for item in self.store.list_extraction_revisions(candidate_id) if item.id == revision_id),
+            None,
+        )
+        if revision is None:
+            raise LookupError("Extraction revision not found")
+        return revision
 
     def _persist_result(
         self,
@@ -176,3 +199,75 @@ class ExtractionManagementService:
             "previous_model_name": existing.model_name if existing else None,
         }
         return raw_response
+
+    def _diff_result(self, current: ExtractionResult, revision) -> list[dict]:
+        current_map = self._flatten_value(current.fields_json or {})
+        revision_map = self._flatten_value(revision.fields_json or {})
+        current_map.update(
+            {
+                "meta.status": current.status,
+                "meta.message": current.message,
+                "meta.model_name": current.model_name,
+            }
+        )
+        revision_map.update(
+            {
+                "meta.status": revision.status,
+                "meta.message": revision.message,
+                "meta.model_name": revision.model_name,
+            }
+        )
+
+        output: list[dict] = []
+        for path in sorted(set(current_map) | set(revision_map)):
+            current_value = current_map.get(path)
+            revision_value = revision_map.get(path)
+            if path not in revision_map:
+                output.append(
+                    {
+                        "field_path": path,
+                        "change_type": "added_in_current",
+                        "current_value": current_value,
+                        "revision_value": None,
+                    }
+                )
+                continue
+            if path not in current_map:
+                output.append(
+                    {
+                        "field_path": path,
+                        "change_type": "missing_in_current",
+                        "current_value": None,
+                        "revision_value": revision_value,
+                    }
+                )
+                continue
+            if current_value != revision_value:
+                output.append(
+                    {
+                        "field_path": path,
+                        "change_type": "changed",
+                        "current_value": current_value,
+                        "revision_value": revision_value,
+                    }
+                )
+        return output
+
+    def _flatten_value(self, payload: object, prefix: str = "") -> dict[str, object]:
+        if isinstance(payload, dict):
+            if not payload and prefix:
+                return {prefix: {}}
+            output: dict[str, object] = {}
+            for key in sorted(payload):
+                child_prefix = f"{prefix}.{key}" if prefix else str(key)
+                output.update(self._flatten_value(payload[key], child_prefix))
+            return output
+        if isinstance(payload, list):
+            if not payload and prefix:
+                return {prefix: []}
+            output: dict[str, object] = {}
+            for index, item in enumerate(payload):
+                child_prefix = f"{prefix}[{index}]" if prefix else f"[{index}]"
+                output.update(self._flatten_value(item, child_prefix))
+            return output
+        return {prefix: payload}

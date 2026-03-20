@@ -19,6 +19,7 @@ from app.schemas.candidate import (
     EligibilityDecisionRead,
     ExtractionResultRead,
     ExtractionResultUpdate,
+    ExtractionRevisionComparisonRead,
     ExtractionRevisionRead,
     ExtractionRevisionRestoreCreate,
     FullTextArtifactCreate,
@@ -181,6 +182,21 @@ def restore_extraction_revision(
     if created is None:
         raise HTTPException(status_code=404, detail="Candidate not found")
     return ExtractionResultRead.model_validate(created)
+
+
+@router.get("/candidates/{candidate_id}/extraction-history/{revision_id}/compare-current", response_model=ExtractionRevisionComparisonRead)
+def compare_extraction_revision_to_current(
+    candidate_id: str,
+    revision_id: str,
+    extraction_management: ExtractionManagementService = Depends(get_extraction_management),
+) -> ExtractionRevisionComparisonRead:
+    try:
+        payload = extraction_management.compare_revision_to_current(candidate_id, revision_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if payload is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    return ExtractionRevisionComparisonRead.model_validate(payload)
 
 
 @router.get("/candidates/{candidate_id}/extraction-history", response_model=list[ExtractionRevisionRead])

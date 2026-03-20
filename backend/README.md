@@ -23,6 +23,7 @@ FastAPI backend for the domestic education meta-analysis prototype.
 - extraction quality assessment with evidence coverage and sample-size checks
 - extraction revision persistence for every saved extraction result
 - extraction revision restore workflow with event logging
+- extraction revision comparison against the current result
 - manual extraction override persistence with event logging
 - export endpoints including audit and PRISMA flow payloads
 - pipeline event logging for collection, screening, OCR, and extraction actions
@@ -98,6 +99,7 @@ The current connector accepts JSON, XML, and SPARQL-style `results.bindings` JSO
 - `PUT /api/candidates/{id}/extraction`
 - `GET /api/candidates/{id}/extraction-history`
 - `POST /api/candidates/{id}/extraction-history/{revision_id}/restore`
+- `GET /api/candidates/{id}/extraction-history/{revision_id}/compare-current`
 - `GET /api/search-requests/{id}/exports/extraction-revisions.json`
 
 The flow payload includes:

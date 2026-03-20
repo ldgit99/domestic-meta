@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -85,6 +87,22 @@ class ExtractionRevisionRead(BaseModel):
     model_name: str | None = None
     raw_response: dict = Field(default_factory=dict)
     created_at: str | None = None
+
+
+class ExtractionDiffEntryRead(BaseModel):
+    field_path: str
+    change_type: str
+    current_value: Any | None = None
+    revision_value: Any | None = None
+
+
+class ExtractionRevisionComparisonRead(BaseModel):
+    candidate_id: str
+    current_extraction_id: str
+    revision_id: str
+    revision_index: int
+    changed_field_count: int
+    differences: list[ExtractionDiffEntryRead] = Field(default_factory=list)
 
 
 class ExtractionResultUpdate(BaseModel):
