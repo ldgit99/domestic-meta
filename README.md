@@ -96,7 +96,7 @@ The dashboard currently supports:
 - rerunning OCR on stored PDF files when an external OCR command is configured
 - running extraction
 - surfacing extraction quality scores and review warnings in candidate detail and exports
-- inspecting extraction revision history and exporting it from the dashboard
+- inspecting extraction revision history, restoring a prior revision, and exporting it from the dashboard
 - editing and saving manual extraction overrides from the dashboard
 - previewing export content
 - exporting a reproducible search manifest with criteria and PRISMA flow payloads
@@ -119,6 +119,7 @@ The dashboard currently supports:
 - `POST /api/candidates/{id}/extract`
 - `PUT /api/candidates/{id}/extraction`
 - `GET /api/candidates/{id}/extraction-history`
+- `POST /api/candidates/{id}/extraction-history/{revision_id}/restore`
 - `GET /api/candidates/{id}/extraction`
 - `GET /api/search-requests/{id}/prisma`
 - `GET /api/search-requests/{id}/prisma/flow`

@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from app.api.dependencies import (
     get_document_ingestion,
@@ -20,6 +20,7 @@ from app.schemas.candidate import (
     ExtractionResultRead,
     ExtractionResultUpdate,
     ExtractionRevisionRead,
+    ExtractionRevisionRestoreCreate,
     FullTextArtifactCreate,
     FullTextArtifactRead,
     OCRRunRead,
@@ -164,6 +165,22 @@ def preview_extraction(
     artifact = store.get_full_text_artifact(candidate_id)
     payload = extraction_service.preview(candidate, artifact, existing=existing)
     return ExtractionResultRead.model_validate(payload)
+
+
+@router.post("/candidates/{candidate_id}/extraction-history/{revision_id}/restore", response_model=ExtractionResultRead)
+def restore_extraction_revision(
+    candidate_id: str,
+    revision_id: str,
+    payload: ExtractionRevisionRestoreCreate,
+    extraction_management: ExtractionManagementService = Depends(get_extraction_management),
+) -> ExtractionResultRead:
+    try:
+        created = extraction_management.restore_revision(candidate_id, revision_id, payload)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if created is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    return ExtractionResultRead.model_validate(created)
 
 
 @router.get("/candidates/{candidate_id}/extraction-history", response_model=list[ExtractionRevisionRead])

@@ -21,7 +21,9 @@ FastAPI backend for the domestic education meta-analysis prototype.
 - OpenAI `Responses API` extraction path with heuristic fallback
 - effect-size readiness summaries
 - extraction quality assessment with evidence coverage and sample-size checks
-- extraction revision persistence for every saved extraction result`r`n- manual extraction override persistence with event logging
+- extraction revision persistence for every saved extraction result
+- extraction revision restore workflow with event logging
+- manual extraction override persistence with event logging
 - export endpoints including audit and PRISMA flow payloads
 - pipeline event logging for collection, screening, OCR, and extraction actions
 - search manifest export with search criteria, counts, and PRISMA flow payload
@@ -95,6 +97,7 @@ The current connector accepts JSON, XML, and SPARQL-style `results.bindings` JSO
 - `GET /api/search-requests/{id}/exports/search-request.json`
 - `PUT /api/candidates/{id}/extraction`
 - `GET /api/candidates/{id}/extraction-history`
+- `POST /api/candidates/{id}/extraction-history/{revision_id}/restore`
 - `GET /api/search-requests/{id}/exports/extraction-revisions.json`
 
 The flow payload includes:
@@ -115,7 +118,7 @@ The search manifest export includes:
 ## OpenAI extraction
 
 When configured, the backend attempts `Responses API` extraction with structured JSON output.
-Otherwise it stores a heuristic fallback extraction with an attached quality assessment payload. Every saved extraction result is also appended to a revision history so the dashboard and exports can audit automatic runs and later manual overrides.
+Otherwise it stores a heuristic fallback extraction with an attached quality assessment payload. Every saved extraction result is also appended to a revision history so the dashboard and exports can audit automatic runs and later manual overrides. A prior revision can be restored into the current extraction result through the restore endpoint or dashboard action.
 
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL_EXTRACTION`

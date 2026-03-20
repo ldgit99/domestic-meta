@@ -15,7 +15,7 @@
 - `backend/app/services/review.py`: candidate detail assembly and review queue generation
 - `backend/app/services/extraction.py`: OpenAI `Responses API` extraction plus heuristic fallback
 - `backend/app/services/extraction_workflow.py`: extraction execution and persistence
-- `backend/app/services/extraction_management.py`: manual extraction override persistence and audit logging
+- `backend/app/services/extraction_management.py`: manual extraction override persistence, revision restore workflow, and audit logging
 - `backend/app/services/effect_size.py`: effect-size-readiness summaries
 - `backend/app/services/quality.py`: extraction quality scoring, evidence coverage checks, and sample-size consistency checks
 - `backend/app/services/connectors.py`: `KCI` and `RISS` live-or-stub connectors
@@ -40,6 +40,7 @@
 - `PUT /api/candidates/{id}/extraction`
 - `GET /api/candidates/{id}/extraction`
 - `GET /api/candidates/{id}/extraction-history`
+- `POST /api/candidates/{id}/extraction-history/{revision_id}/restore`
 - `GET /api/search-requests/{id}/prisma`
 - `GET /api/search-requests/{id}/prisma/flow`
 - `GET /api/search-requests/{id}/exports/candidates.csv`
@@ -75,6 +76,7 @@
 - extraction results carry a `quality_assessment` payload that feeds review priority, manifests, audit reports, and meta-analysis exports
 - every saved extraction result is appended to an extraction revision history for search-level export and candidate-level inspection
 - reviewed extraction JSON can be manually overridden without losing audit metadata, and the override is logged as a pipeline event
+- any prior extraction revision can be restored as the current result, which appends a new revision and audit event rather than overwriting history
 
 ## Current dashboard behavior
 
@@ -89,6 +91,7 @@
 - trigger OCR retries against stored full-text files
 - run extraction and inspect extraction JSON
 - inspect extraction revision history for the selected candidate
+- restore a selected extraction revision into the current extraction result
 - edit extraction JSON for the selected candidate and save a manual override back to the backend
 - surface extraction quality scores and warnings in candidate detail and review outputs
 - preview export payloads for candidates, screening logs, PRISMA counts, PRISMA flow, extraction revisions, meta-analysis CSV, and audit reports

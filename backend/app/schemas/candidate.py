@@ -1,4 +1,4 @@
-﻿from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CandidateRead(BaseModel):
@@ -91,6 +91,13 @@ class ExtractionResultUpdate(BaseModel):
     fields_json: dict = Field(default_factory=dict)
     status: str = Field(default="manual_override")
     message: str = Field(default="Manual extraction override saved.")
+    reviewed_by: str = Field(default="human")
+    notes: str | None = None
+
+
+class ExtractionRevisionRestoreCreate(BaseModel):
+    status: str = Field(default="manual_override")
+    message: str | None = None
     reviewed_by: str = Field(default="human")
     notes: str | None = None
 

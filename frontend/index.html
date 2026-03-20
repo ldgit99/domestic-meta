@@ -553,8 +553,15 @@ interview</textarea>
   "evidence_spans": [],
   "confidence": "medium"
 }</textarea>
+        <label for="revisionToRestore">Revision To Restore</label>
+        <select id="revisionToRestore">
+          <option value="">No revision loaded</option>
+        </select>
+        <label for="restoreRevisionMessage">Restore Message</label>
+        <input id="restoreRevisionMessage" value="Restored extraction revision." />
         <div class="actions" style="margin-top:14px;">
           <button id="saveExtractionOverride" class="ghost">Save Manual Extraction</button>
+          <button id="restoreRevision" class="secondary">Restore Selected Revision</button>
         </div>
       </div>
     </div>
@@ -599,6 +606,7 @@ interview</textarea>
     const runOcrButton = document.getElementById("runOcr");
     const runExtractionButton = document.getElementById("runExtraction");
     const saveExtractionOverrideButton = document.getElementById("saveExtractionOverride");
+    const restoreRevisionButton = document.getElementById("restoreRevision");
 
     const queryInput = document.getElementById("query");
     const expandedKeywordsInput = document.getElementById("expandedKeywords");
@@ -631,9 +639,12 @@ interview</textarea>
     const fullTextFile = document.getElementById("fullTextFile");
     const manualExtractionMessage = document.getElementById("manualExtractionMessage");
     const manualExtractionJson = document.getElementById("manualExtractionJson");
+    const revisionToRestore = document.getElementById("revisionToRestore");
+    const restoreRevisionMessage = document.getElementById("restoreRevisionMessage");
 
     let lastSearchId = null;
     let currentCandidates = [];
+    let currentExtractionHistory = [];
 
     function parseList(value) {
       return value
@@ -836,6 +847,9 @@ interview</textarea>
     async function loadCandidateDetail(candidateId) {
       if (!candidateId) {
         candidateDetail.textContent = "Choose a candidate to inspect its detail payload.";
+        extractionHistory.textContent = "Choose a candidate to inspect extraction revisions.";
+        currentExtractionHistory = [];
+        populateRevisionRestoreOptions([]);
         populateManualExtractionEditor(null);
         return;
       }
@@ -844,6 +858,7 @@ interview</textarea>
       reviewStage.value = suggestReviewStage(payload);
       candidateDetail.textContent = JSON.stringify(payload, null, 2);
       populateManualExtractionEditor(payload);
+      await loadExtractionHistory(candidateId);
     }
 
     function suggestReviewStage(detailPayload) {
@@ -865,14 +880,51 @@ interview</textarea>
       return "title_abstract";
     }
 
+    function selectedRevision() {
+      return currentExtractionHistory.find((item) => item.id === revisionToRestore.value) || null;
+    }
+
+    function syncRestoreRevisionMessage() {
+      const revision = selectedRevision();
+      restoreRevisionMessage.value = revision
+        ? `Restored extraction revision ${revision.revision_index}.`
+        : "Restored extraction revision.";
+    }
+
+    function populateRevisionRestoreOptions(revisions) {
+      currentExtractionHistory = Array.isArray(revisions) ? revisions : [];
+
+      if (!currentExtractionHistory.length) {
+        revisionToRestore.innerHTML = '<option value="">No revision loaded</option>';
+        restoreRevisionMessage.value = "Restored extraction revision.";
+        return;
+      }
+
+      const previousValue = revisionToRestore.value;
+      const ordered = [...currentExtractionHistory].sort((left, right) => right.revision_index - left.revision_index);
+      revisionToRestore.innerHTML = ordered.map((item) => `
+        <option value="${item.id}">#${item.revision_index} | ${item.status} | ${item.model_name || "unknown"} | ${item.created_at || ""}</option>
+      `).join("");
+
+      if (ordered.some((item) => item.id === previousValue)) {
+        revisionToRestore.value = previousValue;
+      } else {
+        revisionToRestore.value = ordered[0].id;
+      }
+      syncRestoreRevisionMessage();
+    }
+
     async function loadExtractionHistory(candidateId) {
       if (!candidateId) {
         extractionHistory.textContent = "Choose a candidate to inspect extraction revisions.";
+        currentExtractionHistory = [];
+        populateRevisionRestoreOptions([]);
         return;
       }
 
       const payload = await fetchJson(`/candidates/${candidateId}/extraction-history`);
       extractionHistory.textContent = JSON.stringify(payload, null, 2);
+      populateRevisionRestoreOptions(payload);
     }
 
     async function loadReviewQueue() {
@@ -980,6 +1032,7 @@ interview</textarea>
       reviewQueue.textContent = "Loading review queue...";
       eventsView.textContent = "Loading search events...";
       extractionHistory.textContent = "Loading extraction revisions...";
+      populateRevisionRestoreOptions([]);
       candidateDetail.textContent = "Loading candidate detail...";
       extraction.textContent = "Waiting for extraction...";
       exportContent.value = "Waiting for export preview...";
@@ -1019,6 +1072,7 @@ interview</textarea>
         reviewQueue.textContent = "Search execution failed.";
         eventsView.textContent = "Search execution failed.";
         extractionHistory.textContent = "Search execution failed.";
+        populateRevisionRestoreOptions([]);
         candidateDetail.textContent = "Search execution failed.";
         candidatesBody.innerHTML = '<tr><td colspan="5">Search execution failed.</td></tr>';
       }
@@ -1103,6 +1157,7 @@ interview</textarea>
         extraction.textContent = JSON.stringify(payload, null, 2);
         await refreshSearchState(lastSearchId);
         await loadExport("meta");
+        await loadExport("revisions");
       } catch (error) {
         extraction.textContent = String(error);
       }
@@ -1130,6 +1185,7 @@ interview</textarea>
         extraction.textContent = JSON.stringify(payload, null, 2);
         await refreshSearchState(lastSearchId);
         await loadExport("meta");
+        await loadExport("revisions");
       } catch (error) {
         extraction.textContent = String(error);
       }
@@ -1205,6 +1261,42 @@ interview</textarea>
       } catch (error) {
         exportContent.value = String(error);
       }
+    });
+
+    restoreRevisionButton.addEventListener("click", async () => {
+      try {
+        const candidate = selectedCandidate();
+        const revision = selectedRevision();
+        if (!candidate) {
+          extraction.textContent = "Select a candidate before restoring an extraction revision.";
+          return;
+        }
+        if (!revision) {
+          extraction.textContent = "Select an extraction revision to restore.";
+          return;
+        }
+
+        const payload = await fetchJson(`/candidates/${candidate.id}/extraction-history/${revision.id}/restore`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: restoreRevisionMessage.value || null,
+            reviewed_by: "dashboard",
+            notes: "Restored from dashboard"
+          })
+        });
+
+        extraction.textContent = JSON.stringify(payload, null, 2);
+        await refreshSearchState(lastSearchId);
+        await loadExport("meta");
+        await loadExport("revisions");
+      } catch (error) {
+        extraction.textContent = String(error);
+      }
+    });
+
+    revisionToRestore.addEventListener("change", () => {
+      syncRestoreRevisionMessage();
     });
 
     reviewCandidate.addEventListener("change", async () => {
