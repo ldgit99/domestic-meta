@@ -25,6 +25,7 @@
 
 - `GET /`
 - `GET /api`
+- `GET /dashboard`
 - `GET /health`
 - `GET /api/health`
 - `GET /api/search-requests`
@@ -109,7 +110,8 @@
 - `backend/Dockerfile` packages the FastAPI service and is paired with `alembic upgrade head` in compose startup
 - `frontend/Dockerfile` and `frontend/nginx.conf` serve the static dashboard and reverse-proxy `/api` to the backend container
 - `.github/workflows/ci.yml` runs backend tests inside the `backend` working directory with editable installs
-- the dashboard now resolves its API base from same-origin hosting by default and falls back to `http://127.0.0.1:8000/api` only under `file://`
+- the backend can now serve the single-file dashboard directly at `/dashboard` for local testing
+- the dashboard resolves its API base from same-origin hosting by default and falls back to `http://127.0.0.1:8000/api` only under `file://`
 ## Next implementation targets
 
 - production-safe `RISS` response mapping

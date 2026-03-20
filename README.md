@@ -48,7 +48,9 @@ Default API base: `http://127.0.0.1:8000`
 Quick checks:
 
 - `http://127.0.0.1:8000/`
+- `http://127.0.0.1:8000/`
 - `http://127.0.0.1:8000/api`
+- `http://127.0.0.1:8000/dashboard`
 - `http://127.0.0.1:8000/docs`
 
 The file-backed repository persists under `backend/data/store.json`.
@@ -86,7 +88,8 @@ If you are using `REPOSITORY_BACKEND=sqlalchemy` for a persistent relational dat
 
 ### Frontend
 
-Open `frontend/index.html` in a browser while the backend is running.
+Open `http://127.0.0.1:8000/dashboard` in a browser while the backend is running.
+You can still open `frontend/index.html` directly if you want to test the static file on its own.
 When the page is served through a web server, it defaults to `window.location.origin + "/api"`.
 When opened from `file://`, it falls back to `http://127.0.0.1:8000/api`.
 

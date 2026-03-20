@@ -1,5 +1,8 @@
-﻿from fastapi import FastAPI
+﻿from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from app.api.router import api_router
 from app.core.config import settings
@@ -21,6 +24,9 @@ app.add_middleware(
 
 app.include_router(api_router)
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_FRONTEND_INDEX = _REPO_ROOT / "frontend" / "index.html"
+
 
 def _service_index(base_path: str = "") -> dict[str, object]:
     return {
@@ -28,6 +34,7 @@ def _service_index(base_path: str = "") -> dict[str, object]:
         "version": app.version,
         "status": "ok",
         "api_base": f"{base_path}/api" if base_path else "/api",
+        "dashboard_url": "/dashboard",
         "docs_url": "/docs",
         "openapi_url": "/openapi.json",
         "health_urls": ["/health", "/api/health"],
@@ -47,10 +54,17 @@ def root() -> dict[str, object]:
     return _service_index()
 
 
+@app.get("/dashboard", include_in_schema=False)
+def dashboard() -> FileResponse:
+    if not _FRONTEND_INDEX.exists():
+        raise HTTPException(status_code=503, detail="Dashboard frontend is not available")
+    return FileResponse(_FRONTEND_INDEX)
+
+
 @app.get("/api")
 def api_root() -> dict[str, object]:
     payload = _service_index()
-    payload["message"] = "Use /docs for interactive API docs or call the listed /api endpoints directly."
+    payload["message"] = "Use /docs for interactive API docs, /dashboard for the web UI, or call the listed /api endpoints directly."
     return payload
 
 

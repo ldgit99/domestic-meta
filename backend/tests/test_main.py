@@ -13,7 +13,16 @@ def test_root_returns_service_index() -> None:
     payload = response.json()
     assert payload["status"] == "ok"
     assert payload["api_base"] == "/api"
+    assert payload["dashboard_url"] == "/dashboard"
     assert "/api/search-requests" in payload["key_endpoints"]
+
+
+def test_dashboard_serves_frontend_html() -> None:
+    response = client.get("/dashboard")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "Domestic Meta Agent" in response.text
 
 
 def test_api_root_returns_message_and_key_endpoints() -> None:
@@ -22,6 +31,7 @@ def test_api_root_returns_message_and_key_endpoints() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["status"] == "ok"
+    assert payload["dashboard_url"] == "/dashboard"
     assert payload["message"].startswith("Use /docs")
     assert "/api/candidates/{id}/extract" in payload["key_endpoints"]
 
