@@ -16,3 +16,4 @@ exports/
 backend/data/store.json
 backend/data/rissmeta.db
 *.egg-info/
+backend/run/
