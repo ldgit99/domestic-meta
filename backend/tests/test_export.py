@@ -282,3 +282,4 @@ def test_search_request_manifest_json_contains_summary_prisma_flow_event_counts_
     assert '"prisma_flow": {' in payload["content"]
     assert '"studies_included_in_review": 2' in payload["content"]
     assert '"event_count": 1' in payload["content"]
+

@@ -29,13 +29,15 @@ def test_riss_connector_falls_back_to_stub_when_live_disabled() -> None:
     settings.riss_live_enabled = False
     settings.riss_api_url = None
     try:
-        items = list(RISSConnector().collect(_request()))
+        result = RISSConnector().collect(_request())
     finally:
         settings.riss_live_enabled = previous_enabled
         settings.riss_api_url = previous_url
 
-    assert len(items) >= 1
-    assert all(item.source == "riss" for item in items)
+    assert result.backend == "stub"
+    assert result.source == "riss"
+    assert len(result.candidates) >= 1
+    assert all(item.source == "riss" for item in result.candidates)
 
 
 def test_riss_live_connector_parses_sparql_style_json_bindings() -> None:
@@ -54,15 +56,17 @@ def test_riss_live_connector_parses_sparql_style_json_bindings() -> None:
                         "description": {"type": "literal", "value": "Reports means and standard deviations."},
                     }
                 ]
-            }
+            },
+            "totalCount": 17,
         }
     )
 
     connector = RISSLiveConnector()
-    items = connector._parse_json(payload)
+    items, total_hits = connector._parse_json(payload)
     candidate = connector._candidate_from_mapping(items[0], _request(), connector.build_search_plan(_request()))
 
     assert len(items) == 1
+    assert total_hits == 17
     assert candidate.title == "Self-directed learning effects"
     assert candidate.document_type == "thesis"
     assert candidate.journal_or_school == "Seoul National University"
@@ -73,12 +77,13 @@ def test_stub_connectors_respect_year_range_and_document_flags() -> None:
     thesis_only = _request(include_journal_articles=False, include_theses=True, year_from=2022, year_to=2022)
     journal_only = _request(include_journal_articles=True, include_theses=False, year_from=2020, year_to=2020)
 
-    riss_thesis_items = list(RISSConnector().collect(thesis_only))
-    kci_items = list(KCIStubConnector().collect(journal_only))
+    riss_result = RISSConnector().collect(thesis_only)
+    kci_result = KCIStubConnector().collect(journal_only)
 
-    assert len(riss_thesis_items) == 1
-    assert riss_thesis_items[0].document_type == "thesis"
-    assert kci_items == []
+    assert len(riss_result.candidates) == 1
+    assert riss_result.candidates[0].document_type == "thesis"
+    assert kci_result.candidates == []
+    assert kci_result.total_hits == 0
 
 
 def test_kci_search_plan_uses_fielded_api_params() -> None:

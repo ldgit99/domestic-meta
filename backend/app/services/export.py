@@ -14,6 +14,7 @@ from app.models.domain import (
 from app.services.effect_size import EffectSizeService
 from app.services.prisma import PrismaService
 from app.services.quality import QualityAssessmentService
+from app.services.search_summary import SearchSummaryService
 
 
 class ExportService:
@@ -21,6 +22,7 @@ class ExportService:
         self.effect_sizes = EffectSizeService()
         self.prisma = PrismaService()
         self.quality = QualityAssessmentService()
+        self.search_summary = SearchSummaryService()
 
     def candidates_csv(self, search_request_id: str, candidates: list[CandidateRecord]) -> dict:
         lines = [
@@ -100,6 +102,8 @@ class ExportService:
         artifacts: list[FullTextArtifact],
         events: list[PipelineEvent],
     ) -> dict:
+        source_breakdown = self.search_summary.build_source_breakdown(candidates, events)
+        screening_sequence = self.search_summary.build_screening_sequence(search_request, candidates)
         payload = {
             "search_request": {
                 "id": search_request.id,
@@ -150,6 +154,8 @@ class ExportService:
         }
 
     def prisma_json(self, search_request_id: str, counts: PrismaCounts) -> dict:
+        source_breakdown = self.search_summary.build_source_breakdown(candidates, events)
+        screening_sequence = self.search_summary.build_screening_sequence(search_request, candidates)
         payload = {
             "id": counts.id,
             "search_request_id": counts.search_request_id,
@@ -488,3 +494,6 @@ class ExportService:
     def _csv_value(self, value: object) -> str:
         text = "" if value is None else str(value)
         return f'"{text.replace(chr(34), chr(39))}"'
+
+
+

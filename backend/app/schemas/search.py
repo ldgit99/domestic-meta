@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+﻿from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.constants import DEFAULT_YEAR_FROM, DEFAULT_YEAR_TO
 from app.schemas.prisma import PrismaCountsRead
@@ -37,6 +37,32 @@ class PipelineEventRead(BaseModel):
     created_at: str
 
 
+class SearchSourceBreakdownRead(BaseModel):
+    source: str
+    label: str
+    backend: str | None = None
+    query_mode: str | None = None
+    raw_total_hits: int | None = None
+    fetched_candidates: int = 0
+    canonical_candidates: int = 0
+    duplicate_candidates: int = 0
+    status_counts: dict[str, int] = Field(default_factory=dict)
+    query_plan: dict = Field(default_factory=dict)
+
+
+class ScreeningSequenceStepRead(BaseModel):
+    order: int
+    criterion_id: str
+    label: str
+    description: str
+    evaluated_count: int = 0
+    passed_count: int = 0
+    excluded_count: int = 0
+    review_count: int = 0
+    included_count: int = 0
+    outcome_counts: dict[str, int] = Field(default_factory=dict)
+
+
 class SearchRequestSummaryRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -58,7 +84,18 @@ class SearchRequestSummaryRead(BaseModel):
     source_counts: dict[str, int] = Field(default_factory=dict)
     status_counts: dict[str, int] = Field(default_factory=dict)
     full_text_status_counts: dict[str, int] = Field(default_factory=dict)
+    source_search_breakdown: list[SearchSourceBreakdownRead] = Field(default_factory=list)
+    screening_sequence: list[ScreeningSequenceStepRead] = Field(default_factory=list)
     prisma: PrismaCountsRead | None = None
+
+
+class SearchRunSourceRead(BaseModel):
+    source: str
+    label: str
+    backend: str
+    query_mode: str
+    raw_total_hits: int | None = None
+    fetched_candidates: int = 0
 
 
 class SearchRunResult(BaseModel):
@@ -67,3 +104,5 @@ class SearchRunResult(BaseModel):
     collected_candidates: int
     screened_candidates: int
     duplicates_removed: int
+    canonical_candidates: int
+    source_runs: list[SearchRunSourceRead] = Field(default_factory=list)

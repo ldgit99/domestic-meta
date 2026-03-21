@@ -1,18 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException
+﻿from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_orchestrator, get_store
 from app.repositories.file_store import FileStore
 from app.schemas.search import (
     PipelineEventRead,
+    ScreeningSequenceStepRead,
     SearchRequestCreate,
     SearchRequestRead,
     SearchRequestSummaryRead,
     SearchRunResult,
+    SearchSourceBreakdownRead,
 )
 from app.services.orchestrator import SearchOrchestrator
+from app.services.search_summary import SearchSummaryService
 
 
 router = APIRouter(prefix="/search-requests", tags=["search-requests"])
+summary_service = SearchSummaryService()
 
 
 @router.get("", response_model=list[SearchRequestRead])
@@ -78,6 +82,15 @@ def get_search_request_summary(
                 full_text_status_counts.get(artifact.text_extraction_status, 0) + 1
             )
 
+    source_breakdown = [
+        SearchSourceBreakdownRead.model_validate(item)
+        for item in summary_service.build_source_breakdown(candidates, events)
+    ]
+    screening_sequence = [
+        ScreeningSequenceStepRead.model_validate(item)
+        for item in summary_service.build_screening_sequence(result, candidates)
+    ]
+
     return SearchRequestSummaryRead(
         id=result.id,
         query_text=result.query_text,
@@ -97,6 +110,8 @@ def get_search_request_summary(
         source_counts=source_counts,
         status_counts=status_counts,
         full_text_status_counts=full_text_status_counts,
+        source_search_breakdown=source_breakdown,
+        screening_sequence=screening_sequence,
         prisma=prisma,
     )
 

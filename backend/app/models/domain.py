@@ -117,3 +117,14 @@ class ExtractionRevision:
     model_name: str | None
     raw_response: dict = field(default_factory=dict)
     created_at: str | None = None
+
+
+@dataclass
+class SourceCollectionResult:
+    source: str
+    backend: str
+    query_mode: str
+    query_plan: dict
+    total_hits: int | None = None
+    candidates: list[CandidateRecord] = field(default_factory=list)
+

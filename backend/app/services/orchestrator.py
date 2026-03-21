@@ -1,5 +1,5 @@
 ﻿from app.core.constants import DECISION_EXCLUDE, DECISION_INCLUDE, DECISION_MAYBE, DECISION_REVIEW
-from app.schemas.search import SearchRunResult
+from app.schemas.search import SearchRunResult, SearchRunSourceRead
 from app.services.connectors import KCIConnector, RISSConnector
 from app.services.deduplication import DeduplicationService
 from app.services.prisma import PrismaService
@@ -39,36 +39,51 @@ class SearchOrchestrator:
             )
 
             collected = []
+            source_runs: list[SearchRunSourceRead] = []
             for connector in self.connectors:
-                plan = connector.build_search_plan(request)
-                connector_items = list(connector.collect(request))
-                collected.extend(connector_items)
-                source_name = getattr(connector, "source_name", connector.__class__.__name__.lower())
-                mode = connector_items[0].raw_payload.get("source", "unknown") if connector_items else "none"
+                collection = connector.collect(request)
+                if collection is None:
+                    continue
+                collected.extend(collection.candidates)
+                source_runs.append(
+                    SearchRunSourceRead(
+                        source=collection.source,
+                        label=self._source_label(collection.source),
+                        backend=collection.backend,
+                        query_mode=collection.query_mode,
+                        raw_total_hits=collection.total_hits,
+                        fetched_candidates=len(collection.candidates),
+                    )
+                )
                 self._log(
                     search_request_id,
                     "source_collection_completed",
-                    f"Collected {len(connector_items)} candidate(s) from {source_name}.",
+                    f"Collected {len(collection.candidates)} candidate(s) from {collection.source}.",
                     stage="collection",
                     status="completed",
                     metadata_json={
-                        "source": source_name,
-                        "count": len(connector_items),
-                        "mode": mode,
-                        "query_plan": plan.to_dict(),
+                        "source": collection.source,
+                        "count": len(collection.candidates),
+                        "fetched_candidates": len(collection.candidates),
+                        "raw_total_hits": collection.total_hits,
+                        "backend": collection.backend,
+                        "query_mode": collection.query_mode,
+                        "query_plan": collection.query_plan,
                     },
                 )
 
             collected, duplicates_removed = self.deduplication.deduplicate(collected)
             self.store.add_candidates(collected)
+            canonical_count = len([item for item in collected if item.canonical_record_id in {None, item.id}])
             self._log(
                 search_request_id,
                 "deduplication_completed",
-                f"Deduplication kept {len(collected)} canonical-or-remaining candidates and removed {duplicates_removed} duplicates.",
+                f"Deduplication kept {canonical_count} canonical candidates and removed {duplicates_removed} duplicates.",
                 stage="deduplication",
                 status="completed",
                 metadata_json={
                     "remaining_candidates": len(collected),
+                    "canonical_candidates": canonical_count,
                     "duplicates_removed": duplicates_removed,
                 },
             )
@@ -123,6 +138,7 @@ class SearchOrchestrator:
                 status="completed",
                 metadata_json={
                     "collected_candidates": len(collected),
+                    "canonical_candidates": canonical_count,
                     "screened_candidates": screened_count,
                     "duplicates_removed": duplicates_removed,
                 },
@@ -134,6 +150,8 @@ class SearchOrchestrator:
                 collected_candidates=len(collected),
                 screened_candidates=screened_count,
                 duplicates_removed=duplicates_removed,
+                canonical_candidates=canonical_count,
+                source_runs=source_runs,
             )
         except Exception as exc:
             self.store.update_search_request_status(search_request_id, "failed")
@@ -164,6 +182,9 @@ class SearchOrchestrator:
             status=status,
             metadata_json=metadata_json or {},
         )
+
+    def _source_label(self, source: str) -> str:
+        return {"riss": "RISS", "kci": "KCI"}.get(source, source.upper())
 
     def _status_for_screening(self, decision: str) -> str:
         if decision == DECISION_INCLUDE:

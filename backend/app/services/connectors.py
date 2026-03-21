@@ -2,26 +2,39 @@
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from collections.abc import Iterable
 
 from app.core.config import settings
 from app.core.constants import SOURCE_KCI, SOURCE_RISS
 from app.core.utils import generate_id
-from app.models.domain import CandidateRecord, SearchRequest
+from app.models.domain import CandidateRecord, SearchRequest, SourceCollectionResult
 from app.services.search_plans import SourceSearchPlan, build_kci_search_plan, build_riss_search_plan
 
 
 class BaseConnector:
     source_name: str
 
-    def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
+    def collect(self, request: SearchRequest) -> SourceCollectionResult | None:
         raise NotImplementedError
 
     def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
         raise NotImplementedError
 
-    def _build_query_text(self, request: SearchRequest) -> str:
-        return self.build_search_plan(request).query_text
+    def _build_collection(
+        self,
+        plan: SourceSearchPlan,
+        candidates: list[CandidateRecord],
+        *,
+        backend: str,
+        total_hits: int | None = None,
+    ) -> SourceCollectionResult:
+        return SourceCollectionResult(
+            source=self.source_name,
+            backend=backend,
+            query_mode=plan.mode,
+            query_plan=plan.to_dict(),
+            total_hits=total_hits if total_hits is not None else len(candidates),
+            candidates=candidates,
+        )
 
     def _plan_metadata(self, plan: SourceSearchPlan) -> dict:
         return plan.to_dict()
@@ -59,16 +72,18 @@ class BaseConnector:
                 flattened[key] = str(value).strip()
         return flattened
 
-    def _parse_json_records(self, payload: str) -> list[dict]:
+    def _parse_json_records(self, payload: str) -> tuple[list[dict], int | None]:
         try:
             data = json.loads(payload)
         except json.JSONDecodeError:
-            return []
+            return [], None
+
+        total_hits = self._extract_total_hits_from_json(data)
 
         if isinstance(data, dict):
             results = data.get("results")
             if isinstance(results, dict) and isinstance(results.get("bindings"), list):
-                return [self._flatten_mapping(item) for item in results["bindings"] if isinstance(item, dict)]
+                return [self._flatten_mapping(item) for item in results["bindings"] if isinstance(item, dict)], total_hits
 
         records = None
         if isinstance(data, dict):
@@ -84,16 +99,17 @@ class BaseConnector:
             records = records.get("item") or records.get("records") or records.get("docs") or records.get("items")
 
         if not isinstance(records, list):
-            return []
+            return [], total_hits
 
-        return [self._flatten_mapping(item) for item in records if isinstance(item, dict)]
+        return [self._flatten_mapping(item) for item in records if isinstance(item, dict)], total_hits
 
-    def _parse_xml_records(self, payload: str) -> list[dict]:
+    def _parse_xml_records(self, payload: str) -> tuple[list[dict], int | None]:
         try:
             root = ET.fromstring(payload)
         except ET.ParseError:
-            return []
+            return [], None
 
+        total_hits = self._extract_total_hits_from_xml(root)
         records = root.findall(".//record") or root.findall(".//item") or root.findall(".//result")
         if not records:
             records = [node for node in root.iter() if list(node)]
@@ -107,7 +123,63 @@ class BaseConnector:
             }
             if mapping:
                 output.append(mapping)
-        return output
+        return output, total_hits
+
+    def _extract_total_hits_from_json(self, value: object) -> int | None:
+        if isinstance(value, dict):
+            for key in [
+                "totalCount",
+                "total_count",
+                "totalHits",
+                "total_hits",
+                "recordCount",
+                "record_count",
+                "numFound",
+                "totalResults",
+                "total_results",
+                "resultCount",
+            ]:
+                if key in value:
+                    parsed = self._parse_int(value.get(key))
+                    if parsed is not None:
+                        return parsed
+            for nested_key in ["meta", "summary", "search", "result", "results", "response", "header", "body", "data"]:
+                if nested_key in value:
+                    parsed = self._extract_total_hits_from_json(value.get(nested_key))
+                    if parsed is not None:
+                        return parsed
+        elif isinstance(value, list):
+            for item in value:
+                parsed = self._extract_total_hits_from_json(item)
+                if parsed is not None:
+                    return parsed
+        return None
+
+    def _extract_total_hits_from_xml(self, root: ET.Element) -> int | None:
+        for xpath in [
+            ".//totalCount",
+            ".//total_count",
+            ".//totalHits",
+            ".//recordCount",
+            ".//resultCount",
+            ".//numFound",
+        ]:
+            node = root.find(xpath)
+            if node is not None and node.text:
+                parsed = self._parse_int(node.text)
+                if parsed is not None:
+                    return parsed
+        for attribute in ["totalCount", "total_count", "totalHits", "recordCount", "resultCount"]:
+            parsed = self._parse_int(root.attrib.get(attribute))
+            if parsed is not None:
+                return parsed
+        return None
+
+    def _parse_int(self, value: object) -> int | None:
+        if value is None:
+            return None
+        text = str(value).strip().replace(",", "")
+        return int(text) if text.isdigit() else None
 
     def _matches_request(self, candidate: CandidateRecord, request: SearchRequest) -> bool:
         if candidate.year and (candidate.year < request.year_from or candidate.year > request.year_to):
@@ -125,11 +197,11 @@ class KCIStubConnector(BaseConnector):
     def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
         return build_kci_search_plan(request)
 
-    def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
-        if not request.include_journal_articles:
-            return []
-
+    def collect(self, request: SearchRequest) -> SourceCollectionResult:
         plan = self.build_search_plan(request)
+        if not request.include_journal_articles:
+            return self._build_collection(plan, [], backend="stub", total_hits=0)
+
         query = plan.query_text
         items = [
             CandidateRecord(
@@ -172,7 +244,8 @@ class KCIStubConnector(BaseConnector):
                 status="collected",
             ),
         ]
-        return [item for item in items if self._matches_request(item, request)]
+        candidates = [item for item in items if self._matches_request(item, request)]
+        return self._build_collection(plan, candidates, backend="stub", total_hits=len(candidates))
 
 
 class KCILiveConnector(BaseConnector):
@@ -181,11 +254,11 @@ class KCILiveConnector(BaseConnector):
     def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
         return build_kci_search_plan(request)
 
-    def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
+    def collect(self, request: SearchRequest) -> SourceCollectionResult | None:
         if not request.include_journal_articles:
-            return []
+            return self._build_collection(self.build_search_plan(request), [], backend="live", total_hits=0)
         if not settings.kci_live_enabled or not settings.kci_api_url or not settings.kci_api_key:
-            return []
+            return None
 
         plan = self.build_search_plan(request)
         params = dict(plan.params)
@@ -195,15 +268,16 @@ class KCILiveConnector(BaseConnector):
             with urllib.request.urlopen(url, timeout=15) as response:
                 payload = response.read().decode("utf-8", errors="replace")
         except Exception:
-            return []
+            return None
 
         if settings.kci_response_format.lower() == "json":
-            records = self._parse_json_records(payload)
+            records, total_hits = self._parse_json_records(payload)
         else:
-            records = self._parse_xml_records(payload)
+            records, total_hits = self._parse_xml_records(payload)
 
         candidates = [self._candidate_from_mapping(item, request, plan) for item in records]
-        return [item for item in candidates if self._matches_request(item, request)]
+        filtered = [item for item in candidates if self._matches_request(item, request)]
+        return self._build_collection(plan, filtered, backend="live", total_hits=total_hits or len(filtered))
 
     def _candidate_from_mapping(self, item: dict, request: SearchRequest, plan: SourceSearchPlan) -> CandidateRecord:
         title = (
@@ -254,10 +328,10 @@ class KCIConnector(BaseConnector):
     def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
         return self.live.build_search_plan(request)
 
-    def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
-        live_items = list(self.live.collect(request))
-        if live_items:
-            return live_items
+    def collect(self, request: SearchRequest) -> SourceCollectionResult:
+        live_result = self.live.collect(request)
+        if live_result is not None:
+            return live_result
         return self.stub.collect(request)
 
 
@@ -267,7 +341,7 @@ class RISSStubConnector(BaseConnector):
     def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
         return build_riss_search_plan(request)
 
-    def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
+    def collect(self, request: SearchRequest) -> SourceCollectionResult:
         plan = self.build_search_plan(request)
         query = plan.query_text
         items: list[CandidateRecord] = []
@@ -316,7 +390,8 @@ class RISSStubConnector(BaseConnector):
                 )
             )
 
-        return [item for item in items if self._matches_request(item, request)]
+        candidates = [item for item in items if self._matches_request(item, request)]
+        return self._build_collection(plan, candidates, backend="stub", total_hits=len(candidates))
 
 
 class RISSLiveConnector(BaseConnector):
@@ -325,9 +400,9 @@ class RISSLiveConnector(BaseConnector):
     def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
         return build_riss_search_plan(request)
 
-    def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
+    def collect(self, request: SearchRequest) -> SourceCollectionResult | None:
         if not settings.riss_live_enabled or not settings.riss_api_url:
-            return []
+            return None
 
         plan = self.build_search_plan(request)
         params = dict(plan.params)
@@ -345,17 +420,18 @@ class RISSLiveConnector(BaseConnector):
             with urllib.request.urlopen(url, timeout=15) as response:
                 payload = response.read().decode("utf-8", errors="replace")
         except Exception:
-            return []
+            return None
 
         if settings.riss_response_format.lower() == "xml":
-            records = self._parse_xml_records(payload)
+            records, total_hits = self._parse_xml_records(payload)
         else:
-            records = self._parse_json(payload)
+            records, total_hits = self._parse_json(payload)
 
         candidates = [self._candidate_from_mapping(item, request, plan) for item in records]
-        return [item for item in candidates if self._matches_request(item, request)]
+        filtered = [item for item in candidates if self._matches_request(item, request)]
+        return self._build_collection(plan, filtered, backend="live", total_hits=total_hits or len(filtered))
 
-    def _parse_json(self, payload: str) -> list[dict]:
+    def _parse_json(self, payload: str) -> tuple[list[dict], int | None]:
         return self._parse_json_records(payload)
 
     def _candidate_from_mapping(self, item: dict, request: SearchRequest, plan: SourceSearchPlan) -> CandidateRecord:
@@ -451,8 +527,8 @@ class RISSConnector(BaseConnector):
     def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
         return self.live.build_search_plan(request)
 
-    def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
-        live_items = list(self.live.collect(request))
-        if live_items:
-            return live_items
+    def collect(self, request: SearchRequest) -> SourceCollectionResult:
+        live_result = self.live.collect(request)
+        if live_result is not None:
+            return live_result
         return self.stub.collect(request)
