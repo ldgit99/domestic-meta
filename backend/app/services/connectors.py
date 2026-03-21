@@ -1,4 +1,4 @@
-import json
+﻿import json
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.core.constants import SOURCE_KCI, SOURCE_RISS
 from app.core.utils import generate_id
 from app.models.domain import CandidateRecord, SearchRequest
+from app.services.search_plans import SourceSearchPlan, build_kci_search_plan, build_riss_search_plan
 
 
 class BaseConnector:
@@ -16,15 +17,14 @@ class BaseConnector:
     def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
         raise NotImplementedError
 
+    def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
+        raise NotImplementedError
+
     def _build_query_text(self, request: SearchRequest) -> str:
-        values = [request.query_text, *request.expanded_keywords]
-        deduped: list[str] = []
-        for value in values:
-            normalized = str(value).strip()
-            if not normalized or normalized in deduped:
-                continue
-            deduped.append(normalized)
-        return " ".join(deduped)
+        return self.build_search_plan(request).query_text
+
+    def _plan_metadata(self, plan: SourceSearchPlan) -> dict:
+        return plan.to_dict()
 
     def _split_values(self, value: object, default: list[str] | None = None) -> list[str]:
         if value is None:
@@ -122,11 +122,15 @@ class BaseConnector:
 class KCIStubConnector(BaseConnector):
     source_name = SOURCE_KCI
 
+    def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
+        return build_kci_search_plan(request)
+
     def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
         if not request.include_journal_articles:
             return []
 
-        query = self._build_query_text(request)
+        plan = self.build_search_plan(request)
+        query = plan.query_text
         items = [
             CandidateRecord(
                 id=generate_id("cand"),
@@ -146,7 +150,7 @@ class KCIStubConnector(BaseConnector):
                 url="https://example.org/kci/001",
                 document_type="journal_article",
                 language="ko",
-                raw_payload={"source": "stub", "origin": "kci"},
+                raw_payload={"source": "stub", "origin": "kci", "query_plan": self._plan_metadata(plan)},
                 status="collected",
             ),
             CandidateRecord(
@@ -164,7 +168,7 @@ class KCIStubConnector(BaseConnector):
                 url="https://example.org/kci/002",
                 document_type="journal_article",
                 language="ko",
-                raw_payload={"source": "stub", "origin": "kci"},
+                raw_payload={"source": "stub", "origin": "kci", "query_plan": self._plan_metadata(plan)},
                 status="collected",
             ),
         ]
@@ -174,17 +178,18 @@ class KCIStubConnector(BaseConnector):
 class KCILiveConnector(BaseConnector):
     source_name = SOURCE_KCI
 
+    def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
+        return build_kci_search_plan(request)
+
     def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
         if not request.include_journal_articles:
             return []
         if not settings.kci_live_enabled or not settings.kci_api_url or not settings.kci_api_key:
             return []
 
-        params = {
-            settings.kci_api_key_param: settings.kci_api_key,
-            settings.kci_query_param: self._build_query_text(request),
-            settings.kci_count_param: "20",
-        }
+        plan = self.build_search_plan(request)
+        params = dict(plan.params)
+        params[settings.kci_api_key_param] = settings.kci_api_key
         url = f"{settings.kci_api_url}?{urllib.parse.urlencode(params)}"
         try:
             with urllib.request.urlopen(url, timeout=15) as response:
@@ -197,10 +202,10 @@ class KCILiveConnector(BaseConnector):
         else:
             records = self._parse_xml_records(payload)
 
-        candidates = [self._candidate_from_mapping(item, request) for item in records]
+        candidates = [self._candidate_from_mapping(item, request, plan) for item in records]
         return [item for item in candidates if self._matches_request(item, request)]
 
-    def _candidate_from_mapping(self, item: dict, request: SearchRequest) -> CandidateRecord:
+    def _candidate_from_mapping(self, item: dict, request: SearchRequest, plan: SourceSearchPlan) -> CandidateRecord:
         title = (
             item.get("title")
             or item.get("articleTitle")
@@ -234,7 +239,7 @@ class KCILiveConnector(BaseConnector):
             url=url,
             document_type="journal_article",
             language="ko",
-            raw_payload={"source": "live", "origin": "kci", "item": item},
+            raw_payload={"source": "live", "origin": "kci", "item": item, "query_plan": self._plan_metadata(plan)},
             status="collected",
         )
 
@@ -246,6 +251,9 @@ class KCIConnector(BaseConnector):
         self.live = KCILiveConnector()
         self.stub = KCIStubConnector()
 
+    def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
+        return self.live.build_search_plan(request)
+
     def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
         live_items = list(self.live.collect(request))
         if live_items:
@@ -256,8 +264,12 @@ class KCIConnector(BaseConnector):
 class RISSStubConnector(BaseConnector):
     source_name = SOURCE_RISS
 
+    def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
+        return build_riss_search_plan(request)
+
     def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
-        query = self._build_query_text(request)
+        plan = self.build_search_plan(request)
+        query = plan.query_text
         items: list[CandidateRecord] = []
 
         if request.include_theses:
@@ -277,7 +289,7 @@ class RISSStubConnector(BaseConnector):
                     url="https://example.org/riss/001",
                     document_type="thesis",
                     language="ko",
-                    raw_payload={"source": "stub", "origin": "riss"},
+                    raw_payload={"source": "stub", "origin": "riss", "query_plan": self._plan_metadata(plan)},
                     status="collected",
                 )
             )
@@ -299,7 +311,7 @@ class RISSStubConnector(BaseConnector):
                     url="https://example.org/riss/002",
                     document_type="journal_article",
                     language="ko",
-                    raw_payload={"source": "stub", "origin": "riss"},
+                    raw_payload={"source": "stub", "origin": "riss", "query_plan": self._plan_metadata(plan)},
                     status="collected",
                 )
             )
@@ -310,15 +322,17 @@ class RISSStubConnector(BaseConnector):
 class RISSLiveConnector(BaseConnector):
     source_name = SOURCE_RISS
 
+    def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
+        return build_riss_search_plan(request)
+
     def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
         if not settings.riss_live_enabled or not settings.riss_api_url:
             return []
 
-        params: dict[str, str] = {settings.riss_query_param: self._build_query_text(request)}
+        plan = self.build_search_plan(request)
+        params = dict(plan.params)
         if settings.riss_api_key and settings.riss_api_key_param:
             params[settings.riss_api_key_param] = settings.riss_api_key
-        if settings.riss_count_param:
-            params[settings.riss_count_param] = "20"
 
         if settings.riss_document_type_param:
             if request.include_theses and not request.include_journal_articles:
@@ -338,13 +352,13 @@ class RISSLiveConnector(BaseConnector):
         else:
             records = self._parse_json(payload)
 
-        candidates = [self._candidate_from_mapping(item, request) for item in records]
+        candidates = [self._candidate_from_mapping(item, request, plan) for item in records]
         return [item for item in candidates if self._matches_request(item, request)]
 
     def _parse_json(self, payload: str) -> list[dict]:
         return self._parse_json_records(payload)
 
-    def _candidate_from_mapping(self, item: dict, request: SearchRequest) -> CandidateRecord:
+    def _candidate_from_mapping(self, item: dict, request: SearchRequest, plan: SourceSearchPlan) -> CandidateRecord:
         title = (
             item.get("title")
             or item.get("riss.title")
@@ -406,7 +420,7 @@ class RISSLiveConnector(BaseConnector):
             url=url,
             document_type=document_type,
             language=language,
-            raw_payload={"source": "live", "origin": "riss", "item": item},
+            raw_payload={"source": "live", "origin": "riss", "item": item, "query_plan": self._plan_metadata(plan)},
             status="collected",
         )
 
@@ -433,6 +447,9 @@ class RISSConnector(BaseConnector):
     def __init__(self) -> None:
         self.live = RISSLiveConnector()
         self.stub = RISSStubConnector()
+
+    def build_search_plan(self, request: SearchRequest) -> SourceSearchPlan:
+        return self.live.build_search_plan(request)
 
     def collect(self, request: SearchRequest) -> Iterable[CandidateRecord]:
         live_items = list(self.live.collect(request))

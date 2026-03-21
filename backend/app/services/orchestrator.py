@@ -1,4 +1,4 @@
-from app.core.constants import DECISION_EXCLUDE, DECISION_INCLUDE, DECISION_MAYBE, DECISION_REVIEW
+﻿from app.core.constants import DECISION_EXCLUDE, DECISION_INCLUDE, DECISION_MAYBE, DECISION_REVIEW
 from app.schemas.search import SearchRunResult
 from app.services.connectors import KCIConnector, RISSConnector
 from app.services.deduplication import DeduplicationService
@@ -40,6 +40,7 @@ class SearchOrchestrator:
 
             collected = []
             for connector in self.connectors:
+                plan = connector.build_search_plan(request)
                 connector_items = list(connector.collect(request))
                 collected.extend(connector_items)
                 source_name = getattr(connector, "source_name", connector.__class__.__name__.lower())
@@ -54,6 +55,7 @@ class SearchOrchestrator:
                         "source": source_name,
                         "count": len(connector_items),
                         "mode": mode,
+                        "query_plan": plan.to_dict(),
                     },
                 )
 

@@ -1,4 +1,4 @@
-# Backend
+﻿# Backend
 
 FastAPI backend for the domestic education meta-analysis prototype.
 
@@ -70,6 +70,8 @@ Live collection is enabled only when configured. Otherwise the connector falls b
 - `KCI_API_KEY_PARAM`
 - `KCI_QUERY_PARAM`
 - `KCI_COUNT_PARAM`
+- `KCI_YEAR_FROM_PARAM`
+- `KCI_YEAR_TO_PARAM`
 - `KCI_RESPONSE_FORMAT`
 
 ## RISS collection
@@ -82,12 +84,18 @@ Live collection is enabled only when configured. Otherwise the connector falls b
 - `RISS_API_KEY_PARAM`
 - `RISS_QUERY_PARAM`
 - `RISS_COUNT_PARAM`
+- `RISS_QUERY_MODE`
 - `RISS_RESPONSE_FORMAT`
 - `RISS_DOCUMENT_TYPE_PARAM`
 - `RISS_THESIS_VALUE`
 - `RISS_JOURNAL_VALUE`
 
 The current connector accepts JSON, XML, and SPARQL-style `results.bindings` JSON payloads.
+
+Source-specific query plans are now generated before collection:
+
+- `KCI`: field-oriented OpenAPI keyword plan with optional year-bound parameters
+- `RISS`: integrated-search query plan, with detail-search syntax intentionally left configurable per endpoint
 
 ## PRISMA flow endpoints
 
@@ -176,3 +184,5 @@ file and update the artifact to `available` when usable text is returned.
 - production-safe RISS field mapping
 - deployment validation for Alembic migrations
 - OCR execution pipeline and stronger PDF parsing
+
+

@@ -1,4 +1,4 @@
-import os
+﻿import os
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -29,6 +29,8 @@ class Settings(BaseModel):
     kci_api_key_param: str = os.getenv("KCI_API_KEY_PARAM", "apiKey")
     kci_query_param: str = os.getenv("KCI_QUERY_PARAM", "keyword")
     kci_count_param: str = os.getenv("KCI_COUNT_PARAM", "displayCount")
+    kci_year_from_param: str | None = os.getenv("KCI_YEAR_FROM_PARAM")
+    kci_year_to_param: str | None = os.getenv("KCI_YEAR_TO_PARAM")
     kci_response_format: str = os.getenv("KCI_RESPONSE_FORMAT", "xml")
     riss_live_enabled: bool = os.getenv("RISS_LIVE_ENABLED", "false").lower() == "true"
     riss_api_url: str | None = os.getenv("RISS_API_URL")
@@ -36,6 +38,7 @@ class Settings(BaseModel):
     riss_api_key_param: str = os.getenv("RISS_API_KEY_PARAM", "apiKey")
     riss_query_param: str = os.getenv("RISS_QUERY_PARAM", "keyword")
     riss_count_param: str = os.getenv("RISS_COUNT_PARAM", "count")
+    riss_query_mode: str = os.getenv("RISS_QUERY_MODE", "integrated").lower()
     riss_response_format: str = os.getenv("RISS_RESPONSE_FORMAT", "json")
     riss_document_type_param: str | None = os.getenv("RISS_DOCUMENT_TYPE_PARAM")
     riss_thesis_value: str = os.getenv("RISS_THESIS_VALUE", "thesis")

@@ -1,8 +1,8 @@
-import json
+﻿import json
 
 from app.core.config import settings
 from app.models.domain import SearchRequest
-from app.services.connectors import KCIStubConnector, RISSConnector, RISSLiveConnector
+from app.services.connectors import KCIConnector, KCIStubConnector, RISSConnector, RISSLiveConnector
 
 
 def _request(**overrides) -> SearchRequest:
@@ -58,8 +58,9 @@ def test_riss_live_connector_parses_sparql_style_json_bindings() -> None:
         }
     )
 
-    items = RISSLiveConnector()._parse_json(payload)
-    candidate = RISSLiveConnector()._candidate_from_mapping(items[0], _request())
+    connector = RISSLiveConnector()
+    items = connector._parse_json(payload)
+    candidate = connector._candidate_from_mapping(items[0], _request(), connector.build_search_plan(_request()))
 
     assert len(items) == 1
     assert candidate.title == "Self-directed learning effects"
@@ -80,11 +81,41 @@ def test_stub_connectors_respect_year_range_and_document_flags() -> None:
     assert kci_items == []
 
 
-def test_connector_query_text_uses_expanded_keywords() -> None:
-    connector = KCIStubConnector()
+def test_kci_search_plan_uses_fielded_api_params() -> None:
+    connector = KCIConnector()
+    previous_year_from = settings.kci_year_from_param
+    previous_year_to = settings.kci_year_to_param
+    settings.kci_year_from_param = "dateFrom"
+    settings.kci_year_to_param = "dateTo"
+    try:
+        plan = connector.build_search_plan(
+            _request(expanded_keywords=["achievement", "motivation", "achievement"], year_from=2018, year_to=2024)
+        )
+    finally:
+        settings.kci_year_from_param = previous_year_from
+        settings.kci_year_to_param = previous_year_to
 
-    query = connector._build_query_text(
-        _request(expanded_keywords=["achievement", "motivation", "achievement"])
-    )
+    assert plan.source == "kci"
+    assert plan.mode == "kci_openapi_keyword"
+    assert plan.terms == ["self-directed learning", "achievement", "motivation"]
+    assert plan.params[settings.kci_query_param] == "self-directed learning achievement motivation"
+    assert plan.params["dateFrom"] == "2018"
+    assert plan.params["dateTo"] == "2024"
 
-    assert query == "self-directed learning achievement motivation"
+
+def test_riss_search_plan_uses_integrated_query_mode() -> None:
+    connector = RISSConnector()
+    previous_mode = settings.riss_query_mode
+    settings.riss_query_mode = "integrated"
+    try:
+        plan = connector.build_search_plan(
+            _request(expanded_keywords=["achievement", "motivation", "achievement"])
+        )
+    finally:
+        settings.riss_query_mode = previous_mode
+
+    assert plan.source == "riss"
+    assert plan.mode == "riss_integrated_search"
+    assert plan.terms == ["self-directed learning", "achievement", "motivation"]
+    assert plan.params[settings.riss_query_param] == "self-directed learning achievement motivation"
+    assert any("Detailed field syntax" in note for note in plan.notes)
