@@ -651,6 +651,33 @@ interview</textarea>
     let currentCandidates = [];
     let currentExtractionHistory = [];
 
+    const statusLabels = {
+      pending: "대기",
+      running: "실행 중",
+      completed: "완료",
+      failed: "실패",
+      include: "포함",
+      exclude: "제외",
+      needs_human_review: "추가 검토",
+      selected_for_full_text: "원문 검토 대상",
+      needs_review_title_abstract: "제목/초록 검토 필요",
+      excluded_title_abstract: "제목/초록 제외",
+      title_abstract: "제목/초록",
+      full_text: "원문",
+      extracted: "추출 완료",
+      manual_override: "수동 보정",
+      ocr_required: "OCR 필요",
+      full_text_needs_ocr: "원문 OCR 필요",
+      full_text_decision_missing: "원문 판정 필요",
+      title_abstract_decision_missing: "제목/초록 판정 필요"
+    };
+
+    function translateStatus(value) {
+      if (value === null || value === undefined || value === "") {
+        return "-";
+      }
+      return statusLabels[value] || value;
+    }
     function parseList(value) {
       return value
         .split(/\r?\n|,/)
@@ -1341,3 +1368,4 @@ interview</textarea>
   </script>
 </body>
 </html>
+
