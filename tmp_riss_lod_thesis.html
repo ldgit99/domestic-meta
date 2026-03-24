@@ -1,0 +1,1109 @@
+﻿
+
+    
+
+
+
+
+    
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" type="text/css" href="css/reset.css" />
+        <title>Linked Data 발행서비스</title>
+        <script type="text/javascript" src="script/jquery-3.7.1.min.js" ></script>
+        <script type="text/javascript" src="script/magefister4jPaging.js" ></script>
+         <script src="script/ddajaxsidepanel.js" type="text/javascript"></script>
+        <link rel="stylesheet" type="text/css" href="css/ddajaxsidepanel.css" />
+        <script>
+            $(function() {
+            	$("input:hidden[name='facetVal1']").each(function(){
+            		var facetval1 = $(this).val();
+            		$("input:checkbox").each(function(){
+            			if(facetval1 == $(this).val())
+            				$(this).attr("checked","checked");
+            		});
+            	});
+            	$("input:hidden[name='facetVal2']").each(function(){
+            		var facetval2 = $(this).val();
+            		$("input:checkbox").each(function(){
+            			if(facetval2 == $(this).val())
+            				$(this).attr("checked","checked");
+            		});
+            	});
+            	$("input:hidden[name='facetVal3']").each(function(){
+            		var facetval3 = $(this).val();
+            		$("input:checkbox").each(function(){
+            			if(facetval3 == $(this).val())
+            				$(this).attr("checked","checked");
+            		});
+            	});
+            	
+                var totalSize = '';
+                var searchWrd = $("#searchWrd").val();
+
+                $.ajax({
+                    type: "POST",
+                    cache: false,
+                    url: "srcPaging.do",
+                    dataType: 'json',
+                    data: ({"page": 1,
+                        "className": "Thesis",
+                        "searchWrd": searchWrd
+                    }),
+                    success: function(msg) {
+                        $.each(msg, function(key, val) {
+                            if (key == 'totalSize') {
+                                totalSize = val;
+                            }
+                        });
+                        jQuery('#paging_bar').magefister4jPaging(msg);  //페이징 처리
+                    },
+                    error: function(msg) {
+                    },
+                    complete: function() {
+                        //$.unblockUI();
+                    }
+                });
+
+                dispCurrent('Thesis');
+            });
+
+            var page_click = function(pageNo) {
+                var totalSize = '';
+                var searchWrd = $("#searchWrd").val();
+
+                //페이징처리
+                $.ajax({
+                    type: "POST",
+                    cache: false,
+                    url: "srcPaging.do",
+                    dataType: 'json',
+                    data: ({"page": pageNo,
+                        "className": "Thesis",
+                        "searchWrd": searchWrd
+                    }),
+                    success: function(msg) {
+                        $.each(msg, function(key, val) {
+                            if (key == 'totalSize') {
+                                totalSize = val;
+                            }
+                        });
+                        jQuery('#paging_bar').magefister4jPaging(msg);  //페이징 처리
+                      //데이터 가져오기
+                        $.ajax({
+                            type: "POST",
+                            cache: false,
+                            url: "lodThesis.do",
+                            dataType: 'json',
+                            data: ({"searchWrd": searchWrd, "page": pageNo,"totalSize":totalSize}),
+                            success: function(msg) {
+                                var html = '';
+                                $.each(msg, function(key, val) {
+                                    var url = '';
+                                    var surl = '';
+                                    var name = '';
+                                    var sid = '';
+                                    $.each(val, function(key, val) {
+                                        if (key == 'title') {
+                                            name = val;
+                                        } else if (key == 'instanceName') {
+                                            url = val;
+                                        } else if (key == 'instanceId') {
+                                            sid = val;
+                                        } else {
+                                            surl = val;
+                                        }
+                                    });
+                                    html += "<li><dl>";
+                                    html += "<dt>" + name + "</dt>";
+                                    html += "<dd class='urilink'><a href='" + surl + "'>" + url + "</a></dd>";
+                                    html += "<dd><a href=" + surl + " target='_blank' class='lb1'><span class='ir'>Linked Data</span></a></dd>";
+                                    html += "<dd class='list_dd'><a href=javascript:instance('"+url+"')><img title='그래프로 보기' alt='그래픽 네비게이션' src='images/demon/sub/gn_btn.gif'></a></dd>";
+                                    html += "<dd><a href=javascript:viewMarcData('" + sid + "','Book') class='lb2'><span class='ir'>MARC</span></a></dd>";
+                                    html += "</dl></li>";
+                                });
+                                $("#bookList").html(html);
+                            },
+                            error: function(msg) {
+                            },
+                            complete: function() {
+                                //$.unblockUI();
+                            }
+                        });
+                    },
+                    error: function(msg) {
+                    },
+                    complete: function() {
+                        //$.unblockUI();
+                    }
+                });
+            }
+            
+            function initSearch(){
+            	 $("#searchFrm").attr("action","lodThesisSearch.do");
+                 $("#searchFrm").submit();
+            }
+            
+            function gofSearch(){
+            	$("#f_frm").attr("action","/lodThesisSearch.do");
+            	$("#f_searchWrd").val($("#searchWrd").val());
+            	$("#f_frm").submit(); 
+            }
+            
+            function fn_egov_select_noticeList(index){
+            	$("#pageIndex").val(index);
+            	$("#f_frm").attr("action","/lodThesisSearch.do");
+            	$("#f_searchWrd").val($("#searchWrd").val());
+            	$("#f_frm").submit(); 
+            	
+            }
+            
+            function instance(instanceUri){
+                $("#ajaxTest").attr("href","gui_layout.do?instanceUri="+instanceUri);
+                $("#ajaxTest").trigger('click');
+            }  
+            
+            function moreView(flag){
+            	var status = $("#more_status"+flag).val();
+            	var cnt = $("input:hidden[name='fVal"+flag+"']").length;
+            	var start = ((status-1) * 5) +1;
+            	var end = status * 5;
+            	var html='';
+            	for(var i=start;i<end;i++){
+            		if(i>=cnt){
+            			$("#fcmore"+flag).hide();
+            			return;
+            		}
+            		var fval = $("input:hidden[name='fVal"+flag+"']:eq("+i+")").val();
+            		var flabel = $("input:hidden[name='fLabel"+flag+"']:eq("+i+")").val();
+            		var chk = false;
+            		/* 더보기 숨겨진값 체크 */
+            		$("input:hidden[name='facetVal"+flag+"']").each(function(){
+            			if($(this).val()==flabel){
+            				chk = true;		
+            			}
+            		});
+            		if(chk)
+            			html+='<li><input type="checkbox"  value="'+flabel+'" name="facetVal'+flag+'" checked>';
+            		else
+            			html+='<li><input type="checkbox"  value="'+flabel+'" name="facetVal'+flag+'">'; 
+            		//html+='<li><input type="checkbox"  value="'+flabel+'" name="facetVal'+flag+'">';
+            		html+='<label for="cnChk0"><span class="faspan">'+flabel+'</span>('+fval+')</label></li>';
+            	}
+            	//html+='</li>';
+            	$(html).appendTo("#append_area"+flag);
+            	$("#more_status"+flag).val($("#more_status"+flag).val()*1+1);
+            }
+        </script>
+    </head>
+    <body id="abody">
+    	
+    	
+    	
+        <div id="skipnavi">
+            <dl>
+                <dt class="hiddenitem">바로가기 메뉴</dt>
+                <dd><a title="주메뉴 바로가기" href="#navi">메인메뉴 바로가기</a></dd>
+                <dd><a title="서브메뉴 바로가기" href="#leftMenu">서브메뉴 바로가기</a></dd>
+                <dd><a title="본문내용 바로가기" href="#contents">본문내용 바로가기</a></dd>
+                <dd><a title="하단바로가기" href="#footer">하단 바로가기</a></dd>
+            </dl>
+            <span class="hiddenitem"><a href="#contents">본문내용 바로가기</a></span>
+        </div><!--skipnavi-->
+        
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<div id="quickMenu">
+    <ul>
+        <li><a href="/main.do" class="q1" title="Home"><span class="ir">Home</span></a></li>
+        <li><a href="/serviceHome.do" class="q2" title="Linked Data 활용서비스"><span class="ir">Linked Data 활용서비스</span></a></li>        
+        <li><a href="/LODintro.do" class="q3" title="RISS Linked Data"><span class="ir">RISS Linked Data</span></a></li>
+        <li><a href="/sparqlEndpoint.do" class="q4" title="SPARQL Endpoint" target="_blank"><span class="ir">SPARQL Endpoint</span></a></li>
+        <li><a href="/errorReport.do" target="_blank" title="LOD 오류신고" class="q6" href="#"><span class="ir">오류신고</span></a></li>
+        <li><a href="http://www.riss.kr/" class="q5" title="RISS" target="_blank"><span class="ir">RISS</span></a></li>
+    </ul>
+</div>
+  
+        <div id="wrap"><!--wrap-->
+            
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<div id="header">
+    <div id="logo">
+        <div class="logo3" title="RISS"><a href="https://data.riss.kr" style="display: block;"><img src="https://data.riss.kr/images/service/main/nlogo2.png" alt="RISS Linked Open Data"/></a></div>
+        <div class="logo1"><img src="https://data.riss.kr/images/demon/sub/nlogo6.png" alt="발행서비스"/></div>
+    </div>
+</div>
+<div class="navi">
+    <h2 class="hiddenitem">메인메뉴</h2>
+    
+
+
+
+<script type="text/javascript" src="https://data.riss.kr/script/jquery.selectBox.js" ></script>
+<link rel="stylesheet" type="text/css" href="https://data.riss.kr/css/jquery.selectBox.css"/>
+
+<script>
+    $(document).ready(function() {        
+        if($('#sel').val() == 'null') {
+           $('#standard-dropdown').val('total').attr("selected", "selected");   
+        }
+
+//        $('#standard-dropdown').val($($('input:hidden').get(0)).val()).attr("selected", "selected");
+    
+        $('#standard-dropdown')
+                .selectBox({
+            mobile: true
+        })
+                .focus(function() {
+            $('#console').append('Focus on ' + $(this).attr('name') + '<br />');
+//            $('#console')[0].scrollTop = $('#console')[0].scrollHeight;
+        })
+                .blur(function() {
+            $('#console').append('Blur on ' + $(this).attr('name') + '<br />');
+//            $('#console')[0].scrollTop = $('#console')[0].scrollHeight;
+        })
+                .change(function() {
+            $('#console').append('Change on ' + $(this).attr('name') + ': ' + $(this).val() + '<br />');
+//            $('#console')[0].scrollTop = $('#console')[0].scrollHeight;
+        });
+        
+    });
+
+    $(function() {
+        $("#searchBtn").click(function() {          
+            //특수문자 방지
+            var re = /[~!@\#$%<>^&*\()\-=+_\']/gi; //특수문자 정규식 변수 선언
+            var blank_pattern = /^\s+|\s+$/g;
+             if(re.test($("#searchWrd").val())){
+                alert("특수문자는 입력하실수 없습니다.");
+                return false;
+            }       
+            
+            if ($("#searchWrd").val().replace(blank_pattern, "") == "" || $("#searchWrd").val() == "") {
+                alert("키워드를 입력하세요.");
+                return false;    
+            }                
+        
+            if ($('#standard-dropdown option:selected').val() == "foreignArticle") {                         
+                $("#searchFrm").attr("action", "/ForeignArticleSearch.do");
+            } else if ($('#standard-dropdown option:selected').val() == "foreignJournal") {
+                $("#searchFrm").attr("action", "/ForeignJournalSearch.do");
+            } else if ($('#standard-dropdown option:selected').val() == "book") {
+                $("#searchFrm").attr("action", "/lodBookSearch.do");
+            } else if ($('#standard-dropdown option:selected').val() == "thesis") {
+                $("#searchFrm").attr("action", "/lodThesisSearch.do");
+            }else { //total
+                $("#searchFrm").attr("action", "/lodSearch.do");
+            }
+            $("#searchFrm").submit();
+        });  
+   
+    });
+    
+    function blankCheck() {        
+                //특수문자 방지
+                var re = /[~!@x\#$%<>^&*\()\-=+_\']/gi; //특수문자 정규식 변수 선언
+                var blank_pattern = /^\s+|\s+$/g;
+                 if(re.test($("#searchWrd").val())){
+                    alert("특수문자는 입력하실수 없습니다.");
+                    return;
+                }       
+
+                if ($("#searchWrd").val().replace(blank_pattern, "") == "" || $("#searchWrd").val() == "" ) {
+                    alert("키워드를 입력하세요.");
+                    return;    
+                }
+               if ($('#standard-dropdown option:selected').val() == "foreignArticle") {
+                    $("#searchFrm").attr("action", "/ForeignArticleSearch.do");
+                } else if ($('#standard-dropdown option:selected').val() == "foreignJournal") {
+                    $("#searchFrm").attr("action", "/ForeignJournalSearch.do");
+                } else if ($('#standard-dropdown option:selected').val() == "book") {
+                    $("#searchFrm").attr("action", "/lodBookSearch.do");
+                }else if ($('#standard-dropdown option:selected').val() == "thesis") {
+                    $("#searchFrm").attr("action", "/lodThesisSearch.do");
+                } else { //total
+                    $("#searchFrm").attr("action", "/lodSearch.do");
+                }
+                $("#searchFrm").submit();
+    }
+    function search(event) { 
+	    if(event.keyCode==13)
+	    {
+	    	blankCheck();
+	    }	
+	}
+</script>              
+<ul>
+    <li class="dnvli1"><a href="/LODintro.do" title="소개 및 구축방법" class="dnv1"><img src="/images/default/navi1.png" alt="소개 및 구축방법" /></a></li>
+    <li class="dnvli2"><a href="/marctoRDF.do" title="Marc to RDF매핑 규칙" class="dnv2"><img src="/images/default/navi2.png" alt="Marc to RDF매핑 규칙" /></a></li>
+    <li class="dnvli3"><a href="/ontoModel.do" title="온톨로지모델" class="dnv3"><img src="/images/default/navi3.png" alt="온톨로지모델" /></a></li>
+    <li class="dnvli4"><a href="/dataNavigation.do" title="데이터네비게이션" class="dnv4"><img src="/images/default/navi4.png" alt="데이터네비게이션" /></a></li>
+    <li class="dnvli5"><a href="/sparqlEndpoint.do" title="SPARQL EndPoint" class="dnv5"><img src="/images/default/navi5.png" alt="SPARQL EndPoint" /></a></li>
+    <li class="dnvli6"><a href="/download.do" title="Download" class="dnv6"><img src="/images/default/navi6.png" alt="Download" /></a></li>
+</ul>
+<div class="subSearch">
+    <div class="srhform">        
+        <select id = "standard-dropdown" name="standard-dropdown" class="custom-class1 custom-class2" >
+            <option value="total">전체</option>
+            <option value="book">단행본</option>
+            <option value="thesis">학위논문</option>
+            <option value="foreignJournal">해외학술지</option>
+            <option value="foreignArticle">해외학술논문</option>
+        </select>    
+        <input type="hidden" name="sel" id = "sel" value="thesis" />
+        <form id="searchFrm" action="javascript:blankCheck();">
+            <fieldset>
+                <legend>통합겁색 폼</legend>
+                <label class="hiddenitem">검색조건 입력</label>
+                <input type="text" name="searchWrd" title="검색어 입력" class="subsearchtxt" id="searchWrd" value="교육" onkeydown="javascript:search(event);"/>
+                </div>
+                <img src="/images/demon/sub/sbsh_btn.png" alt="검색" class="subsearchbtn" id="searchBtn" />
+            </fieldset>
+        </form>            
+    </div>
+    <script>
+        $('#standard-dropdown').val($($('input:hidden[name="sel"]').get(0)).val()).attr("selected", "selected");
+    </script>
+    <!--subSearch--> 
+</div>
+<!--메인메뉴-->
+
+            <!--header-->            
+            <div id="contents">
+                <div id="midcon" class="facetcon">
+                    
+
+
+<script>
+    $(function(){
+       $("a[name='Search']").click(function(){
+          $("#searchFrm").attr("action","lodSearch.do");
+          $("#searchFrm").submit();
+       });
+       
+       $("a[name='BookSearch']").click(function(){
+          $("#searchFrm").attr("action","lodBookSearch.do");
+          $("#searchFrm").submit();
+       });
+       
+       //학위논문추가
+       $("a[name='ThesisSearch']").click(function(){
+           $("#searchFrm").attr("action","lodThesisSearch.do");
+           $("#searchFrm").submit();
+        });
+       
+       $("a[name='AgentSearch']").click(function(){
+          $("#searchFrm").attr("action","lodAgentSearch.do");
+          $("#searchFrm").submit();
+       });
+       
+       $("a[name='ConceptSearch']").click(function(){
+          $("#searchFrm").attr("action","lodConceptSearch.do");
+          $("#searchFrm").submit();
+       });
+       
+       //$("a[name='LibrarySearch']").click(function(){
+          //$("#searchFrm").attr("action","LibrarySearch.do");
+          //$("#searchFrm").submit();
+       //});
+       
+       $("a[name='ForeignArticleSearch']").click(function(){
+          $("#searchFrm").attr("action","ForeignArticleSearch.do");
+          $("#searchFrm").submit();
+       });
+       
+       $("a[name='ForeignJournalSearch']").click(function(){
+          $("#searchFrm").attr("action","ForeignJournalSearch.do");
+          $("#searchFrm").submit();
+       });
+       
+       
+    });
+    
+    function dispCurrent(className){
+            $("#current").attr("id","");
+            $("a[name='"+className+"Search']").attr("id","current");
+    }
+    
+    function viewMarcData(id,flag){
+        var title = removeHtml($("#"+id).val());
+        window.open("marcView.do?flag="+flag+"&id="+id+"&title="+title,"MARC_Data_View","width=600,height=500,scrollbars=yes,resizeable=no,left=350,top=150");
+	}
+    
+    function removeHtml(text)
+    {
+    	text = text.replace(/<(\/)?([a-zA-Z]*)(\s[a-zA-Z]*=[^>]*)?(\s)*(\/)?>/ig, "");
+    	return text;
+    }
+    
+</script>
+<div class="searchTab">
+    <h2 class="hiddenitem">검색카테고리</h2>
+    <ul>
+        <li><a href="#" title="통합검색" name="Search" id="">통합검색</a></li>
+        <li><a href="#" title="도서명" name="BookSearch" id="">단행본</a></li>
+        <li><a href="#" title="학위논문명" name="ThesisSearch" id="">학위논문</a></li>
+        <li><a href="#" title="FRIC-학술지" name="ForeignJournalSearch" id="">해외학술지</a></li>
+        <li><a href="#" title="FRIC-학술논문" name="ForeignArticleSearch" id="">해외학술논문</a></li>
+        <li><a href="#" title="저자명" name="AgentSearch" id="">저자</a></li>
+        <li><a href="#" title="주제명" name="ConceptSearch" id="">주제</a></li>
+        <!--<li><a href="#" title="소장기관" name="LibrarySearch" id="">소장기관</a></li>-->
+    </ul>
+</div>
+        
+                    <h3><strong class="sh3">'교육' </strong>의 학위논문 검색 결과</h3>
+                    <h4 class="srhh4"><strong class="sb">학위논문</strong><strong class="cb1">(80,918)건</strong></h4>
+                    <div class="section srhsection">
+                        <ul class="data_list" id="bookList">
+                            
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>소설 <B>교육</B>론</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000010452628" target="_blank">http://data.riss.kr/resource/Thesis/000010452628</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000010452628')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000010452628" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000010452628','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000010452628" value= '소설 <B>교육</B>론'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>음악<B>교육</B></dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000008956301" target="_blank">http://data.riss.kr/resource/Thesis/000008956301</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000008956301')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000008956301" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000008956301','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000008956301" value= '음악<B>교육</B>'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>'-겠-'의 의미 <B>교육</B></dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000010027334" target="_blank">http://data.riss.kr/resource/Thesis/000010027334</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000010027334')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000010027334" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000010027334','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000010027334" value= ''-겠-'의 의미 <B>교육</B>'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt><구운몽> <B>교육</B> 연구</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000012148868" target="_blank">http://data.riss.kr/resource/Thesis/000012148868</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000012148868')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000012148868" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000012148868','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000012148868" value= '<구운몽> <B>교육</B> 연구'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>시조 <B>교육</B> 연구</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000012237456" target="_blank">http://data.riss.kr/resource/Thesis/000012237456</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000012237456')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000012237456" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000012237456','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000012237456" value= '시조 <B>교육</B> 연구'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>설화 <B>교육</B> 연구</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000009813200" target="_blank">http://data.riss.kr/resource/Thesis/000009813200</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000009813200')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000009813200" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000009813200','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000009813200" value= '설화 <B>교육</B> 연구'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>시 <B>교육</B> 방법론</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000002597267" target="_blank">http://data.riss.kr/resource/Thesis/000002597267</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000002597267')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000002597267" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000002597267','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000002597267" value= '시 <B>교육</B> 방법론'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>영어<B>교육</B>에서의 문화<B>교육</B></dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000009962913" target="_blank">http://data.riss.kr/resource/Thesis/000009962913</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000009962913')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000009962913" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000009962913','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000009962913" value= '영어<B>교육</B>에서의 문화<B>교육</B>'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt><B>교육</B>목회를 위한 영성<B>교육</B></dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000010753251" target="_blank">http://data.riss.kr/resource/Thesis/000010753251</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000010753251')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000010753251" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000010753251','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000010753251" value= '<B>교육</B>목회를 위한 영성<B>교육</B>'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt><B>교육</B>목회를 위한 영성<B>교육</B></dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000011806570" target="_blank">http://data.riss.kr/resource/Thesis/000011806570</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000011806570')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000011806570" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000011806570','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000011806570" value= '<B>교육</B>목회를 위한 영성<B>교육</B>'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>원격<B>교육</B>을 통한 수학<B>교육</B></dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000012532072" target="_blank">http://data.riss.kr/resource/Thesis/000012532072</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000012532072')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000012532072" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000012532072','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000012532072" value= '원격<B>교육</B>을 통한 수학<B>교육</B>'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>Maria Montessori의 "우주적 <B>교육</B>"</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000011204994" target="_blank">http://data.riss.kr/resource/Thesis/000011204994</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000011204994')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000011204994" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000011204994','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000011204994" value= 'Maria Montessori의 "우주적 <B>교육</B>"'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>시조<B>교육</B>연구</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000008948265" target="_blank">http://data.riss.kr/resource/Thesis/000008948265</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000008948265')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000008948265" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000008948265','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000008948265" value= '시조<B>교육</B>연구'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>기독교가 중국 근대 <B>교육</B>에 미친 영향:학제, 여성<B>교육</B>, 유아<B>교육</B>, 특수<B>교육</B> 면에서</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000015509789" target="_blank">http://data.riss.kr/resource/Thesis/000015509789</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000015509789')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000015509789" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000015509789','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000015509789" value= '기독교가 중국 근대 <B>교육</B>에 미친 영향:학제, 여성<B>교육</B>, 유아<B>교육</B>, 특수<B>교육</B> 면에서'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>「인간 <B>교육</B>」 중심으로 살펴본 Frobel의 아동<B>교육</B>론</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000007276714" target="_blank">http://data.riss.kr/resource/Thesis/000007276714</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000007276714')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000007276714" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000007276714','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000007276714" value= '「인간 <B>교육</B>」 중심으로 살펴본 Frobel의 아동<B>교육</B>론'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt><B>교육</B>대학원 유아<B>교육</B>과 <B>교육</B>과정 분석</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000013268267" target="_blank">http://data.riss.kr/resource/Thesis/000013268267</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000013268267')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000013268267" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000013268267','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000013268267" value= '<B>교육</B>대학원 유아<B>교육</B>과 <B>교육</B>과정 분석'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt><B>교육</B>대학원 음악<B>교육</B>전공 <B>교육</B>과정 분석</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000009994172" target="_blank">http://data.riss.kr/resource/Thesis/000009994172</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000009994172')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000009994172" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000009994172','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000009994172" value= '<B>교육</B>대학원 음악<B>교육</B>전공 <B>교육</B>과정 분석'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt>공교육과 사교육에서의 미술<B>교육</B>의 비교 =</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000011730984" target="_blank">http://data.riss.kr/resource/Thesis/000011730984</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000011730984')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000011730984" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000011730984','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000011730984" value= '공교육과 사교육에서의 미술<B>교육</B>의 비교 ='/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt><B>교육</B>대학원 영어<B>교육</B>과 <B>교육</B>과정 연구</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000001155823" target="_blank">http://data.riss.kr/resource/Thesis/000001155823</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000001155823')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000001155823" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000001155823','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000001155823" value= '<B>교육</B>대학원 영어<B>교육</B>과 <B>교육</B>과정 연구'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                                    <li>
+                                        <dl>
+                                            
+                                                <dt><B>교육</B> 연극을 통한 희곡 <B>교육</B> 연구</dt>
+                                                <dd class="urilink"><a href="http://data.riss.kr/resource/Thesis/000012432912" target="_blank">http://data.riss.kr/resource/Thesis/000012432912</a></dd>
+                                                <dd class="list_dd"><a href="javascript:instance('http://data.riss.kr/resource/Thesis/000012432912')"><img title="그래프로 보기" alt="그래픽 네비게이션" src="images/demon/sub/gn_btn.gif"></a></dd>
+                                                <dd><a href="http://data.riss.kr/resource/Thesis/000012432912" title="" class="lb1" target="_blank"><span class="ir">Linked Data</span></a></dd>
+                                                <dd><a href="javascript:viewMarcData('000012432912','Thesis');" title="" class="lb2"><span class="ir">MARC</span></a></dd>
+                                                <input type="hidden" id="000012432912" value= '<B>교육</B> 연극을 통한 희곡 <B>교육</B> 연구'/>
+                                            
+                                        </dl>
+                                    </li>
+                                
+                            
+                            
+                        </ul>
+                    </div>
+                    <!--section-->
+                    
+                    <!-- <div class="paging" id="paging_bar"></div> -->
+                    <div class="paging" id="paging_div">
+						<ul class="paging_align">
+							<a href="#" onclick="fn_egov_select_noticeList(1);return false; "><img src="http://data.riss.kr/images/default/paging2.png" alt="처음"   border="0"/></a>&#160;<a href="#" onclick="fn_egov_select_noticeList(1);return false; "><img src="http://data.riss.kr/images/default/paging1.png"    alt="이전"   border="0"/></a>&#160;<strong>1</strong>&#160;<a href="#" onclick="fn_egov_select_noticeList(2);return false; ">2</a>&#160;<a href="#" onclick="fn_egov_select_noticeList(3);return false; ">3</a>&#160;<a href="#" onclick="fn_egov_select_noticeList(4);return false; ">4</a>&#160;<a href="#" onclick="fn_egov_select_noticeList(5);return false; ">5</a>&#160;<a href="#" onclick="fn_egov_select_noticeList(6);return false; ">6</a>&#160;<a href="#" onclick="fn_egov_select_noticeList(7);return false; ">7</a>&#160;<a href="#" onclick="fn_egov_select_noticeList(8);return false; ">8</a>&#160;<a href="#" onclick="fn_egov_select_noticeList(9);return false; ">9</a>&#160;<a href="#" onclick="fn_egov_select_noticeList(10);return false; ">10</a>&#160;<a href="#" onclick="fn_egov_select_noticeList(11);return false; "><img src="http://data.riss.kr/images/default/paging3.png"    alt="다음"   border="0"/></a>&#160;<a href="#" onclick="fn_egov_select_noticeList(4046);return false; "><img src="http://data.riss.kr/images/default/paging4.png" alt="마지막" border="0"/></a>&#160;
+
+						</ul>
+					</div>
+                </div>
+                <!-- facet을 신규로 추가했습니다. -->
+            <div class="facet">
+                  <h2>검색유형</h2>
+                  <form method="post" id="f_frm" name="f_frm" action="">
+                  <input type="hidden" id="f_searchWrd" name="f_searchWrd"/>
+                  <input type="hidden" name="pageIndex" id="pageIndex" value="1"/>
+                  
+                  <h3>저자</h3>
+                  <input type="hidden" value="저자" name="fcategory1">
+                  <ul>
+                  	  
+                      <li>
+                        <input type="checkbox"  value="김지영" name="facetVal1" >
+                        <label for="cnChk0"><span class="faspan">김지영</span><span class="cnt">(140)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="교육대학원" name="facetVal1" >
+                        <label for="cnChk0"><span class="faspan">교육대학원</span><span class="cnt">(130)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="김민정" name="facetVal1" >
+                        <label for="cnChk0"><span class="faspan">김민정</span><span class="cnt">(124)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="김현정" name="facetVal1" >
+                        <label for="cnChk0"><span class="faspan">김현정</span><span class="cnt">(122)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="전남대학교" name="facetVal1" >
+                        <label for="cnChk0"><span class="faspan">전남대학교</span><span class="cnt">(117)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="김지혜" name="facetVal1" >
+                        <label for="cnChk0"><span class="faspan">김지혜</span><span class="cnt">(107)</span></label>
+                      </li>
+                      
+                      <div id="append_area1"></div>
+                      
+                      <input type="hidden"  value="140" name="fVal1" >
+                      <input type="hidden"  value="김지영" name="fLabel1" >
+                      
+                      <input type="hidden"  value="130" name="fVal1" >
+                      <input type="hidden"  value="교육대학원" name="fLabel1" >
+                      
+                      <input type="hidden"  value="124" name="fVal1" >
+                      <input type="hidden"  value="김민정" name="fLabel1" >
+                      
+                      <input type="hidden"  value="122" name="fVal1" >
+                      <input type="hidden"  value="김현정" name="fLabel1" >
+                      
+                      <input type="hidden"  value="117" name="fVal1" >
+                      <input type="hidden"  value="전남대학교" name="fLabel1" >
+                      
+                      <input type="hidden"  value="107" name="fVal1" >
+                      <input type="hidden"  value="김지혜" name="fLabel1" >
+                      
+                      <input type="hidden"  value="102" name="fVal1" >
+                      <input type="hidden"  value="이은주" name="fLabel1" >
+                      
+                      <input type="hidden"  value="94" name="fVal1" >
+                      <input type="hidden"  value="김은정" name="fLabel1" >
+                      
+                      <input type="hidden"  value="92" name="fVal1" >
+                      <input type="hidden"  value="김수진" name="fLabel1" >
+                      
+                      <input type="hidden"  value="91" name="fVal1" >
+                      <input type="hidden"  value="김현주" name="fLabel1" >
+                      
+                      <input type="hidden"  value="87" name="fVal1" >
+                      <input type="hidden"  value="이지은" name="fLabel1" >
+                      
+                      <input type="hidden"  value="86" name="fVal1" >
+                      <input type="hidden"  value="김지현" name="fLabel1" >
+                      
+                      <input type="hidden"  value="84" name="fVal1" >
+                      <input type="hidden"  value="박지영" name="fLabel1" >
+                      
+                      <input type="hidden"  value="82" name="fVal1" >
+                      <input type="hidden"  value="이지영" name="fLabel1" >
+                      
+                      <input type="hidden"  value="77" name="fVal1" >
+                      <input type="hidden"  value="이은정" name="fLabel1" >
+                      
+                      <input type="hidden"  value="75" name="fVal1" >
+                      <input type="hidden"  value="김지은" name="fLabel1" >
+                      
+                      <input type="hidden"  value="75" name="fVal1" >
+                      <input type="hidden"  value="이현주" name="fLabel1" >
+                      
+                      <input type="hidden"  value="74" name="fVal1" >
+                      <input type="hidden"  value="김경희" name="fLabel1" >
+                      
+                      <input type="hidden"  value="74" name="fVal1" >
+                      <input type="hidden"  value="김미경" name="fLabel1" >
+                      
+                      <input type="hidden"  value="74" name="fVal1" >
+                      <input type="hidden"  value="김은영" name="fLabel1" >
+                      
+                      <li class="fcmore"><a id="fcmore1" title="" href="javascript:moreView('1');">더보기 +</a></li>
+                  </ul>
+                  
+                  <h3>발행기관</h3>
+                  <input type="hidden" value="발행기관" name="fcategory2">
+                  <ul>
+                  	  
+                      <li>
+                        <input type="checkbox"  value="연세대학교 교육대학원" name="facetVal2" >
+                        <label for="cnChk0"><span class="faspan">연세대학교 교육대학원</span><span class="cnt">(1651)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="서울대학교 대학원" name="facetVal2" >
+                        <label for="cnChk0"><span class="faspan">서울대학교 대학원</span><span class="cnt">(1634)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="경희대학교 교육대학원" name="facetVal2" >
+                        <label for="cnChk0"><span class="faspan">경희대학교 교육대학원</span><span class="cnt">(1575)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="한국교원대학교 대학원" name="facetVal2" >
+                        <label for="cnChk0"><span class="faspan">한국교원대학교 대학원</span><span class="cnt">(1413)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="이화여자대학교 교육대학원" name="facetVal2" >
+                        <label for="cnChk0"><span class="faspan">이화여자대학교 교육대학원</span><span class="cnt">(1332)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="고려대학교 교육대학원" name="facetVal2" >
+                        <label for="cnChk0"><span class="faspan">고려대학교 교육대학원</span><span class="cnt">(1215)</span></label>
+                      </li>
+                      
+                      <div id="append_area2"></div>
+                      
+                      <input type="hidden"  value="1651" name="fVal2" >
+                      <input type="hidden"  value="연세대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="1634" name="fVal2" >
+                      <input type="hidden"  value="서울대학교 대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="1575" name="fVal2" >
+                      <input type="hidden"  value="경희대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="1413" name="fVal2" >
+                      <input type="hidden"  value="한국교원대학교 대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="1332" name="fVal2" >
+                      <input type="hidden"  value="이화여자대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="1215" name="fVal2" >
+                      <input type="hidden"  value="고려대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="1209" name="fVal2" >
+                      <input type="hidden"  value="부산대학교" name="fLabel2" >
+                      
+                      <input type="hidden"  value="1026" name="fVal2" >
+                      <input type="hidden"  value="한국교원대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="883" name="fVal2" >
+                      <input type="hidden"  value="단국대학교" name="fLabel2" >
+                      
+                      <input type="hidden"  value="844" name="fVal2" >
+                      <input type="hidden"  value="한양대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="824" name="fVal2" >
+                      <input type="hidden"  value="중앙대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="758" name="fVal2" >
+                      <input type="hidden"  value="이화여자대학교 대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="731" name="fVal2" >
+                      <input type="hidden"  value="서울교육대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="730" name="fVal2" >
+                      <input type="hidden"  value="서울교육대학교 교육전문대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="706" name="fVal2" >
+                      <input type="hidden"  value="공주대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="698" name="fVal2" >
+                      <input type="hidden"  value="동국대학교" name="fLabel2" >
+                      
+                      <input type="hidden"  value="655" name="fVal2" >
+                      <input type="hidden"  value="국민대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="638" name="fVal2" >
+                      <input type="hidden"  value="건국대학교 교육대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="625" name="fVal2" >
+                      <input type="hidden"  value="중앙대학교 대학원" name="fLabel2" >
+                      
+                      <input type="hidden"  value="581" name="fVal2" >
+                      <input type="hidden"  value="숙명여자대학교 교육대학원" name="fLabel2" >
+                      
+                      <li class="fcmore"><a id="fcmore2" title="" href="javascript:moreView('2');">더보기 +</a></li>
+                  </ul>
+                  
+                  <h3>발행년도</h3>
+                  <input type="hidden" value="발행년도" name="fcategory3">
+                  <ul>
+                  	  
+                      <li>
+                        <input type="checkbox"  value="2008" name="facetVal3" >
+                        <label for="cnChk0"><span class="faspan">2008</span><span class="cnt">(3826)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="2011" name="facetVal3" >
+                        <label for="cnChk0"><span class="faspan">2011</span><span class="cnt">(3777)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="2010" name="facetVal3" >
+                        <label for="cnChk0"><span class="faspan">2010</span><span class="cnt">(3753)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="2012" name="facetVal3" >
+                        <label for="cnChk0"><span class="faspan">2012</span><span class="cnt">(3703)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="2009" name="facetVal3" >
+                        <label for="cnChk0"><span class="faspan">2009</span><span class="cnt">(3652)</span></label>
+                      </li>
+                      
+                      <li>
+                        <input type="checkbox"  value="2005" name="facetVal3" >
+                        <label for="cnChk0"><span class="faspan">2005</span><span class="cnt">(3593)</span></label>
+                      </li>
+                      
+                      <div id="append_area3"></div>
+                      
+                      <input type="hidden"  value="3826" name="fVal3" >
+                      <input type="hidden"  value="2008" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3777" name="fVal3" >
+                      <input type="hidden"  value="2011" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3753" name="fVal3" >
+                      <input type="hidden"  value="2010" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3703" name="fVal3" >
+                      <input type="hidden"  value="2012" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3652" name="fVal3" >
+                      <input type="hidden"  value="2009" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3593" name="fVal3" >
+                      <input type="hidden"  value="2005" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3586" name="fVal3" >
+                      <input type="hidden"  value="2013" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3465" name="fVal3" >
+                      <input type="hidden"  value="2007" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3446" name="fVal3" >
+                      <input type="hidden"  value="2003" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3358" name="fVal3" >
+                      <input type="hidden"  value="2014" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3310" name="fVal3" >
+                      <input type="hidden"  value="2006" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3287" name="fVal3" >
+                      <input type="hidden"  value="2004" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3117" name="fVal3" >
+                      <input type="hidden"  value="2015" name="fLabel3" >
+                      
+                      <input type="hidden"  value="3115" name="fVal3" >
+                      <input type="hidden"  value="2002" name="fLabel3" >
+                      
+                      <input type="hidden"  value="2941" name="fVal3" >
+                      <input type="hidden"  value="2017" name="fLabel3" >
+                      
+                      <input type="hidden"  value="2870" name="fVal3" >
+                      <input type="hidden"  value="2016" name="fLabel3" >
+                      
+                      <input type="hidden"  value="2767" name="fVal3" >
+                      <input type="hidden"  value="2019" name="fLabel3" >
+                      
+                      <input type="hidden"  value="2637" name="fVal3" >
+                      <input type="hidden"  value="2018" name="fLabel3" >
+                      
+                      <input type="hidden"  value="2476" name="fVal3" >
+                      <input type="hidden"  value="2001" name="fLabel3" >
+                      
+                      <input type="hidden"  value="2431" name="fVal3" >
+                      <input type="hidden"  value="2021" name="fLabel3" >
+                      
+                      <li class="fcmore"><a id="fcmore3" title="" href="javascript:moreView('3');">더보기 +</a></li>
+                  </ul>
+                  
+                  </form>
+                  <input type="hidden" value="2" name="more_status1" id="more_status1"></input>
+                  <input type="hidden" value="2" name="more_status2" id="more_status2"></input>
+                  <input type="hidden" value="2" name="more_status3" id="more_status3"></input>
+                  <ul class="facetbtn">
+                    <li><input type="image" id="facetedReturn" value="" alt="초기화" src="/images/demon/sub/nbtn3.png" onclick="initSearch();"> </li>
+                    <li><input type="image" id="facetSearch" value="" alt="적용" src="/images/demon/sub/nbtn4.png" onclick="gofSearch();"> </li>
+                  </ul>
+              </div>
+              
+              <!-- facet을 신규로 추가했습니다. -->
+              <a id="ajaxTest" href="" class="hiddenitem" rel="ajaxpanel">kkkkkk</a></div>
+                <a href="#header" class="hiddenitem">위로가기</a>
+            </div>
+            <!--contents-->
+        </div>
+        <!--wrap-->
+        
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<div id="footer" class="mfooter">
+	
+    <div class="infot">
+		<div class="flogo"><span class="ir">keris 한국교육학술정보원</span></div>
+		<address><img src="https://data.riss.kr/images/service/common/addrimg.png" alt="대구광역시 동구 동내로 64(동내동 1119) 고객센터 : 1599-3122"/></address>
+		<div class="siteinfo">
+			<a title="이용약관" onclick="popupWindow('http://www.riss.kr/etc/clause.html','clause',700,720);" href="#redirect">이용약관</a>
+			<a title="개인정보처리방침" onclick="popupWindow('http://www.riss.kr/etc/safe_policy.html','safe_policy',700,720);" href="#redirect"><strong>개인정보처리방침</strong></a>
+		    <a title="기관소개" target="_blank" href="http://www.keris.or.kr/intro/it_message.jsp">기관소개</a>
+	    </div>
+	    <p><span class="ir">Copyright(c)KERIS, All Right Reserved.</span></p>
+	    <div class="flogo1"><img src="https://data.riss.kr/images/service/common/ban_footer_link.gif" alt="교육부"/></div>
+	</div>
+</div> 
+<script type="text/javascript" src="https://wcs.naver.net/wcslog.js"></script> 
+<script type="text/javascript"> 
+	if(!wcs_add) var wcs_add = {}; 
+	wcs_add["wa"] = "75bb589de795d8"; wcs_do(); 
+</script>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-46060561-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+<!--[GA4] Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JYXYH17NZ8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-JYXYH17NZ8');
+</script>
+            <!--footer-->
+    </body>
+</html>
+

@@ -84,18 +84,30 @@ Live collection is enabled only when configured. Otherwise the connector falls b
 - `RISS_API_KEY_PARAM`
 - `RISS_QUERY_PARAM`
 - `RISS_COUNT_PARAM`
-- `RISS_QUERY_MODE`
+- `RISS_QUERY_MODE=web|sparql|integrated`
 - `RISS_RESPONSE_FORMAT`
+- `RISS_WEB_PAGE_SCALE=100`
+- `RISS_THESIS_COLLECTION=bib_t`
+- `RISS_JOURNAL_COLLECTION=re_a_kor`
 - `RISS_DOCUMENT_TYPE_PARAM`
 - `RISS_THESIS_VALUE`
 - `RISS_JOURNAL_VALUE`
 
-The current connector accepts JSON, XML, and SPARQL-style `results.bindings` JSON payloads.
+Default live settings now target the real RISS web search:
+
+- `RISS_API_URL=https://www.riss.kr/search/Search.do`
+- `RISS_QUERY_MODE=web`
+- `RISS_RESPONSE_FORMAT=html`
+
+The connector still accepts JSON, XML, and SPARQL-style `results.bindings` JSON payloads for
+non-web modes.
 
 Source-specific query plans are now generated before collection:
 
 - `KCI`: field-oriented OpenAPI keyword plan with optional year-bound parameters
-- `RISS`: integrated-search query plan, with detail-search syntax intentionally left configurable per endpoint
+- `RISS web`: paginated collection across thesis and journal result pages on `www.riss.kr`
+- `RISS sparql`: keyword-filtered SPARQL query against `data.riss.kr`
+- `RISS integrated`: parameter-only fallback for older endpoint mappings
 
 ## PRISMA flow endpoints
 
@@ -136,6 +148,12 @@ Otherwise it stores a heuristic fallback extraction with an attached quality ass
 - `OCR_COMMAND_TEMPLATE`
 - `OCR_TIMEOUT_SECONDS`
 - `OCR_MIN_TEXT_LENGTH`
+
+## Environment loading
+
+`backend/.env` is loaded automatically when `app.core.config` is imported. Existing process
+environment variables take precedence, so CI and production can still inject secrets and runtime
+settings without being overwritten by the file.
 
 Quick manual checks after `uvicorn app.main:app --reload`:
 
@@ -181,7 +199,7 @@ file and update the artifact to `available` when usable text is returned.
 
 ## Next work items
 
-- production-safe RISS field mapping
+- production validation of the RISS web-result parser and collection mapping
 - deployment validation for Alembic migrations
 - OCR execution pipeline and stronger PDF parsing
 

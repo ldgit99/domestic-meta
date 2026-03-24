@@ -71,9 +71,12 @@
 - rerunning a search clears prior candidates, decisions, PRISMA counts, artifacts, extraction results, and extraction revision history for that search
 - `KCI` live collection is attempted only when configured; otherwise the service falls back to stub data
 - `RISS` live collection is attempted only when configured; otherwise the service falls back to stub data
+- the default `RISS` live mode uses the real `www.riss.kr` result pages and paginates by collection
+- `RISS` can also run in `sparql` mode against `data.riss.kr` or `integrated` fallback mode for older mappings
 - document ingestion extracts text from TXT directly and from PDF through `pypdf` when available
 - failed or empty PDF extraction is persisted as `ocr_required`, which keeps the candidate in review until usable text exists
 - a configurable OCR command can be invoked later to update the stored artifact and candidate status
+- `backend/.env` is loaded automatically unless the same keys are already present in the process environment
 - manual screening immediately refreshes PRISMA counts and downstream review state
 - pipeline events are persisted for search creation, orchestration, manual review, OCR, and extraction transitions
 - PRISMA flow payloads are derived from persisted PRISMA counts plus exclusion reason counts
@@ -114,7 +117,7 @@
 - the dashboard resolves its API base from same-origin hosting by default and falls back to `http://127.0.0.1:8000/api` only under `file://`
 ## Next implementation targets
 
-- production-safe `RISS` response mapping
+- production validation of `RISS` web result parsing and field mapping
 - deployment validation and rollback procedures for Alembic-managed `PostgreSQL`
 - OCR pipeline and stronger PDF parsing
 - authentication and user-level isolation

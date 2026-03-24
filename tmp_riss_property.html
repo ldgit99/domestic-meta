@@ -1,0 +1,1373 @@
+﻿
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" type="text/css" href="css/reset.css" />               
+        <title>Property 설명</title>       
+        <script type='text/javascript' src='script/jquery-1.6.2.min.js'></script>
+        <script type='text/javascript' src='script/jquery.blockUI.js'></script>
+        <script type='text/javascript' src='script/sparql.js'></script>
+    </head>
+    <body id="abody">
+        <div id="skipnavi">
+            <dl>
+                <dt class="hiddenitem">바로가기 메뉴</dt>
+                <dd><a title="주메뉴 바로가기" href="#navi">메인메뉴 바로가기</a></dd>
+                <dd><a title="서브메뉴 바로가기" href="#leftMenu">서브메뉴 바로가기</a></dd>
+                <dd><a title="본문내용 바로가기" href="#contents">본문내용 바로가기</a></dd>
+                <dd><a title="하단바로가기" href="#footer">하단 바로가기</a></dd>
+            </dl>
+            <span class="hiddenitem"><a href="#contents">본문내용 바로가기</a></span>
+        </div><!--skipnavi-->
+        <!--skipnavi-->
+        
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<div id="quickMenu">
+    <ul>
+        <li><a href="/main.do" class="q1" title="Home"><span class="ir">Home</span></a></li>
+        <li><a href="/serviceHome.do" class="q2" title="Linked Data 활용서비스"><span class="ir">Linked Data 활용서비스</span></a></li>        
+        <li><a href="/LODintro.do" class="q3" title="RISS Linked Data"><span class="ir">RISS Linked Data</span></a></li>
+        <li><a href="/sparqlEndpoint.do" class="q4" title="SPARQL Endpoint" target="_blank"><span class="ir">SPARQL Endpoint</span></a></li>
+        <li><a href="/errorReport.do" target="_blank" title="LOD 오류신고" class="q6" href="#"><span class="ir">오류신고</span></a></li>
+        <li><a href="http://www.riss.kr/" class="q5" title="RISS" target="_blank"><span class="ir">RISS</span></a></li>
+    </ul>
+</div>
+  
+        <div id="wrap"><!--wrap--> 
+            
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<div id="header">
+    <div id="logo">
+        <div class="logo3" title="RISS"><a href="https://data.riss.kr" style="display: block;"><img src="https://data.riss.kr/images/service/main/nlogo2.png" alt="RISS Linked Open Data"/></a></div>
+        <div class="logo1"><img src="https://data.riss.kr/images/demon/sub/nlogo6.png" alt="발행서비스"/></div>
+    </div>
+</div>
+<div class="navi">
+    <h2 class="hiddenitem">메인메뉴</h2>
+    
+
+
+
+<script type="text/javascript" src="https://data.riss.kr/script/jquery.selectBox.js" ></script>
+<link rel="stylesheet" type="text/css" href="https://data.riss.kr/css/jquery.selectBox.css"/>
+
+<script>
+    $(document).ready(function() {        
+        if($('#sel').val() == 'null') {
+           $('#standard-dropdown').val('total').attr("selected", "selected");   
+        }
+
+//        $('#standard-dropdown').val($($('input:hidden').get(0)).val()).attr("selected", "selected");
+    
+        $('#standard-dropdown')
+                .selectBox({
+            mobile: true
+        })
+                .focus(function() {
+            $('#console').append('Focus on ' + $(this).attr('name') + '<br />');
+//            $('#console')[0].scrollTop = $('#console')[0].scrollHeight;
+        })
+                .blur(function() {
+            $('#console').append('Blur on ' + $(this).attr('name') + '<br />');
+//            $('#console')[0].scrollTop = $('#console')[0].scrollHeight;
+        })
+                .change(function() {
+            $('#console').append('Change on ' + $(this).attr('name') + ': ' + $(this).val() + '<br />');
+//            $('#console')[0].scrollTop = $('#console')[0].scrollHeight;
+        });
+        
+    });
+
+    $(function() {
+        $("#searchBtn").click(function() {          
+            //특수문자 방지
+            var re = /[~!@\#$%<>^&*\()\-=+_\']/gi; //특수문자 정규식 변수 선언
+            var blank_pattern = /^\s+|\s+$/g;
+             if(re.test($("#searchWrd").val())){
+                alert("특수문자는 입력하실수 없습니다.");
+                return false;
+            }       
+            
+            if ($("#searchWrd").val().replace(blank_pattern, "") == "" || $("#searchWrd").val() == "") {
+                alert("키워드를 입력하세요.");
+                return false;    
+            }                
+        
+            if ($('#standard-dropdown option:selected').val() == "foreignArticle") {                         
+                $("#searchFrm").attr("action", "/ForeignArticleSearch.do");
+            } else if ($('#standard-dropdown option:selected').val() == "foreignJournal") {
+                $("#searchFrm").attr("action", "/ForeignJournalSearch.do");
+            } else if ($('#standard-dropdown option:selected').val() == "book") {
+                $("#searchFrm").attr("action", "/lodBookSearch.do");
+            } else if ($('#standard-dropdown option:selected').val() == "thesis") {
+                $("#searchFrm").attr("action", "/lodThesisSearch.do");
+            }else { //total
+                $("#searchFrm").attr("action", "/lodSearch.do");
+            }
+            $("#searchFrm").submit();
+        });  
+   
+    });
+    
+    function blankCheck() {        
+                //특수문자 방지
+                var re = /[~!@x\#$%<>^&*\()\-=+_\']/gi; //특수문자 정규식 변수 선언
+                var blank_pattern = /^\s+|\s+$/g;
+                 if(re.test($("#searchWrd").val())){
+                    alert("특수문자는 입력하실수 없습니다.");
+                    return;
+                }       
+
+                if ($("#searchWrd").val().replace(blank_pattern, "") == "" || $("#searchWrd").val() == "" ) {
+                    alert("키워드를 입력하세요.");
+                    return;    
+                }
+               if ($('#standard-dropdown option:selected').val() == "foreignArticle") {
+                    $("#searchFrm").attr("action", "/ForeignArticleSearch.do");
+                } else if ($('#standard-dropdown option:selected').val() == "foreignJournal") {
+                    $("#searchFrm").attr("action", "/ForeignJournalSearch.do");
+                } else if ($('#standard-dropdown option:selected').val() == "book") {
+                    $("#searchFrm").attr("action", "/lodBookSearch.do");
+                }else if ($('#standard-dropdown option:selected').val() == "thesis") {
+                    $("#searchFrm").attr("action", "/lodThesisSearch.do");
+                } else { //total
+                    $("#searchFrm").attr("action", "/lodSearch.do");
+                }
+                $("#searchFrm").submit();
+    }
+    function search(event) { 
+	    if(event.keyCode==13)
+	    {
+	    	blankCheck();
+	    }	
+	}
+</script>              
+<ul>
+    <li class="dnvli1"><a href="/LODintro.do" title="소개 및 구축방법" class="dnv1"><img src="/images/default/navi1.png" alt="소개 및 구축방법" /></a></li>
+    <li class="dnvli2"><a href="/marctoRDF.do" title="Marc to RDF매핑 규칙" class="dnv2"><img src="/images/default/navi2.png" alt="Marc to RDF매핑 규칙" /></a></li>
+    <li class="dnvli3"><a href="/ontoModel.do" title="온톨로지모델" class="dnv3"><img src="/images/default/navi3.png" alt="온톨로지모델" /></a></li>
+    <li class="dnvli4"><a href="/dataNavigation.do" title="데이터네비게이션" class="dnv4"><img src="/images/default/navi4.png" alt="데이터네비게이션" /></a></li>
+    <li class="dnvli5"><a href="/sparqlEndpoint.do" title="SPARQL EndPoint" class="dnv5"><img src="/images/default/navi5.png" alt="SPARQL EndPoint" /></a></li>
+    <li class="dnvli6"><a href="/download.do" title="Download" class="dnv6"><img src="/images/default/navi6.png" alt="Download" /></a></li>
+</ul>
+<div class="subSearch">
+    <div class="srhform">        
+        <select id = "standard-dropdown" name="standard-dropdown" class="custom-class1 custom-class2" >
+            <option value="total">전체</option>
+            <option value="book">단행본</option>
+            <option value="thesis">학위논문</option>
+            <option value="foreignJournal">해외학술지</option>
+            <option value="foreignArticle">해외학술논문</option>
+        </select>    
+        <input type="hidden" name="sel" id = "sel" value="null" />
+        <form id="searchFrm" action="javascript:blankCheck();">
+            <fieldset>
+                <legend>통합겁색 폼</legend>
+                <label class="hiddenitem">검색조건 입력</label>
+                <input type="text" name="searchWrd" title="검색어 입력" class="subsearchtxt" id="searchWrd" value="" onkeydown="javascript:search(event);"/>
+                </div>
+                <img src="/images/demon/sub/sbsh_btn.png" alt="검색" class="subsearchbtn" id="searchBtn" />
+            </fieldset>
+        </form>            
+    </div>
+    <script>
+        $('#standard-dropdown').val($($('input:hidden[name="sel"]').get(0)).val()).attr("selected", "selected");
+    </script>
+    <!--subSearch--> 
+</div>
+<!--메인메뉴-->
+            
+            <!--header-->
+            <div id="contents">
+                <div id="leftcon" class="dleft">
+                    <h2 class="hiddenitem">왼쪽메뉴</h2>
+                    <ul class="leftmenu">
+                        <li><a href="/sparqlEndpoint.do" title="SPARQL Endpoint">SPARQL Endpoint</a></li>
+                        <!--<li><a href="#" title="SPARQL 도움말" id="help">SPARQL 도움말</a></li>-->
+                        <li><a href="/userguide.do" title="SPARQL 도움말" id="help">SPARQL 도움말</a></li>
+                        <li><a href="/explanProperty.do" title="Property 설명">Property 설명</a></li>
+                    </ul>
+                </div>
+                    <div id="rightcon" class="dright"> 
+                <!--내용시작-->
+		<h3 class="h3_5_2">SPARQL 설명</h3>
+                <div class="section intsection">
+                <div class="introsection">
+<table width="0" cellspacing="0" cellpadding="0" border="1" summary="" class="table1 table2">
+<caption>
+property info
+</caption>
+<colgroup>
+<col width="15%"/>
+<col width="17%"/>
+<col width="*"/>
+</colgroup>
+<thead>
+  <tr>
+    <th scope="col">Property</th>
+    <th scope="col">Property 유형</th>
+    <th scope="col">설명</th>
+  </tr>
+</thead>
+<tbody>
+    <tr>
+  <td class="lf">bibo:annotates</td>
+  <td>Data property</td>
+  <td class="lf">서지 등 주기</td>
+</tr>
+<tr>
+  <td class="lf">bibo:coden</td>
+  <td>Data property</td>
+  <td class="lf">코덴부호(CODEN부호)</td>
+</tr>
+<tr>
+  <td class="lf">bibo:degree</td>
+  <td>Data property</td>
+  <td class="lf">학위논문주기 - 학위논문의 종류</td>
+</tr>
+<tr>
+  <td class="lf">bibo:edition</td>
+  <td>Data property</td>
+  <td class="lf">권․연차, 연월차 사항 - 권․연차 또는 발행년 표시 </td>
+</tr>
+<tr>
+  <td class="lf">bibo:isbn</td>
+  <td>Data property</td>
+  <td class="lf">국제표준도서번호</td>
+</tr>
+<tr>
+  <td class="lf">bibo:issn</td>
+  <td>Data property</td>
+  <td class="lf">국제표준연속간행물번호</td>
+</tr>
+<tr>
+  <td class="lf">bibo:number</td>
+  <td>Data property</td>
+  <td class="lf">판사항 - 판표시</td>
+</tr>
+<tr>
+  <td class="lf">bibo:volume</td>
+  <td>Data property</td>
+  <td class="lf">표제와 책임표시사항 - 권차 또는 편차</td>
+</tr>
+<tr>
+  <td class="lf">dc:date</td>
+  <td>Data property</td>
+  <td class="lf">발행년, 배포년 등</td>
+</tr>
+<tr>
+  <td class="lf">dc:description</td>
+  <td>Data property</td>
+  <td class="lf">일반주기</td>
+</tr>
+<tr>
+  <td class="lf">dc:format</td>
+  <td>Data property</td>
+  <td class="lf">자료유형표시 </td>
+</tr>
+<tr>
+  <td class="lf">dc:identifier</td>
+  <td>Data property</td>
+  <td class="lf">제어번호</td>
+</tr>
+<tr>
+  <td class="lf">dc:language</td>
+  <td>Data property</td>
+  <td class="lf">언어부호 - 본문언어 / 음성녹음대(sound track) 언어</td>
+</tr>
+<tr>
+  <td class="lf">dc:relation</td>
+  <td>Data property</td>
+  <td class="lf">동시발간저록 - 판차</td>
+</tr>
+<tr>
+  <td class="lf">dc:source</td>
+  <td>Data property</td>
+  <td class="lf">판차</td>
+</tr>
+<tr>
+  <td class="lf">dc:title</td>
+  <td>Data property</td>
+  <td class="lf">표제와 책임표시사항 - 본표제</td>
+</tr>
+<tr>
+  <td class="lf">dc:type</td>
+  <td>Data property</td>
+  <td class="lf">Type</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:abstract</td>
+  <td>Data property</td>
+  <td class="lf">요약 등 주기</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:accessRights</td>
+  <td>Data property</td>
+  <td class="lf">이용제한주기 - 이용제한사항</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:alternative</td>
+  <td>Data property</td>
+  <td class="lf">기본표목 - 통일표제 - 통일표제</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:date</td>
+  <td>Data property</td>
+  <td class="lf">발행, 배포, 간사사항 - 발행년, 배포년 등</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:description</td>
+  <td>Data property</td>
+  <td class="lf">일반주기</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:extent</td>
+  <td>Data property</td>
+  <td class="lf">형태사항 - 특정자료종별과 수량</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:format</td>
+  <td>Data property</td>
+  <td class="lf">표제와 책임표시사항 - 자료유형표시</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:hasFormat</td>
+  <td>Data property</td>
+  <td class="lf">기타형태저록 - 판차</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:hasPart</td>
+  <td>Data property</td>
+  <td class="lf">하위총서저록 - 표제</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:hasVersion</td>
+  <td>Data property</td>
+  <td class="lf">이판저록 - 판차</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:isPartOf</td>
+  <td>Data property</td>
+  <td class="lf">상위총서저록 - 표제</td>
+</tr>
+<tr>
+  <td class="lf">dbpprop:followedBy</td>
+  <td>Data property</td>
+  <td class="lf">후속저록 - 판차</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:isVersionOf</td>
+  <td>Data property</td>
+  <td class="lf">표제와 책임표시사항 - 판(version)</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:modified</td>
+  <td>Data property</td>
+  <td class="lf">최종 처리일시</td>
+</tr>
+<tr>
+  <td class="lf">dbpprop:precededBy</td>
+  <td>Data property</td>
+  <td class="lf">선행저록 - 판차</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:requires</td>
+  <td>Data property</td>
+  <td class="lf">시스템사항에 관한 주기 - 시스템에 관한 사항</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:source</td>
+  <td>Data property</td>
+  <td class="lf">데이터의 정보원 저록 - 판차</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:spatial</td>
+  <td>Data property</td>
+  <td class="lf">주제명부출표목-지명 - 지명(地名)</td>
+</tr>
+<tr>
+  <td class="lf">event:place</td>
+  <td>Data property</td>
+  <td class="lf">기본표목 - 회의명 - 회의장소</td>
+</tr>
+<tr>
+  <td class="lf">event:time</td>
+  <td>Data property</td>
+  <td class="lf">기본표목 - 회의명 - 회의일자</td>
+</tr>
+<tr>
+  <td class="lf">foaf:givenName</td>
+  <td>Data property</td>
+  <td class="lf">기본표목-개인명 - 이름과 관련 정보 (직위, 칭호 및 기타 명칭. 역조(歷朝), 국명(國名), 한국 및 중국의 세계(世系)</td>
+</tr>
+<tr>
+  <td class="lf">foaf:homepage</td>
+  <td>Data property</td>
+  <td class="lf">홈페이지</td>
+</tr>
+<tr>
+  <td class="lf">foaf:img</td>
+  <td>Data property</td>
+  <td class="lf">이미지</td>
+</tr>
+<tr>
+  <td class="lf">foaf:mbox</td>
+  <td>Data property</td>
+  <td class="lf">Creator.Corporatename.EMAIL</td>
+</tr>
+<tr>
+  <td class="lf">foaf:name</td>
+  <td>Data property</td>
+  <td class="lf">개인명</td>
+</tr>
+<tr>
+  <td class="lf">foaf:suffixName</td>
+  <td>Data property</td>
+  <td class="lf">기본표목-개인명 - 이름(名)에 포함되어 세계(世系)를 칭하는 숫자</td>
+</tr>
+<tr>
+  <td class="lf">geonames:latitude</td>
+  <td>Data property</td>
+  <td class="lf">위도</td>
+</tr>
+<tr>
+  <td class="lf">geonames:longitude</td>
+  <td>Data property</td>
+  <td class="lf">경도</td>
+</tr>
+<tr>
+  <td class="lf">keris:addForm</td>
+  <td>Data property</td>
+  <td class="lf">이용가능한 다른 형태자료 주기 - 이용가능한 다른 형태자료</td>
+</tr>
+<tr>
+  <td class="lf">keris:addMaterial</td>
+  <td>Data property</td>
+  <td class="lf">부호화정보필드 - 부가적자료특성</td>
+</tr>
+<tr>
+  <td class="lf">keris:affilation</td>
+  <td>Data property</td>
+  <td class="lf">Creator.Personalname.Affiliation</td>
+</tr>
+<tr>
+  <td class="lf">schema:author</td>
+  <td>Data property</td>
+  <td class="lf">기본표복 - 개인명(성과 이름)</td>
+</tr>
+<tr>
+  <td class="lf">keris:awardsNote</td>
+  <td>Data property</td>
+  <td class="lf">수상 주기 - 수상주기</td>
+</tr>
+<tr>
+  <td class="lf">keris:bulkDates</td>
+  <td>Data property</td>
+  <td class="lf">표제와 책임표시사항 - 수집된 자료 중 대다수 자료의 포괄연도(Bulk dates)</td>
+</tr>
+<tr>
+  <td class="lf">keris:calssificationSource</td>
+  <td>Data property</td>
+  <td class="lf">기타 분류기호 - 분류기호의 정보원</td>
+</tr>
+<tr>
+  <td class="lf">keris:captionLanguage</td>
+  <td>Data property</td>
+  <td class="lf">언어부호 - 요약문언어 / 자막의 언어</td>
+</tr>
+<tr>
+  <td class="lf">keris:cip</td>
+  <td>Data property</td>
+  <td class="lf">출판시도서목록제어번호 - 출판시도서목록(CIP)제어번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:cip_cancel</td>
+  <td>Data property</td>
+  <td class="lf">출판시도서목록제어번호 - 취소/사용하지 않는 출판시도서목록(CIP)제어번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:classItemNo</td>
+  <td>Data property</td>
+  <td class="lf">자관 청구기호 - 도서기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:coden_cancel</td>
+  <td>Data property</td>
+  <td class="lf">코덴부호 - 취소/사용하지 않는 CODEN부호</td>
+</tr>
+<tr>
+  <td class="lf">keris:collection_parallelTitle</td>
+  <td>Data property</td>
+  <td class="lf">총서사항/부출표목-표제 - 대등총서표제</td>
+</tr>
+<tr>
+  <td class="lf">keris:collectionDescription</td>
+  <td>Data property</td>
+  <td class="lf">총서사항/부출되지 않거나 다르게 부출되는 총서표제 - 총서사항</td>
+</tr>
+<tr>
+  <td class="lf">keris:collectionIssn</td>
+  <td>Data property</td>
+  <td class="lf">총서사항/부출표목-표제 - ISSN</td>
+</tr>
+<tr>
+  <td class="lf">keris:collectionNo</td>
+  <td>Data property</td>
+  <td class="lf">총서부출표목-개인명 - 권차/순차표시</td>
+</tr>
+<tr>
+  <td class="lf">keris:collectionNumber</td>
+  <td>Data property</td>
+  <td class="lf">총서사항/부출표목-표제 - 총서번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:collectionTitle</td>
+  <td>Data property</td>
+  <td class="lf">총서사항/부출표목-표제 - 총서의 편(part)제</td>
+</tr>
+<tr>
+  <td class="lf">keris:collectionVolume</td>
+  <td>Data property</td>
+  <td class="lf">총서사항/부출표목-표제 - 총서의 편(part)차</td>
+</tr>
+<tr>
+  <td class="lf">keris:collectionWorkForm</td>
+  <td>Data property</td>
+  <td class="lf">총서부출표목-개인명 - 저작의 편제</td>
+</tr>
+<tr>
+  <td class="lf">keris:collectionWorkNo</td>
+  <td>Data property</td>
+  <td class="lf">총서부출표목-개인명 - 책․권차, 편차</td>
+</tr>
+<tr>
+  <td class="lf">keris:collectionWorkYear</td>
+  <td>Data property</td>
+  <td class="lf">총서부출표목-개인명 - 저작 연도</td>
+</tr>
+<tr>
+  <td class="lf">keris:compositionForm</td>
+  <td>Data property</td>
+  <td class="lf">작곡형식부호</td>
+</tr>
+<tr>
+  <td class="lf">keris:conference</td>
+  <td>Data property</td>
+  <td class="lf">Source.Conferencetitle</td>
+</tr>
+<tr>
+  <td class="lf">keris:conferenceDate</td>
+  <td>Data property</td>
+  <td class="lf">Source.Conferencedate</td>
+</tr>
+<tr>
+  <td class="lf">keris:conferenceVenue</td>
+  <td>Data property</td>
+  <td class="lf">Source.Conferencevenue</td>
+</tr>
+<tr>
+  <td class="lf">keris:copyright</td>
+  <td>Data property</td>
+  <td class="lf">저작권등록번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:copyrightFee</td>
+  <td>Data property</td>
+  <td class="lf">저작권료부호</td>
+</tr>
+<tr>
+  <td class="lf">keris:copyrightNum</td>
+  <td>Data property</td>
+  <td class="lf">저작권등록번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:copyrightOrg</td>
+  <td>Data property</td>
+  <td class="lf">저작권등록번호 - 번호부여기관</td>
+</tr>
+<tr>
+  <td class="lf">dbpprop:country</td>
+  <td>Data property</td>
+  <td class="lf">발행/제작국명 부호</td>
+</tr>
+<tr>
+  <td class="lf">keris:createdBy</td>
+  <td>Data property</td>
+  <td class="lf">발행, 배포, 간사사항 - 제작처 또는 인쇄처</td>
+</tr>
+<tr>
+  <td class="lf">schema:dateCreated</td>
+  <td>Data property</td>
+  <td class="lf">발행, 배포, 간사사항 - 제작년 또는 인쇄년</td>
+</tr>
+<tr>
+  <td class="lf">keris:createdPlace</td>
+  <td>Data property</td>
+  <td class="lf">발행, 배포, 간사사항 - 제작지 또는 인쇄지</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:DDCItemNo</td>
+  <td>Data property</td>
+  <td class="lf">듀이십진분류기호 - 도서기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:degreeMajor</td>
+  <td>Data property</td>
+  <td class="lf">학위논문주기 - 학과 및 전공</td>
+</tr>
+<tr>
+  <td class="lf">keris:degreeOrgnization</td>
+  <td>Data property</td>
+  <td class="lf">학위논문주기 - 학위수여기관</td>
+</tr>
+<tr>
+  <td class="lf">keris:degreeYear</td>
+  <td>Data property</td>
+  <td class="lf">학위논문주기 - 학위수여연도</td>
+</tr>
+<tr>
+  <td class="lf">keris:editOfDDC</td>
+  <td>Data property</td>
+  <td class="lf">듀이십진분류기호 - 판표시</td>
+</tr>
+<tr>
+  <td class="lf">keris:editOfKDC</td>
+  <td>Data property</td>
+  <td class="lf">한국십진분류기호 - 판표시</td>
+</tr>
+<tr>
+  <td class="lf">keris:editOfUDC</td>
+  <td>Data property</td>
+  <td class="lf">국제십진분류기호 - 판표시</td>
+</tr>
+<tr>
+  <td class="lf">keris:etc_Calssification</td>
+  <td>Data property</td>
+  <td class="lf">기타 분류기호 - 기타 분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:etc_identifier</td>
+  <td>Data property</td>
+  <td class="lf">기타 표준부호 - 표준부호</td>
+</tr>
+<tr>
+  <td class="lf">keris:etcItemNo</td>
+  <td>Data property</td>
+  <td class="lf">기타 분류기호 - 도서기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:eventTitle</td>
+  <td>Data property</td>
+  <td class="lf">총서부출표목-회의명 - 회차표제</td>
+</tr>
+<tr>
+  <td class="lf">keris:exhibitionNote</td>
+  <td>Data property</td>
+  <td class="lf">전시 주기</td>
+</tr>
+<tr>
+  <td class="lf">keris:firstMarcCreator</td>
+  <td>Data property</td>
+  <td class="lf">목록작성기관 - 최초 목록작성기관</td>
+</tr>
+<tr>
+  <td class="lf">keris:form</td>
+  <td>Data property</td>
+  <td class="lf">표제와 책임표시사항 - 형식</td>
+</tr>
+<tr>
+  <td class="lf">keris:frequency</td>
+  <td>Data property</td>
+  <td class="lf">현재 간행빈도 - 현재 간행빈도</td>
+</tr>
+<tr>
+  <td class="lf">keris:geoDetail</td>
+  <td>Data property</td>
+  <td class="lf">지리분류기호 - 지리분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:geography</td>
+  <td>Data property</td>
+  <td class="lf">지역부호 - 지역구분부호</td>
+</tr>
+<tr>
+  <td class="lf">keris:geoName</td>
+  <td>Data property</td>
+  <td class="lf">지리분류기호 - 거주지명</td>
+</tr>
+<tr>
+  <td class="lf">keris:governmentDocu</td>
+  <td>Data property</td>
+  <td class="lf">정부문서분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:governmentName</td>
+  <td>Data property</td>
+  <td class="lf">정부문서분류기호 - 정부기관부호 또는 기관명</td>
+</tr>
+<tr>
+  <td class="lf">keris:gpo</td>
+  <td>Data property</td>
+  <td class="lf">정부간행물번호(GPRN/GPO Item Number) - 미국정부간행물(GPO)번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:gprn</td>
+  <td>Data property</td>
+  <td class="lf">정부간행물번호(GPRN/GPO Item Number) - 한국정부간행물 발간등록번호 (GPRN)</td>
+</tr>
+<tr>
+  <td class="lf">keris:hasgeoPart</td>
+  <td>Data property</td>
+  <td class="lf">지리분류기호 - 하위지역 지리 분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:inclusiveDates</td>
+  <td>Data property</td>
+  <td class="lf">표제와 책임표시사항 - 수집된 자료의 전체 포괄연도(Inclusive dates)</td>
+</tr>
+<tr>
+  <td class="lf">keris:instruments</td>
+  <td>Data property</td>
+  <td class="lf">악기나 성악부호 - 연주자 또는 앙상블</td>
+</tr>
+<tr>
+  <td class="lf">keris:interval</td>
+  <td>Data property</td>
+  <td class="lf">Type.Interval</td>
+</tr>
+<tr>
+  <td class="lf">keris:intervalOfEvent</td>
+  <td>Data property</td>
+  <td class="lf">기본표목 - 회의명 - 분과 및 부회 회의 회차</td>
+</tr>
+<tr>
+  <td class="lf">keris:isbn_cancel</td>
+  <td>Data property</td>
+  <td class="lf">국제표준도서번호 - 취소/사용하지 않는 국제표준도서번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:followedByISSN</td>
+  <td>Data property</td>
+  <td class="lf">후속저록 - 국제표준연속간행물번호(ISSN)</td>
+</tr>
+<tr>
+  <td class="lf">keris:issn_cancel</td>
+  <td>Data property</td>
+  <td class="lf">국제표준연속간행물번호 - 취소된 국제표준연속간행물번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:issn_incorrect</td>
+  <td>Data property</td>
+  <td class="lf">국제표준연속간행물번호 - 부정확한 국제표준연속간행물번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:kdcItemNo</td>
+  <td>Data property</td>
+  <td class="lf">한국십진분류기호 - 도서기호</td>
+</tr>
+<tr>
+  <td class="lf">schema:inLanguage</td>
+  <td>Data property</td>
+  <td class="lf">언어주기</td>
+</tr>
+<tr>
+  <td class="lf">keris:lcshClassification</td>
+  <td>Data property</td>
+  <td class="lf">미국국회도서관 청구기호 - 분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:lcshNumber</td>
+  <td>Data property</td>
+  <td class="lf">미국국회도서관 청구기호 - 도서기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:libAddr</td>
+  <td>Data property</td>
+  <td class="lf">도서관주소</td>
+</tr>
+<tr>
+  <td class="lf">keris:libUrlName</td>
+  <td>Data property</td>
+  <td class="lf">도서관 홈페이지</td>
+</tr>
+<tr>
+  <td class="lf">keris:lifespan</td>
+  <td>Data property</td>
+  <td class="lf">기본표목-개인명 - 생몰년</td>
+</tr>
+<tr>
+  <td class="lf">keris:material</td>
+  <td>Data property</td>
+  <td class="lf">물리적 매체 유형 - 표면 재질</td>
+</tr>
+<tr>
+  <td class="lf">keris:materialType</td>
+  <td>Data property</td>
+  <td class="lf">Source.Materialtype</td>
+</tr>
+<tr>
+  <td class="lf">keris:musicLanguage</td>
+  <td>Data property</td>
+  <td class="lf">언어부호 - 가사의 언어</td>
+</tr>
+<tr>
+  <td class="lf">keris:nalClassification</td>
+  <td>Data property</td>
+  <td class="lf">미국국립농업도서관 청구기호 - 분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:nalNumber</td>
+  <td>Data property</td>
+  <td class="lf">미국국립농업도서관 청구기호 - 도서기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:nlkClassification</td>
+  <td>Data property</td>
+  <td class="lf">국립중앙도서관 청구기호 - 분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:nlkNumber</td>
+  <td>Data property</td>
+  <td class="lf">국립중앙도서관 청구기호 - 도서기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:nlmClassification</td>
+  <td>Data property</td>
+  <td class="lf">미국국립의학도서관청구기호 - 분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:nlmNumber</td>
+  <td>Data property</td>
+  <td class="lf">미국국립의학도서관청구기호 - 도서기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:originalCollection</td>
+  <td>Data property</td>
+  <td class="lf">원본주기 - 원본 총서사항</td>
+</tr>
+<tr>
+  <td class="lf">keris:originalDocu</td>
+  <td>Data property</td>
+  <td class="lf">원본주기 - 원본의 기본표목</td>
+</tr>
+<tr>
+  <td class="lf">keris:originalEdition</td>
+  <td>Data property</td>
+  <td class="lf">원본주기 - 원본 판사항</td>
+</tr>
+<tr>
+  <td class="lf">keris:originalFormat</td>
+  <td>Data property</td>
+  <td class="lf">원본주기 - 원본 형태사항</td>
+</tr>
+<tr>
+  <td class="lf">keris:originalISBN</td>
+  <td>Data property</td>
+  <td class="lf">원본주기 - 원본 ISBN</td>
+</tr>
+<tr>
+  <td class="lf">keris:originalISSN</td>
+  <td>Data property</td>
+  <td class="lf">원본주기 - 원본 ISSN</td>
+</tr>
+<tr>
+  <td class="lf">keris:originalPublishing</td>
+  <td>Data property</td>
+  <td class="lf">원본주기 - 원본 발행사항</td>
+</tr>
+<tr>
+  <td class="lf">keris:originLanguage</td>
+  <td>Data property</td>
+  <td class="lf">언어부호 - 원저작의 언어나 중역의 언어</td>
+</tr>
+<tr>
+  <td class="lf">keris:page</td>
+  <td>Data property</td>
+  <td class="lf">Format.Page</td>
+</tr>
+<tr>
+  <td class="lf">keris:parallelTitle</td>
+  <td>Data property</td>
+  <td class="lf">표제와 책임표시사항 - 대등표제</td>
+</tr>
+<tr>
+  <td class="lf">keris:partOfCollection</td>
+  <td>Data property</td>
+  <td class="lf">총서사항/부출표목-표제 - 총서표제</td>
+</tr>
+<tr>
+  <td class="lf">keris:patentNo</td>
+  <td>Data property</td>
+  <td class="lf">번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:peculiarNote</td>
+  <td>Data property</td>
+  <td class="lf">특수한 권차표시주기</td>
+</tr>
+<tr>
+  <td class="lf">keris:periodOfHeading</td>
+  <td>Data property</td>
+  <td class="lf">연대부호</td>
+</tr>
+<tr>
+  <td class="lf">keris:physicalFormat</td>
+  <td>Data property</td>
+  <td class="lf">형태기술필드</td>
+</tr>
+<tr>
+  <td class="lf">keris:player</td>
+  <td>Data property</td>
+  <td class="lf">연주자와 배역진주기</td>
+</tr>
+<tr>
+  <td class="lf">keris:playTime</td>
+  <td>Data property</td>
+  <td class="lf">재생/연주시간</td>
+</tr>
+<tr>
+  <td class="lf">keris:postalNum</td>
+  <td>Data property</td>
+  <td class="lf">우편물등기번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:producer</td>
+  <td>Data property</td>
+  <td class="lf">제작진주기</td>
+</tr>
+<tr>
+  <td class="lf">schema:publisher</td>
+  <td>Data property</td>
+  <td class="lf">발행, 배포, 간사사항 - 발행처, 배포처 등</td>
+</tr>
+<tr>
+  <td class="lf">library:placeOfPublication</td>
+  <td>Data property</td>
+  <td class="lf">발행, 배포, 간사사항 - 발행지, 배포지 등</td>
+</tr>
+<tr>
+  <td class="lf">keris:recording</td>
+  <td>Data property</td>
+  <td class="lf">녹음, 녹화, 음악관련 발행처번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:precededByInfo</td>
+  <td>Data property</td>
+  <td class="lf">선행저록 - 관계표시</td>
+</tr>
+<tr>
+  <td class="lf">keris:precededByISSN</td>
+  <td>Data property</td>
+  <td class="lf">선행저록 - 국제표준연속간행물번호(ISSN)</td>
+</tr>
+<tr>
+  <td class="lf">keris:reportNumber</td>
+  <td>Data property</td>
+  <td class="lf">보고서번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:ReproductNote</td>
+  <td>Data property</td>
+  <td class="lf">복제주기 - 복제형식</td>
+</tr>
+<tr>
+  <td class="lf">keris:role</td>
+  <td>Data property</td>
+  <td class="lf">Contributor.Corporatename.Role</td>
+</tr>
+<tr>
+  <td class="lf">keris:seriesAuthor</td>
+  <td>Data property</td>
+  <td class="lf">기본표목-개인명 - 개인명 (성과 이름)</td>
+</tr>
+<tr>
+  <td class="lf">keris:seriesNumber</td>
+  <td>Data property</td>
+  <td class="lf">상위총서저록 - 판차</td>
+</tr>
+<tr>
+  <td class="lf">keris:size</td>
+  <td>Data property</td>
+  <td class="lf">물리적 매체 유형 - 크기</td>
+</tr>
+<tr>
+  <td class="lf">keris:sourceCitation</td>
+  <td>Data property</td>
+  <td class="lf">Source.Citation</td>
+</tr>
+<tr>
+  <td class="lf">keris:sourceInterval</td>
+  <td>Data property</td>
+  <td class="lf">Source.Interval</td>
+</tr>
+<tr>
+  <td class="lf">keris:sourceOfAcquisition</td>
+  <td>Data property</td>
+  <td class="lf">입수처 - 재고번호/주문번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:sourceTitle</td>
+  <td>Data property</td>
+  <td class="lf">Source.Maintitle</td>
+</tr>
+<tr>
+  <td class="lf">keris:sourceType</td>
+  <td>Data property</td>
+  <td class="lf">Source.Type</td>
+</tr>
+<tr>
+  <td class="lf">keris:sourceVolume</td>
+  <td>Data property</td>
+  <td class="lf">Source.Volume</td>
+</tr>
+<tr>
+  <td class="lf">keris:sourceVolumeTitle</td>
+  <td>Data property</td>
+  <td class="lf">Source.Volumetitle</td>
+</tr>
+<tr>
+  <td class="lf">keris:strn</td>
+  <td>Data property</td>
+  <td class="lf">표준기술보고서번호 - 표준기술보고서번호(STRN)</td>
+</tr>
+<tr>
+  <td class="lf">keris:strn_cancel</td>
+  <td>Data property</td>
+  <td class="lf">표준기술보고서번호 - 취소/사용하지 않는 표준기술보고서번호</td>
+</tr>
+<tr>
+  <td class="lf">keris:subOrganization</td>
+  <td>Data property</td>
+  <td class="lf">하위기관</td>
+</tr>
+<tr>
+  <td class="lf">keris:subtitle</td>
+  <td>Data property</td>
+  <td class="lf">표제와 책임표시사항 - 표제관련정보</td>
+</tr>
+<tr>
+  <td class="lf">schema:about</td>
+  <td>Data property</td>
+  <td class="lf">여러 형태의 표제 - 기타정보</td>
+</tr>
+<tr>
+  <td class="lf">keris:titleOfVolume</td>
+  <td>Data property</td>
+  <td class="lf">표제와 책임표시사항 - 권제 또는 편제</td>
+</tr>
+<tr>
+  <td class="lf">keris:marcmodified</td>
+  <td>Data property</td>
+  <td class="lf">목록작성기관 - 수정기관</td>
+</tr>
+<tr>
+  <td class="lf">keris:translationDocu</td>
+  <td>Data property</td>
+  <td class="lf">번역저록 - 표제</td>
+</tr>
+<tr>
+  <td class="lf">keris:typeOfDataFile</td>
+  <td>Data property</td>
+  <td class="lf">컴퓨터파일과 데이터유형주기</td>
+</tr>
+<tr>
+  <td class="lf">keris:udcItemNo</td>
+  <td>Data property</td>
+  <td class="lf">국제십진분류기호 - 도서기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:univAddr</td>
+  <td>Data property</td>
+  <td class="lf">대학교 주소</td>
+</tr>
+<tr>
+  <td class="lf">keris:univUrlName</td>
+  <td>Data property</td>
+  <td class="lf">대학교 홈페이지</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:audience</td>
+  <td>Data property</td>
+  <td class="lf">이용대상자 주기 - 이용대상자</td>
+</tr>
+<tr>
+  <td class="lf">keris:withNote</td>
+  <td>Data property</td>
+  <td class="lf">합철주기 - 표제</td>
+</tr>
+<tr>
+  <td class="lf">keris:wordLanguage</td>
+  <td>Data property</td>
+  <td class="lf">언어부호 - 노래나 연설문의 언어</td>
+</tr>
+<tr>
+  <td class="lf">keris:workTitle</td>
+  <td>Data property</td>
+  <td class="lf">기본표목 - 개인명 - 저작의 표제</td>
+</tr>
+<tr>
+  <td class="lf">keris:workYear</td>
+  <td>Data property</td>
+  <td class="lf">기본표목-개인명 - 저작 연도</td>
+</tr>
+<tr>
+  <td class="lf">keris:role</td>
+  <td>Data property</td>
+  <td class="lf">Contributor.Corporatename.Role</td>
+</tr>
+<tr>
+  <td class="lf">owl:sameAs</td>
+  <td>Data property</td>
+  <td class="lf">미국국회도서관 제어번호</td>
+</tr>
+<tr>
+  <td class="lf">rdfs:label</td>
+  <td>Data property</td>
+  <td class="lf">기본표목-개인명 - 이름의 완전형</td>
+</tr>
+<tr>
+  <td class="lf">skos:changeNote</td>
+  <td>Data property</td>
+  <td class="lf">변경전 표제나 표제변동 - 본표제/간략표제</td>
+</tr>
+<tr>
+  <td class="lf">dc:contributor</td>
+  <td>Object property</td>
+  <td class="lf">Contributor.Personalname</td>
+</tr>
+<tr>
+  <td class="lf">dc:creator</td>
+  <td>Object property</td>
+  <td class="lf">저자</td>
+</tr>
+<tr>
+  <td class="lf">dc:publisher</td>
+  <td>Object property</td>
+  <td class="lf">발행처주기</td>
+</tr>
+<tr>
+  <td class="lf">dc:subject</td>
+  <td>Object property</td>
+  <td class="lf">주제범주부호(Subject Category Code)</td>
+</tr>
+<tr>
+  <td class="lf">keris:classification</td>
+  <td>Object property</td>
+  <td class="lf">자관 청구기호 - 분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:createBook</td>
+  <td>Object property</td>
+  <td class="lf">저작도서</td>
+</tr>
+<tr>
+  <td class="lf">keris:createJournal</td>
+  <td>Object property</td>
+  <td class="lf">저작학술지</td>
+</tr>
+<tr>
+  <td class="lf">dcterms:DDC</td>
+  <td>Object property</td>
+  <td class="lf">듀이십진분류기호 - 듀이십진분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:hasArticle</td>
+  <td>Object property</td>
+  <td class="lf">수록학술논문</td>
+</tr>
+<tr>
+  <td class="lf">keris:hasJournalOf</td>
+  <td>Object property</td>
+  <td class="lf">발행학술지</td>
+</tr>
+<tr>
+  <td class="lf">keris:hasSubjectOfBook</td>
+  <td>Object property</td>
+  <td class="lf">주제도서</td>
+</tr>
+<tr>
+  <td class="lf">keris:hasSubjectOfThesis</td>
+  <td>Object property</td>
+  <td class="lf">주제학위논문</td>
+</tr>
+<tr>
+  <td class="lf">keris:hasSubjectOfJournal</td>
+  <td>Object property</td>
+  <td class="lf">주제학술지</td>
+</tr>
+<tr>
+  <td class="lf">keris:heldBy</td>
+  <td>Object property</td>
+  <td class="lf">소장기관</td>
+</tr>
+<tr>
+  <td class="lf">keris:heldByLib</td>
+  <td>Object property</td>
+  <td class="lf">소장도서관</td>
+</tr>
+<tr>
+  <td class="lf">keris:heldByUniv</td>
+  <td>Object property</td>
+  <td class="lf">소장대학교</td>
+</tr>
+<tr>
+  <td class="lf">keris:holdBook</td>
+  <td>Object property</td>
+  <td class="lf">소장도서</td>
+</tr>
+<tr>
+  <td class="lf">keris:holdJournal</td>
+  <td>Object property</td>
+  <td class="lf">소장학술지</td>
+</tr>
+<tr>
+  <td class="lf">keris:KDC</td>
+  <td>Object property</td>
+  <td class="lf">한국십진분류기호</td>
+</tr>
+<tr>
+  <td class="lf">keris:LCC</td>
+  <td>Object property</td>
+  <td class="lf">미국 의회도서관 분류</td>
+</tr>
+<tr>
+  <td class="lf">keris:publishedBook</td>
+  <td>Object property</td>
+  <td class="lf">발행도서 </td>
+</tr>
+<tr>
+  <td class="lf">keris:publishedJournal</td>
+  <td>Object property</td>
+  <td class="lf">발행학술지</td>
+</tr>
+<tr>
+  <td class="lf">keris:publishedThesis</td>
+  <td>Object property</td>
+  <td class="lf">발행학위논문</td>
+</tr>
+<tr>
+  <td class="lf">keris:relatedUniversity</td>
+  <td>Object property</td>
+  <td class="lf">관련대학교</td>
+</tr>
+<tr>
+  <td class="lf">keris:UDC</td>
+  <td>Object property</td>
+  <td class="lf">국제십진분류기호 - 국제십진분류기호(UDC)</td>
+</tr>
+<tr>
+  <td class="lf">skos:broader</td>
+  <td>Object property</td>
+  <td class="lf">상위어</td>
+</tr>
+<tr>
+  <td class="lf">skos:hasTopConcept</td>
+  <td>Object property</td>
+  <td class="lf">주제어</td>
+</tr>
+<tr>
+  <td class="lf">skos:narrower</td>
+  <td>Object property</td>
+  <td class="lf">하위어</td>
+</tr>
+<tr>
+  <td class="lf">skos:related</td>
+  <td>Object property</td>
+  <td class="lf">연관어</td>
+</tr>
+<tr>
+  <td class="lf">skos:topConceptOf</td>
+  <td>Object property</td>
+  <td class="lf">주제유형</td>
+</tr>
+<tr>
+  <td class="lf">keris:creatorArticle</td>
+  <td>Object property</td>
+  <td class="lf">저작학술논문</td>
+</tr>    
+<tr>
+  <td class="lf">keris:creatorJournal</td>
+  <td>Object property</td>
+  <td class="lf">저작학술지</td>
+</tr>    
+<tr>
+  <td class="lf">keris:publishedArticle</td>
+  <td>Object property</td>
+  <td class="lf">발행학술논문</td>
+</tr>
+<tr>
+  <td class="lf">keris:contributorArticle</td>
+  <td>Object property</td>
+  <td class="lf">기여학술논문</td>
+</tr>
+<tr>
+  <td class="lf">keris:contributorJournal</td>
+  <td>Object property</td>
+  <td class="lf">기여학술지</td>
+</tr>
+</tbody>
+</table>    
+</div>
+                    </div>
+                <a href="#header" class="hiddenitem">위로가기</a>
+                </div>
+                <!--rightContents--> 
+            </div>
+            <!--contents--> 
+            
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<div id="footer" class="mfooter">
+	
+    <div class="infot">
+		<div class="flogo"><span class="ir">keris 한국교육학술정보원</span></div>
+		<address><img src="https://data.riss.kr/images/service/common/addrimg.png" alt="대구광역시 동구 동내로 64(동내동 1119) 고객센터 : 1599-3122"/></address>
+		<div class="siteinfo">
+			<a title="이용약관" onclick="popupWindow('http://www.riss.kr/etc/clause.html','clause',700,720);" href="#redirect">이용약관</a>
+			<a title="개인정보처리방침" onclick="popupWindow('http://www.riss.kr/etc/safe_policy.html','safe_policy',700,720);" href="#redirect"><strong>개인정보처리방침</strong></a>
+		    <a title="기관소개" target="_blank" href="http://www.keris.or.kr/intro/it_message.jsp">기관소개</a>
+	    </div>
+	    <p><span class="ir">Copyright(c)KERIS, All Right Reserved.</span></p>
+	    <div class="flogo1"><img src="https://data.riss.kr/images/service/common/ban_footer_link.gif" alt="교육부"/></div>
+	</div>
+</div> 
+<script type="text/javascript" src="https://wcs.naver.net/wcslog.js"></script> 
+<script type="text/javascript"> 
+	if(!wcs_add) var wcs_add = {}; 
+	wcs_add["wa"] = "75bb589de795d8"; wcs_do(); 
+</script>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-46060561-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+<!--[GA4] Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JYXYH17NZ8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-JYXYH17NZ8');
+</script> 
+            <!--footer-->
+        </div>
+        <!--wrap-->
+    </body>
+</html>
+

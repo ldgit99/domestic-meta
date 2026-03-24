@@ -1,0 +1,469 @@
+﻿
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" type="text/css" href="css/reset.css" />               
+        <title>SPARQL Endpoint</title>
+        <script type="text/javascript" src="script/jquery-1.6.2.min.js" ></script>        
+        <script type='text/javascript' src='script/jquery.blockUI.js'></script>
+        <script type='text/javascript' src='script/sparql.js'></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                var query;
+                $('#template').change(function() {
+                    $('#flag').val("none");   
+                    $('#dbpck').attr("checked", false);
+//                    $('#dbpck').attr("disabled", false);
+                    if ($('#template option:selected').val() == "SELECT") {
+                        //SELECT
+                        query = "SELECT * WHERE { \n "
+                                + "  <https://data.riss.kr/resource/Book/000009652329> ?p  ?o. \n"
+                                + "}";
+                    } else if ($("#template option:selected").val() == "CONSTRUCT") {
+                        //CONSTRUCT
+                        query = " PREFIX vCard: <http://www.w3.org/2001/vcard-rdf/3.0#> \n"
+                                + " PREFIX foaf: <http://xmlns.com/foaf/0.1/> \n"
+                                + " CONSTRUCT {  \n"
+                                + "   ?p vCard:FN ?o . \n"
+                                + " } \n"
+                                + " WHERE { \n"
+                                + "   <https://data.riss.kr/resource/Agent/000000040214> ?p ?o. \n"
+                                + " } \n";
+                    } else {
+                        //TEMPLATE
+                        query =  'SELECT ?objectproperty ?name WHERE { \n'
+                        	+ '   ?s a <http://xmlns.com/foaf/0.1/Agent>. \n'
+                        	+ '   ?s <http://purl.org/dc/elements/1.1/title> "이청준"^^xsd:string. \n'
+                        	+ '   ?s <http://data.riss.kr/ontology/createBook> ?objectproperty. \n'
+                        	+ '   ?objectproperty <http://data.riss.kr/ontology/heldByUniv> ?k. \n'
+                        	+ '   ?k <http://www.w3.org/2004/02/skos/core#prefLabel> "경희대학교"^^xsd:string. \n'
+                        	+ '   ?objectproperty <http://purl.org/dc/elements/1.1/title> ?name. \n'
+                        	+ ' } \n';
+                    }
+                    $('#userquary').val(query)
+                });
+                
+                $('#sparql1').click(function() {
+                    var sparql1 = 'SELECT ?제목 ?uri WHERE { \n'
+   + '   ?s a <http://xmlns.com/foaf/0.1/Agent>.\n'
+   + '   ?s <http://purl.org/dc/elements/1.1/title> "고은"^^xsd:string.\n'
+   + '   ?s <http://data.riss.kr/ontology/createBook> ?uri.\n'
+   + '   ?uri <http://purl.org/dc/elements/1.1/title> ?제목.\n'
++'}' ;
+                    $('#userquary').val(sparql1);
+                    $('#flag').val("none");       
+                    $('#dbpck').attr("checked", false);                    
+                });
+                
+                $('#sparql2').click(function() {
+                    var sparql2 = ' SELECT ?제목 ?uri WHERE { \n'
+                    	+ '   ?s a <http://www.w3.org/2004/02/skos/core#Concept>. \n'
+                    	+ '   ?s <http://www.w3.org/2004/02/skos/core#prefLabel> "중국사"^^xsd:string. \n'
+                    	+ '   ?s <http://data.riss.kr/ontology/hasSubjectOfBook> ?uri. \n'
+                    	+ '   ?uri <http://purl.org/dc/elements/1.1/title> ?제목. \n'
+                    	+ ' } \n'
+                    $('#userquary').val(sparql2);
+                    $('#flag').val("none");       
+                    $('#dbpck').attr("checked", false);                    
+                });
+                
+                $('#sparql3').click(function() {
+                    var sparql3 = ' SELECT ?제목 ?uri WHERE { \n'
+                    	+ '    ?s a <http://data.riss.kr/ontology/University>. \n'
+                    	+ '    ?s <http://www.w3.org/2004/02/skos/core#prefLabel> "서강대학교"^^xsd:string. \n'
+                    	+ '    ?s <http://data.riss.kr/ontology/holdBook> ?uri.  \n'  
+                    	+ '    ?uri <http://purl.org/dc/elements/1.1/subject> ?p. \n'
+                    	+ '    ?p <http://www.w3.org/2004/02/skos/core#prefLabel> "951.95 s"^^xsd:string. \n'
+                    	+ '    ?uri <http://purl.org/dc/elements/1.1/title> ?제목. \n'
+                    	+ ' } \n'
+
+                    $('#userquary').val(sparql3);
+                    $('#flag').val("none");       
+                    $('#dbpck').attr("checked", false);                    
+                });
+                
+                $('#sparql4').click(function() {
+                    var sparql4 = ' SELECT ?제목 ?uri WHERE { \n'
+                    	+ '   ?s a <http://data.riss.kr/ontology/ForeignJournal>. \n'
+                    	+ '   ?s <http://purl.org/dc/elements/1.1/title> "DICKENSIAN"^^xsd:string. \n'
+                    	+ '   ?s <http://data.riss.kr/ontology/hasArticle> ?uri. \n'
+                    	+ '   ?uri <http://purl.org/dc/elements/1.1/title> ?제목. \n'
+                    	+ ' } \n'
+                    $('#userquary').val(sparql4);
+                    $('#flag').val("none");       
+                    $('#dbpck').attr("checked", false);                    
+                });
+                
+                $('#sparql5').click(function() {
+                    var sparql5 =  'SELECT ?uri ?제목 WHERE { \n'
+                    	+ '   ?s a <http://xmlns.com/foaf/0.1/Agent>. \n'
+                    	+ '   ?s <http://www.w3.org/2004/02/skos/core#prefLabel> "이청준"^^xsd:string. \n'
+                    	+ '   ?s <http://data.riss.kr/ontology/createBook> ?uri. \n'
+                    	+ '   ?uri <http://data.riss.kr/ontology/heldByUniv> ?k. \n'
+                    	+ '   ?k <http://www.w3.org/2004/02/skos/core#prefLabel> "경희대학교"^^xsd:string. \n'
+                    	+ '   ?uri <http://purl.org/dc/elements/1.1/title> ?제목. \n'
+                    	+ ' } \n';
+                    $('#userquary').val(sparql5);
+                    $('#flag').val("none");       
+                    $('#dbpck').attr("checked", false);                    
+                });
+                
+                $('#sparql6').click(function() {
+                    var sparql6 =  ' SELECT ?uri ?제목 WHERE { \n'
+                    	+ '   ?uri a <http://purl.org/ontology/bibo/Thesis>. \n'
+                    	+ '   ?uri <http://purl.org/dc/elements/1.1/subject> ?o . \n'
+                    	+ '   ?o <http://www.w3.org/2004/02/skos/core#prefLabel> "430"^^xsd:string. \n'
+                    	+ '   ?uri <http://purl.org/dc/elements/1.1/title> ?제목 \n'
+                    	+ '} limit 10 \n'
+                    $('#userquary').val(sparql6);
+                    $('#flag').val("none");       
+                    $('#dbpck').attr("checked", false);                    
+                });
+                
+                
+                $('#dbpck').click(function(){                    
+                    if($('#dbpck').attr("checked")) {                        
+                        $('#flag').val("DBpedia");                        
+                    } else {
+                        $('#flag').val("none");                    
+                    }
+                });
+              
+            });
+        </script>
+        <script>
+        var c=0;
+        var t;
+        var timer_is_on=0;
+
+        function timedCount()
+          {
+            c=c+1;
+            t=setTimeout(function(){timedCount()},1000);
+            if(c > 29){
+                alert('시간이 초과하여 접속을 종료합니다.');
+                stopCount();
+            }
+          }
+
+        function doTimer()
+          {
+          if (!timer_is_on)
+            {
+            timer_is_on=1;
+            timedCount();
+            }
+          }
+
+        function stopCount()
+          {
+          $.unblockUI();    
+          clearTimeout(t);
+          timer_is_on=0;
+          c = 0;
+          }
+          
+        </script>
+    </head>
+    <body id="abody">
+        <div id="skipnavi">
+            <dl>
+                <dt class="hiddenitem">바로가기 메뉴</dt>
+                <dd><a title="주메뉴 바로가기" href="#navi">메인메뉴 바로가기</a></dd>
+                <dd><a title="서브메뉴 바로가기" href="#leftMenu">서브메뉴 바로가기</a></dd>
+                <dd><a title="본문내용 바로가기" href="#contents">본문내용 바로가기</a></dd>
+                <dd><a title="하단바로가기" href="#footer">하단 바로가기</a></dd>
+            </dl>
+            <span class="hiddenitem"><a href="#contents">본문내용 바로가기</a></span>
+        </div><!--skipnavi-->
+        <!--skipnavi-->
+        
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<div id="quickMenu">
+    <ul>
+        <li><a href="/main.do" class="q1" title="Home"><span class="ir">Home</span></a></li>
+        <li><a href="/serviceHome.do" class="q2" title="Linked Data 활용서비스"><span class="ir">Linked Data 활용서비스</span></a></li>        
+        <li><a href="/LODintro.do" class="q3" title="RISS Linked Data"><span class="ir">RISS Linked Data</span></a></li>
+        <li><a href="/sparqlEndpoint.do" class="q4" title="SPARQL Endpoint" target="_blank"><span class="ir">SPARQL Endpoint</span></a></li>
+        <li><a href="/errorReport.do" target="_blank" title="LOD 오류신고" class="q6" href="#"><span class="ir">오류신고</span></a></li>
+        <li><a href="http://www.riss.kr/" class="q5" title="RISS" target="_blank"><span class="ir">RISS</span></a></li>
+    </ul>
+</div>
+  
+        <div id="wrap"><!--wrap-->
+            
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<div id="header">
+    <div id="logo">
+        <div class="logo3" title="RISS"><a href="https://data.riss.kr" style="display: block;"><img src="https://data.riss.kr/images/service/main/nlogo2.png" alt="RISS Linked Open Data"/></a></div>
+        <div class="logo1"><img src="https://data.riss.kr/images/demon/sub/nlogo6.png" alt="발행서비스"/></div>
+    </div>
+</div>
+<div class="navi">
+    <h2 class="hiddenitem">메인메뉴</h2>
+    
+
+
+
+<script type="text/javascript" src="https://data.riss.kr/script/jquery.selectBox.js" ></script>
+<link rel="stylesheet" type="text/css" href="https://data.riss.kr/css/jquery.selectBox.css"/>
+
+<script>
+    $(document).ready(function() {        
+        if($('#sel').val() == 'null') {
+           $('#standard-dropdown').val('total').attr("selected", "selected");   
+        }
+
+//        $('#standard-dropdown').val($($('input:hidden').get(0)).val()).attr("selected", "selected");
+    
+        $('#standard-dropdown')
+                .selectBox({
+            mobile: true
+        })
+                .focus(function() {
+            $('#console').append('Focus on ' + $(this).attr('name') + '<br />');
+//            $('#console')[0].scrollTop = $('#console')[0].scrollHeight;
+        })
+                .blur(function() {
+            $('#console').append('Blur on ' + $(this).attr('name') + '<br />');
+//            $('#console')[0].scrollTop = $('#console')[0].scrollHeight;
+        })
+                .change(function() {
+            $('#console').append('Change on ' + $(this).attr('name') + ': ' + $(this).val() + '<br />');
+//            $('#console')[0].scrollTop = $('#console')[0].scrollHeight;
+        });
+        
+    });
+
+    $(function() {
+        $("#searchBtn").click(function() {          
+            //특수문자 방지
+            var re = /[~!@\#$%<>^&*\()\-=+_\']/gi; //특수문자 정규식 변수 선언
+            var blank_pattern = /^\s+|\s+$/g;
+             if(re.test($("#searchWrd").val())){
+                alert("특수문자는 입력하실수 없습니다.");
+                return false;
+            }       
+            
+            if ($("#searchWrd").val().replace(blank_pattern, "") == "" || $("#searchWrd").val() == "") {
+                alert("키워드를 입력하세요.");
+                return false;    
+            }                
+        
+            if ($('#standard-dropdown option:selected').val() == "foreignArticle") {                         
+                $("#searchFrm").attr("action", "/ForeignArticleSearch.do");
+            } else if ($('#standard-dropdown option:selected').val() == "foreignJournal") {
+                $("#searchFrm").attr("action", "/ForeignJournalSearch.do");
+            } else if ($('#standard-dropdown option:selected').val() == "book") {
+                $("#searchFrm").attr("action", "/lodBookSearch.do");
+            } else if ($('#standard-dropdown option:selected').val() == "thesis") {
+                $("#searchFrm").attr("action", "/lodThesisSearch.do");
+            }else { //total
+                $("#searchFrm").attr("action", "/lodSearch.do");
+            }
+            $("#searchFrm").submit();
+        });  
+   
+    });
+    
+    function blankCheck() {        
+                //특수문자 방지
+                var re = /[~!@x\#$%<>^&*\()\-=+_\']/gi; //특수문자 정규식 변수 선언
+                var blank_pattern = /^\s+|\s+$/g;
+                 if(re.test($("#searchWrd").val())){
+                    alert("특수문자는 입력하실수 없습니다.");
+                    return;
+                }       
+
+                if ($("#searchWrd").val().replace(blank_pattern, "") == "" || $("#searchWrd").val() == "" ) {
+                    alert("키워드를 입력하세요.");
+                    return;    
+                }
+               if ($('#standard-dropdown option:selected').val() == "foreignArticle") {
+                    $("#searchFrm").attr("action", "/ForeignArticleSearch.do");
+                } else if ($('#standard-dropdown option:selected').val() == "foreignJournal") {
+                    $("#searchFrm").attr("action", "/ForeignJournalSearch.do");
+                } else if ($('#standard-dropdown option:selected').val() == "book") {
+                    $("#searchFrm").attr("action", "/lodBookSearch.do");
+                }else if ($('#standard-dropdown option:selected').val() == "thesis") {
+                    $("#searchFrm").attr("action", "/lodThesisSearch.do");
+                } else { //total
+                    $("#searchFrm").attr("action", "/lodSearch.do");
+                }
+                $("#searchFrm").submit();
+    }
+    function search(event) { 
+	    if(event.keyCode==13)
+	    {
+	    	blankCheck();
+	    }	
+	}
+</script>              
+<ul>
+    <li class="dnvli1"><a href="/LODintro.do" title="소개 및 구축방법" class="dnv1"><img src="/images/default/navi1.png" alt="소개 및 구축방법" /></a></li>
+    <li class="dnvli2"><a href="/marctoRDF.do" title="Marc to RDF매핑 규칙" class="dnv2"><img src="/images/default/navi2.png" alt="Marc to RDF매핑 규칙" /></a></li>
+    <li class="dnvli3"><a href="/ontoModel.do" title="온톨로지모델" class="dnv3"><img src="/images/default/navi3.png" alt="온톨로지모델" /></a></li>
+    <li class="dnvli4"><a href="/dataNavigation.do" title="데이터네비게이션" class="dnv4"><img src="/images/default/navi4.png" alt="데이터네비게이션" /></a></li>
+    <li class="dnvli5"><a href="/sparqlEndpoint.do" title="SPARQL EndPoint" class="dnv5"><img src="/images/default/navi5.png" alt="SPARQL EndPoint" /></a></li>
+    <li class="dnvli6"><a href="/download.do" title="Download" class="dnv6"><img src="/images/default/navi6.png" alt="Download" /></a></li>
+</ul>
+<div class="subSearch">
+    <div class="srhform">        
+        <select id = "standard-dropdown" name="standard-dropdown" class="custom-class1 custom-class2" >
+            <option value="total">전체</option>
+            <option value="book">단행본</option>
+            <option value="thesis">학위논문</option>
+            <option value="foreignJournal">해외학술지</option>
+            <option value="foreignArticle">해외학술논문</option>
+        </select>    
+        <input type="hidden" name="sel" id = "sel" value="null" />
+        <form id="searchFrm" action="javascript:blankCheck();">
+            <fieldset>
+                <legend>통합겁색 폼</legend>
+                <label class="hiddenitem">검색조건 입력</label>
+                <input type="text" name="searchWrd" title="검색어 입력" class="subsearchtxt" id="searchWrd" value="" onkeydown="javascript:search(event);"/>
+                </div>
+                <img src="/images/demon/sub/sbsh_btn.png" alt="검색" class="subsearchbtn" id="searchBtn" />
+            </fieldset>
+        </form>            
+    </div>
+    <script>
+        $('#standard-dropdown').val($($('input:hidden[name="sel"]').get(0)).val()).attr("selected", "selected");
+    </script>
+    <!--subSearch--> 
+</div>
+<!--메인메뉴-->
+            
+            <!--header-->
+            <div id="contents">
+                <div id="leftcon" class="dleft">
+                    <h2 class="hiddenitem">왼쪽메뉴</h2>
+                    <ul class="leftmenu">
+                        <li><a href="sparqlEndpoint.do" title="SPARQL Endpoint">SPARQL Endpoint</a></li>
+                        <!--<li><a href="#" title="SPARQL 도움말" id="help">SPARQL 도움말</a></li>-->
+                        <li><a href="/userguide.do" title="SPARQL 도움말" id="help">SPARQL 도움말</a></li>
+                        <li><a href="/explanProperty.do" title="Property 설명">Property 설명</a></li>
+                    </ul>
+                </div>
+                <!--leftContents-->
+                <div id="rightcon" class="dright"> 
+                    <h3 class="h3_5"><span class="ir">SPARQL EndPoint</span></h3>
+                    <h4><strong class="sb">예제</strong></h4>
+                    <div class="section" style="width:700px !ie;"><!--ie hack-->
+                        <ul class="data_list2">
+                            <li><a href="#sparql6" title="" id="sparql6">한국십진분류기호(KDC) ‘430’ 주제로 발행한 학위논문</a></li>
+                            <li><a href="#sparql4" title="" id="sparql4">'DICKENSIAN' 학술지에 발행된 학술논문?</a></li>
+                            <li><a href="#sparql5" title="" id="sparql5">'이청준'이 집필한 도서 중 경희대학교에 소장하고 있는 도서?</a></li>
+                            <li><a href="#sparql3" title="" id="sparql3">'서강대학교'가 소장중인 도서 중 한국십진분류 '951.95 s'에 해당하는 도서?</a></li>
+                            <li><a href="#sparql2" title="" id="sparql2">'중국사'을 주제로 다루고 있는 도서?</a></li>
+                            <!-- <li><a href="#sparql1" title="" id="sparql1">'고은'이 집필한 도서?</a></li> -->
+                        </ul>
+                    </div>
+                    <h4><strong class="sb">Query</strong></h4>
+                    <div class="section" style="width:700px !ie;"><!--ie hack-->                
+                        <form name='sparqlForm' action='search.jsp' method='get' target='xml'>
+                            <input type="hidden" id="flag" name="flag" value=""/>
+                            <select name="template" class="template" id="template">
+                                <option  selected="selected">--TEMPLATE--</option>
+                                <option>SELECT</option>
+                                <option>CONSTRUCT</option>                                
+                            </select>
+                            <textarea name="txtQuery" id="userquary" rows="12" cols="101">
+    SELECT ?uri ?제목 WHERE { 
+   ?s a <http://xmlns.com/foaf/0.1/Agent>.
+   ?s <http://purl.org/dc/elements/1.1/title> "이청준"^^xsd:string.
+   ?s <http://data.riss.kr/ontology/createBook> ?uri.
+   ?uri <http://data.riss.kr/ontology/heldByUniv> ?k.
+   ?k <http://www.w3.org/2004/02/skos/core#prefLabel> "경희대학교"^^xsd:string.
+   ?uri <http://purl.org/dc/elements/1.1/title> ?제목.
+}
+                        </textarea>
+                    </form>
+                    <select  id="type" name="output" class="output">                        
+                        <option value='Html' selected="selected">HTML</option>
+                        <option value='Xml'>XML</option>
+                        <option value='Json'>JSON</option>                        
+                    </select>
+                    <input  id="schxml" type="image" src="images/demon/sub/result_btn.png" alt="Result" class="Result">
+                        <input  id="schxmldown" type="image" src="images/demon/sub/dwn_btn.png" alt="Download" class="Download">                 
+                            <input type='hidden' name='id' />
+                            <input type='hidden' name='q' />
+                            <span class="dbp">
+                                <label for="dbpck">DBpedia</label>
+                                <input type="checkbox" value="" id="dbpck" />
+                            </span>
+                            <p class="sqp">'DBpedia'를 직접 Query 하실 경우 DBpedia 데이터의 상태에 따라 시간이 지연될 수 있습니다.</p>
+                            </div>                
+                            <form id='downloadSparqlForm' name='downloadSparqlForm'>
+                                <input type='hidden' id='downloadQry' name='query' />
+                                <input type='hidden' id='download' name='download' />
+                                <input type='hidden' id='type' name='type' />
+                            </form>
+                            <h4><strong class="sb">Query 결과</strong></h4>
+                            <div class="section"  id='schxmlview' style="width:700px !ie;"><!--ie hack-->
+                                <textarea class="viewResult" rows="12" cols="101"></textarea>
+                            </div>
+                            <a href="#header" class="hiddenitem">위로가기</a>
+                            </div>
+                            <!--rightContents--> 
+                            </div>
+                            <!--contents--> 
+                            
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<div id="footer" class="mfooter">
+	
+    <div class="infot">
+		<div class="flogo"><span class="ir">keris 한국교육학술정보원</span></div>
+		<address><img src="https://data.riss.kr/images/service/common/addrimg.png" alt="대구광역시 동구 동내로 64(동내동 1119) 고객센터 : 1599-3122"/></address>
+		<div class="siteinfo">
+			<a title="이용약관" onclick="popupWindow('http://www.riss.kr/etc/clause.html','clause',700,720);" href="#redirect">이용약관</a>
+			<a title="개인정보처리방침" onclick="popupWindow('http://www.riss.kr/etc/safe_policy.html','safe_policy',700,720);" href="#redirect"><strong>개인정보처리방침</strong></a>
+		    <a title="기관소개" target="_blank" href="http://www.keris.or.kr/intro/it_message.jsp">기관소개</a>
+	    </div>
+	    <p><span class="ir">Copyright(c)KERIS, All Right Reserved.</span></p>
+	    <div class="flogo1"><img src="https://data.riss.kr/images/service/common/ban_footer_link.gif" alt="교육부"/></div>
+	</div>
+</div> 
+<script type="text/javascript" src="https://wcs.naver.net/wcslog.js"></script> 
+<script type="text/javascript"> 
+	if(!wcs_add) var wcs_add = {}; 
+	wcs_add["wa"] = "75bb589de795d8"; wcs_do(); 
+</script>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-46060561-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+<!--[GA4] Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JYXYH17NZ8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-JYXYH17NZ8');
+</script> 
+                            <!--footer-->
+                            </div>
+                            <!--wrap-->
+                            </body>
+                            </html>
+

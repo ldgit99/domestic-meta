@@ -1,0 +1,34 @@
+﻿<?xml version='1.0'?><sparql xmlns='http://www.w3.org/2005/sparql-results#'>
+	<head>
+		<variable name="URI"/>
+		<variable name="TITLE"/>
+	</head>
+	<results>
+		<result>
+			<binding name="URI">
+				<uri>https://data.riss.kr/resource/Thesis/000000002155</uri>
+			</binding>
+			<binding name="TITLE">
+				<literal datatype='http://www.w3.org/2001/XMLSchema#string'><![CDATA[Gretchen 悲劇의 意義:Faust 救濟와의 關聯에서]]></literal>
+			</binding>
+		</result>
+		<result>
+			<binding name="URI">
+				<uri>https://data.riss.kr/resource/Thesis/000000010876</uri>
+			</binding>
+			<binding name="TITLE">
+				<literal datatype='http://www.w3.org/2001/XMLSchema#string'><![CDATA[남북한 초·중등 과학 교과서의 화학 내용 비교]]></literal>
+			</binding>
+		</result>
+		<result>
+			<binding name="URI">
+				<uri>https://data.riss.kr/resource/Thesis/000000017180</uri>
+			</binding>
+			<binding name="TITLE">
+				<literal datatype='http://www.w3.org/2001/XMLSchema#string'><![CDATA[獨逸語의 音素'r'와 그 Realisation]]></literal>
+			</binding>
+		</result>
+	</results>
+</sparql>
+
+

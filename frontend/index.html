@@ -1,20 +1,27 @@
-﻿<!DOCTYPE html>
-<html lang="ko">
+<!DOCTYPE html>
+<html lang='ko'>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>교육학 메타분석 AI 워크스페이스</title>
+  <meta charset='UTF-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+  <title>교육학 메타분석 AI 감사 워크스페이스</title>
   <style>
     :root {
-      --bg: #f4f7fb;
-      --panel: rgba(255, 255, 255, 0.94);
-      --ink: #191f28;
-      --muted: #6b7684;
-      --line: rgba(107, 118, 132, 0.18);
-      --accent: #3182f6;
-      --accent-2: #1b64da;
-      --accent-3: #eaf2ff;
-      --shadow: rgba(15, 23, 42, 0.08);
+      --bg: #f7f1e6;
+      --bg-deep: #ece2ce;
+      --panel: rgba(255, 250, 243, 0.94);
+      --panel-strong: #fffdf8;
+      --line: rgba(83, 78, 66, 0.14);
+      --line-strong: rgba(83, 78, 66, 0.24);
+      --ink: #1f1c16;
+      --muted: #6f675a;
+      --accent: #0b6b67;
+      --accent-strong: #074e4b;
+      --accent-soft: #d8f0ed;
+      --gold: #c66d36;
+      --gold-soft: #fde6d6;
+      --rose: #9f4c44;
+      --rose-soft: #f7ddda;
+      --shadow: rgba(29, 23, 14, 0.1);
     }
 
     * { box-sizing: border-box; }
@@ -23,87 +30,90 @@
       margin: 0;
       color: var(--ink);
       background:
-        radial-gradient(circle at top left, rgba(196, 109, 54, 0.10), transparent 28%),
-        radial-gradient(circle at top right, rgba(13, 107, 103, 0.12), transparent 32%),
-        linear-gradient(180deg, #ede5d6 0%, #f8f5ef 100%);
-      font-family: Georgia, "Times New Roman", serif;
+        radial-gradient(circle at top left, rgba(198, 109, 54, 0.14), transparent 24%),
+        radial-gradient(circle at top right, rgba(11, 107, 103, 0.16), transparent 28%),
+        linear-gradient(180deg, var(--bg-deep) 0%, var(--bg) 18%, #faf6ef 100%);
+      font-family: Georgia, 'Times New Roman', serif;
     }
 
-    .wrap {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 40px 20px 80px;
+    button, input, select, textarea { font: inherit; }
+
+    .wrap { max-width: 1460px; margin: 0 auto; padding: 34px 20px 72px; }
+
+    .hero {
+      margin-bottom: 20px;
+      padding: 26px 28px;
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      background: linear-gradient(135deg, rgba(255, 249, 240, 0.96) 0%, rgba(244, 250, 248, 0.96) 100%);
+      box-shadow: 0 18px 42px var(--shadow);
     }
 
-    h1 {
-      margin: 0 0 12px;
-      font-size: 46px;
-      line-height: 1.04;
-      letter-spacing: -0.03em;
-    }
-
-    h2 {
-      margin: 0 0 14px;
-      font-size: 22px;
-      line-height: 1.15;
-    }
-
-    h3 {
-      margin: 0 0 10px;
-      font-size: 16px;
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(11, 107, 103, 0.1);
+      color: var(--accent-strong);
+      font-size: 12px;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
     }
 
-    .lead {
-      max-width: 780px;
-      margin: 0 0 28px;
-      color: var(--muted);
-      font-size: 18px;
-      line-height: 1.55;
-    }
+    .hero h1 { margin: 0 0 10px; font-size: 52px; line-height: 1.02; letter-spacing: -0.035em; }
+    .lead { max-width: 960px; margin: 0; color: var(--muted); font-size: 19px; line-height: 1.65; }
 
     .panel {
       margin-bottom: 18px;
       padding: 22px;
       border: 1px solid var(--line);
-      border-radius: 24px;
-      background: rgba(255, 250, 241, 0.94);
-      box-shadow: 0 16px 38px var(--shadow);
-      backdrop-filter: blur(6px);
+      border-radius: 26px;
+      background: var(--panel);
+      box-shadow: 0 16px 36px var(--shadow);
+      backdrop-filter: blur(8px);
     }
 
-    .grid {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .grid-wide {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
-    }
-
-    .actions {
-      display: grid;
+    .panel-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
       gap: 12px;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      margin-top: 16px;
+      margin-bottom: 16px;
     }
 
-    .form-grid {
+    .panel h2 { margin: 0; font-size: 24px; line-height: 1.1; letter-spacing: -0.02em; }
+    .panel h3 { margin: 0 0 12px; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .subtle-note, .api-note { color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+    .search-shell, .grid-wide, .workspace-grid {
       display: grid;
-      gap: 14px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      align-items: start;
     }
 
-    .inline-options {
-      display: grid;
-      gap: 12px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .search-shell { grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr); }
+    .grid-wide { grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr); }
+    .workspace-grid { grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.95fr); }
+    .grid { display: grid; gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .form-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .inline-options { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    label { display: block; margin-bottom: 8px; font-size: 13px; letter-spacing: 0.02em; color: var(--muted); }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--ink);
     }
+
+    textarea { min-height: 140px; resize: vertical; }
+    .compact { min-height: 88px; }
 
     .checkbox-row {
       display: flex;
@@ -112,490 +122,409 @@
       padding: 12px 14px;
       border: 1px solid var(--line);
       border-radius: 14px;
-      background: white;
+      background: rgba(255, 255, 255, 0.82);
     }
 
-    .checkbox-row input {
-      width: auto;
-      margin: 0;
-    }
-
-    .compact {
-      min-height: 96px;
-    }
-
-    .decision-actions {
-      display: grid;
-      gap: 12px;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .flow-stages {
-      display: grid;
-      gap: 14px;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    }
-
-    .flow-stage {
-      padding: 16px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-    }
-
-    .flow-stage-title {
-      margin: 0 0 12px;
-      font-size: 15px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-    }
-
-    .flow-node {
-      margin-bottom: 12px;
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: white;
-    }
-
-    .flow-node:last-child {
-      margin-bottom: 0;
-    }
-
-    .flow-count {
-      margin-bottom: 8px;
-      color: var(--accent);
-      font-size: 30px;
-      line-height: 1;
-    }
-
-    .flow-label {
-      margin-bottom: 6px;
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .flow-desc {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .flow-list {
-      margin: 0;
-      padding-left: 18px;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.55;
-    }
-
-    .flow-list li {
-      margin-bottom: 8px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 13px;
-      letter-spacing: 0.02em;
-      color: var(--muted);
-    }
-
-    input, select, button, textarea {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: white;
-      color: var(--ink);
-      font: inherit;
-    }
-
-    input, select, textarea {
-      padding: 12px 14px;
-    }
-
-    textarea {
-      min-height: 170px;
-      resize: vertical;
-    }
+    .checkbox-row input { width: auto; margin: 0; }
+    .button-row, .actions { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .button-stack { display: grid; gap: 12px; }
 
     button {
+      width: 100%;
       padding: 12px 14px;
       border: none;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
       color: white;
       cursor: pointer;
-      transition: transform 140ms ease, opacity 140ms ease;
+      transition: transform 140ms ease, opacity 140ms ease, box-shadow 140ms ease;
+      box-shadow: 0 10px 20px rgba(11, 107, 103, 0.18);
     }
 
-    button:hover {
-      transform: translateY(-1px);
-      opacity: 0.96;
+    button:hover { transform: translateY(-1px); opacity: 0.97; }
+    .secondary { background: linear-gradient(135deg, var(--gold) 0%, #9d5528 100%); box-shadow: 0 10px 20px rgba(198, 109, 54, 0.16); }
+    .ghost { background: var(--accent-soft); color: var(--accent-strong); box-shadow: none; }
+
+    .metric-grid { display: grid; gap: 14px; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-bottom: 18px; }
+    .metric-card { padding: 18px; border: 1px solid var(--line); border-radius: 22px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(250, 246, 238, 0.92) 100%); box-shadow: 0 12px 24px rgba(29, 23, 14, 0.07); }
+    .metric-label { margin-bottom: 10px; color: var(--muted); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+    .metric-value { font-size: 34px; line-height: 1; letter-spacing: -0.04em; }
+    .metric-meta { margin-top: 8px; color: var(--muted); font-size: 13px; line-height: 1.45; min-height: 36px; }
+
+    .table-shell { overflow-x: auto; border: 1px solid var(--line); border-radius: 18px; background: rgba(255, 255, 255, 0.72); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; font-size: 14px; }
+    th { color: var(--muted); font-weight: 700; white-space: nowrap; }
+    tbody tr:last-child td { border-bottom: none; }
+    .worklist-candidate { min-width: 260px; }
+    .selected-row { background: rgba(11, 107, 103, 0.07); }
+
+    .title-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      width: auto;
+      padding: 0;
+      border: none;
+      background: none;
+      color: var(--ink);
+      box-shadow: none;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: left;
     }
 
-    .secondary {
-      background: var(--accent-2);
+    .title-button:hover { transform: none; color: var(--accent-strong); }
+    .title-meta { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    .pill, .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      line-height: 1.2;
+      white-space: nowrap;
     }
 
-    .ghost {
-      background: var(--accent-3);
-      color: var(--accent);
+    .pill-muted, .chip-muted { background: rgba(111, 103, 90, 0.12); color: var(--muted); }
+    .pill-accent, .chip-accent { background: rgba(11, 107, 103, 0.1); color: var(--accent-strong); }
+    .pill-gold, .chip-gold { background: var(--gold-soft); color: #9d5528; }
+    .pill-high, .chip-high { background: rgba(159, 76, 68, 0.12); color: var(--rose); }
+    .pill-medium, .chip-medium { background: rgba(198, 109, 54, 0.16); color: #8e4d22; }
+    .pill-low, .chip-low { background: rgba(11, 107, 103, 0.12); color: var(--accent-strong); }
+    .chip-danger { background: var(--rose-soft); color: var(--rose); }
+
+    .chip-list, .pill-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .fact-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .fact-card { padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, 0.84); }
+    .fact-card.wide { grid-column: 1 / -1; }
+    .fact-label { margin-bottom: 6px; color: var(--muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .fact-value { font-size: 15px; line-height: 1.55; word-break: break-word; }
+    .fact-value strong { font-size: 18px; }
+
+    .stack-list { display: grid; gap: 12px; }
+    .stack-item { padding: 16px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255, 255, 255, 0.82); }
+    .stack-item-title { margin-bottom: 8px; font-size: 16px; font-weight: 700; }
+    .stack-item-meta { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+    .section-block { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .sticky-panel { position: sticky; top: 24px; align-self: start; }
+    .candidate-header { padding: 18px; border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 248, 247, 0.92) 100%); }
+    .candidate-title { margin: 0; font-size: 28px; line-height: 1.12; letter-spacing: -0.03em; }
+    .candidate-subtitle { margin: 10px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    .summary-list { display: grid; gap: 10px; }
+    .summary-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(83, 78, 66, 0.08); }
+    .summary-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .summary-label { color: var(--muted); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .summary-value { font-size: 15px; line-height: 1.5; text-align: right; word-break: break-word; }
+
+    .timeline { display: grid; gap: 12px; }
+    .timeline-item { padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, 0.78); }
+    .timeline-meta { margin-bottom: 6px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .timeline-message { font-size: 14px; line-height: 1.55; }
+
+    .empty-state, .loading-state, .error-state, .feedback-box {
+      padding: 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
     }
 
-    .table-button {
-      margin: 0;
-      padding: 8px 10px;
-      border-radius: 10px;
-      font-size: 13px;
-    }
+    .empty-state, .loading-state, .feedback-box { color: var(--muted); background: rgba(255, 255, 255, 0.56); border: 1px dashed var(--line-strong); }
+    .error-state { color: var(--rose); background: rgba(247, 221, 218, 0.5); border: 1px solid rgba(159, 76, 68, 0.28); }
 
-    pre, .code-block {
+    pre, .raw-textarea {
       min-height: 180px;
       margin: 0;
       padding: 16px;
       border: 1px solid var(--line);
       border-radius: 16px;
-      background: #f8fbff;
+      background: rgba(248, 251, 255, 0.88);
       white-space: pre-wrap;
       word-break: break-word;
-      font-family: Consolas, "Courier New", monospace;
+      font-family: Consolas, 'Courier New', monospace;
       font-size: 13px;
       line-height: 1.55;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .mono { font-family: Consolas, 'Courier New', monospace; font-size: 12px; }
+
+    details { border: 1px solid var(--line); border-radius: 18px; background: rgba(255, 255, 255, 0.72); }
+    details summary { padding: 16px 18px; cursor: pointer; font-size: 15px; font-weight: 700; list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+    .details-inner { padding: 0 18px 18px; }
+    .details-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .prisma-grid { display: grid; gap: 12px; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 16px; }
+    .prisma-card { padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, 0.82); }
+    .prisma-card-value { font-size: 26px; line-height: 1; letter-spacing: -0.03em; }
+
+    .flow-stages { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .flow-stage { padding: 16px; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(180deg, #ffffff 0%, #f7fbfa 100%); }
+    .flow-stage-title { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .flow-node { margin-bottom: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: white; }
+    .flow-node:last-child { margin-bottom: 0; }
+    .flow-count { margin-bottom: 8px; color: var(--accent); font-size: 30px; line-height: 1; }
+    .flow-label { margin-bottom: 6px; font-size: 15px; font-weight: 700; }
+    .flow-desc { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .flow-list { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .flow-list li { margin-bottom: 8px; }
+
+    @media (max-width: 1280px) {
+      .metric-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
 
-    th, td {
-      padding: 10px 8px;
-      border-bottom: 1px solid var(--line);
-      vertical-align: top;
-      text-align: left;
-      font-size: 14px;
+    @media (max-width: 1080px) {
+      .search-shell, .workspace-grid, .grid, .grid-wide, .form-grid, .inline-options, .details-grid, .prisma-grid, .fact-grid { grid-template-columns: 1fr; }
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sticky-panel { position: static; }
     }
 
-    th {
-      color: var(--muted);
-      font-weight: 700;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #eaf2ff;
-      color: var(--accent);
-      font-size: 12px;
-    }
-
-    .status {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #f5e7de;
-      color: #7a4726;
-      font-size: 12px;
-    }
-
-    @media (max-width: 960px) {
-      .grid,
-      .grid-wide,
-      .decision-actions,
-      .form-grid,
-      .inline-options {
-        grid-template-columns: 1fr;
-      }
-
-      h1 {
-        font-size: 36px;
-      }
+    @media (max-width: 720px) {
+      .wrap { padding-left: 14px; padding-right: 14px; }
+      .hero h1 { font-size: 38px; }
+      .lead { font-size: 17px; }
+      .metric-grid, .button-row, .actions { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>교육학 메타분석 AI 워크스페이스</h1>
-    <p class="lead">
-      RISS와 KCI를 분리해 검색 건수를 확인하고, 사용자가 입력한 포함·제외 기준에 따라
-      제목·초록 단계부터 순차적으로 분류할 수 있는 교육학 메타분석 워크스페이스입니다.
-      검색, PRISMA 집계, 원문 등록, OCR, 추출, 수동 검토를 한 화면에서 이어서 확인할 수 있습니다.
-    </p>
+  <div class='wrap'>
+    <section class='hero'>
+      <div class='hero-kicker'>Audit-Focused Dashboard</div>
+      <h1>교육학 메타분석 AI 감사 워크스페이스</h1>
+      <p class='lead'>검색 요청, PRISMA 흐름, 원문/OCR, 추출 품질, 리비전 비교를 한 흐름으로 연결한 검토 중심 대시보드입니다. 우선순위 큐와 감사 패널을 기준으로 품질 위험과 수동 개입 지점을 빠르게 식별할 수 있도록 재구성했습니다.</p>
+    </section>
 
-    <div class="panel">
-      <div class="form-grid">
+    <section class='panel'>
+      <div class='search-shell'>
         <div>
-          <label for="query">검색어</label>
-          <input id="query" value="self-directed learning" />
-        </div>
-        <div>
-          <label for="expandedKeywords">확장 키워드</label>
-          <textarea id="expandedKeywords" class="compact">achievement
+          <div class='panel-head'>
+            <h2>검색 컨텍스트 설정</h2>
+            <div class='subtle-note'>기존 API payload를 그대로 사용합니다.</div>
+          </div>
+          <div class='form-grid'>
+            <div>
+              <label for='query'>검색어</label>
+              <input id='query' value='self-directed learning' />
+            </div>
+            <div>
+              <label for='expandedKeywords'>확장 키워드</label>
+              <textarea id='expandedKeywords' class='compact'>achievement
 motivation</textarea>
-        </div>
-        <div class="inline-options">
-          <div>
-            <label for="yearFrom">시작 연도</label>
-            <input id="yearFrom" type="number" value="2018" />
-          </div>
-          <div>
-            <label for="yearTo">종료 연도</label>
-            <input id="yearTo" type="number" value="2026" />
-          </div>
-        </div>
-        <div class="inline-options">
-          <label class="checkbox-row" for="includeTheses">
-            <input id="includeTheses" type="checkbox" checked />
-            <span>학위논문 포함</span>
-          </label>
-          <label class="checkbox-row" for="includeJournals">
-            <input id="includeJournals" type="checkbox" checked />
-            <span>학술지 논문 포함</span>
-          </label>
-        </div>
-        <div>
-          <label for="inclusionRules">포함 기준</label>
-          <textarea id="inclusionRules" class="compact">achievement
+            </div>
+            <div class='inline-options'>
+              <div>
+                <label for='yearFrom'>시작 연도</label>
+                <input id='yearFrom' type='number' value='2018' />
+              </div>
+              <div>
+                <label for='yearTo'>종료 연도</label>
+                <input id='yearTo' type='number' value='2026' />
+              </div>
+            </div>
+            <div class='inline-options'>
+              <label class='checkbox-row' for='includeTheses'><input id='includeTheses' type='checkbox' checked /><span>학위논문 포함</span></label>
+              <label class='checkbox-row' for='includeJournals'><input id='includeJournals' type='checkbox' checked /><span>학술지 논문 포함</span></label>
+            </div>
+            <div>
+              <label for='inclusionRules'>포함 기준</label>
+              <textarea id='inclusionRules' class='compact'>achievement
 control group</textarea>
-        </div>
-        <div>
-          <label for="exclusionRules">제외 기준</label>
-          <textarea id="exclusionRules" class="compact">qualitative
+            </div>
+            <div>
+              <label for='exclusionRules'>제외 기준</label>
+              <textarea id='exclusionRules' class='compact'>qualitative
 interview</textarea>
-        </div>
-      </div>
-      <div class="actions">
-        <button id="run">검색 실행</button>
-        <button id="exportManifest" class="secondary">검색 설정</button>
-        <button id="exportCsv" class="secondary">후보 CSV</button>
-        <button id="exportScreening" class="secondary">스크리닝 로그</button>
-        <button id="exportPrisma" class="secondary">PRISMA 집계</button>
-        <button id="exportPrismaFlow" class="secondary">PRISMA 플로우</button>
-        <button id="exportMeta" class="secondary">메타분석 CSV</button>
-        <button id="exportAudit" class="secondary">감사 보고서</button>
-        <button id="exportEvents" class="secondary">이벤트 로그</button>
-        <button id="exportRevisionHistory" class="secondary">추출 이력</button>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="panel">
-        <h2>실행 결과</h2>
-        <pre id="result">검색 요청을 생성하고 실행하면 파이프라인 결과가 여기에 표시됩니다.</pre>
-      </div>
-      <div class="panel">
-        <h2>검색 요약</h2>
-        <pre id="summary">검색 요약이 여기에 표시됩니다.</pre>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="panel">
-        <h2>소스별 검색 건수</h2>
-        <pre id="sourceBreakdown">RISS와 KCI 검색 건수가 여기에 표시됩니다.</pre>
-      </div>
-      <div class="panel">
-        <h2>기준별 순차 분류</h2>
-        <pre id="screeningSequence">검색 후 기준별 분류 단계가 여기에 표시됩니다.</pre>
-      </div>
-    </div>
-
-    <div class="grid-wide">
-      <div class="panel">
-        <h2>후보 논문</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>제목</th>
-              <th>출처</th>
-              <th>연도</th>
-              <th>상태</th>
-              <th>작업</th>
-            </tr>
-          </thead>
-          <tbody id="candidates">
-            <tr><td colspan="5">아직 후보가 없습니다.</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="panel">
-        <h2>최근 검색</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>검색 ID</th>
-              <th>검색어</th>
-              <th>상태</th>
-              <th>열기</th>
-            </tr>
-          </thead>
-          <tbody id="searches">
-            <tr><td colspan="4">이전 검색이 없습니다.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="panel">
-        <h2>수동 선별</h2>
-        <label for="reviewCandidate">후보</label>
-        <select id="reviewCandidate">
-          <option value="">후보를 선택하세요</option>
-        </select>
-
-        <label for="reviewStage">검토 단계</label>
-        <select id="reviewStage">
-          <option value="title_abstract">제목 / 초록</option>
-          <option value="full_text">원문</option>
-        </select>
-
-        <label for="reviewReasonCode">사유 코드</label>
-        <input id="reviewReasonCode" placeholder="예: insufficient_statistics" />
-
-        <label for="reviewReasonText">검토 메모</label>
-        <textarea id="reviewReasonText">수동 선별 사유를 기록합니다.</textarea>
-
-        <div class="decision-actions">
-          <button id="decisionInclude">포함</button>
-          <button id="decisionMaybe" class="ghost">추가 검토</button>
-          <button id="decisionExclude" class="secondary">제외</button>
+            </div>
+          </div>
+          <div class='button-row' style='margin-top: 14px;'>
+            <button id='run'>검색 실행</button>
+            <button id='exportManifest' class='secondary'>검색 설정</button>
+            <button id='exportCsv' class='secondary'>후보 CSV</button>
+            <button id='exportScreening' class='secondary'>스크리닝 로그</button>
+            <button id='exportPrisma' class='secondary'>PRISMA 집계</button>
+            <button id='exportPrismaFlow' class='secondary'>PRISMA 플로우</button>
+            <button id='exportMeta' class='secondary'>메타분석 CSV</button>
+            <button id='exportAudit' class='secondary'>감사 보고서</button>
+            <button id='exportEvents' class='secondary'>이벤트 로그</button>
+            <button id='exportRevisionHistory' class='secondary'>추출 이력</button>
+          </div>
         </div>
 
-        <pre id="reviewResult">수동 선별 결과가 여기에 표시됩니다.</pre>
-      </div>
-
-      <div class="panel">
-        <h2>원문 등록</h2>
-        <label for="fullTextFile">TXT 또는 PDF 업로드</label>
-        <input id="fullTextFile" type="file" accept=".txt,.pdf,text/plain,application/pdf" />
-        <p style="margin:8px 0 14px; color: var(--muted); font-size: 13px; line-height: 1.5;">
-          If a PDF is image-based and text extraction fails, the candidate will move to
-          <code>full_text_needs_ocr</code>. Paste OCR text below or re-upload a text-based file.
-          When the backend has an OCR command configured, the extraction action will try OCR first.
-        </p>
-
-        <label for="fullText">대체 원문 텍스트</label>
-        <textarea id="fullText">The study included 120 middle school students. The intervention group had 60 students and the control group had 60 students. After the self-directed learning program, the intervention group mean was 82.4 with a standard deviation of 10.1. The control group mean was 75.2 with a standard deviation of 11.3. The difference was statistically significant at p less than .05.</textarea>
-
-        <div class="actions" style="margin-top:14px;">
-          <button id="runOcr" class="ghost">저장된 파일 OCR 실행</button>
-          <button id="runExtraction">원문 또는 OCR 텍스트 등록 후 추출 실행</button>
+        <div class='button-stack'>
+          <div class='fact-card'><div class='fact-label'>현재 API 기준점</div><div class='fact-value mono' id='apiBaseLabel'>-</div></div>
+          <div class='fact-card'><div class='fact-label'>최근 실행 요약</div><div id='runSummary' class='empty-state'>검색을 실행하면 수집, 중복 제거, 스크리닝 결과가 구조화되어 표시됩니다.</div></div>
+          <div class='fact-card'><div class='fact-label'>검색 맥락</div><div id='searchContext' class='empty-state'>최근 검색을 열거나 새 검색을 실행하면 컨텍스트가 표시됩니다.</div></div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="grid">
-      <div class="panel">
-        <h2>선택 후보 상세</h2>
-        <pre id="candidateDetail">후보를 선택하면 상세, 원문, 추출, 검토 플래그가 여기에 표시됩니다.</pre>
-      </div>
-      <div class="panel">
-        <h2>검토 대기열</h2>
-        <pre id="reviewQueue">현재 검색의 검토 대기열이 여기에 표시됩니다.</pre>
-      </div>
-      <div class="panel">
-        <h2>활동 타임라인</h2>
-        <pre id="events">검색 이벤트가 여기에 표시됩니다.</pre>
-      </div>
-      <div class="panel">
-        <h2>추출 이력</h2>
-        <pre id="extractionHistory">후보를 선택하면 추출 리비전 이력을 확인할 수 있습니다.</pre>
-      </div>
-      <div class="panel">
-        <h2>리비전 비교</h2>
-        <pre id="revisionComparison">현재 추출 결과와 비교할 리비전을 선택하세요.</pre>
-      </div>
-    </div>
+    <section class='metric-grid'>
+      <div class='metric-card'><div class='metric-label'>전체 후보</div><div class='metric-value' id='metricTotalCandidates'>-</div><div class='metric-meta' id='metricTotalCandidatesMeta'>검색을 불러오면 업데이트됩니다.</div></div>
+      <div class='metric-card'><div class='metric-label'>대표 후보</div><div class='metric-value' id='metricCanonicalCandidates'>-</div><div class='metric-meta' id='metricCanonicalCandidatesMeta'>중복 제거 후 기준입니다.</div></div>
+      <div class='metric-card'><div class='metric-label'>검토 필요 건수</div><div class='metric-value' id='metricReviewNeeded'>-</div><div class='metric-meta' id='metricReviewNeededMeta'>리뷰 큐 기준입니다.</div></div>
+      <div class='metric-card'><div class='metric-label'>고위험 품질 이슈</div><div class='metric-value' id='metricHighRisk'>-</div><div class='metric-meta' id='metricHighRiskMeta'>우선순위 또는 low 품질 기준입니다.</div></div>
+      <div class='metric-card'><div class='metric-label'>OCR 필요</div><div class='metric-value' id='metricOcrNeeded'>-</div><div class='metric-meta' id='metricOcrNeededMeta'>원문 OCR이 필요한 후보 수입니다.</div></div>
+      <div class='metric-card'><div class='metric-label'>추출 완료</div><div class='metric-value' id='metricExtracted'>-</div><div class='metric-meta' id='metricExtractedMeta'>후보 상태 집계 기준입니다.</div></div>
+      <div class='metric-card'><div class='metric-label'>포함 연구 수</div><div class='metric-value' id='metricIncludedStudies'>-</div><div class='metric-meta' id='metricIncludedStudiesMeta'>PRISMA 포함 수입니다.</div></div>
+    </section>
 
-    <div class="panel">
-      <h2>PRISMA 플로우 데이터</h2>
-      <div id="prismaFlow" class="flow-stages">
-        <div class="flow-stage">검색을 실행하면 PRISMA 플로우 데이터가 여기에 표시됩니다.</div>
-      </div>
-      <div class="grid" style="margin-top:16px;">
-        <div>
-          <h3>흐름 간선</h3>
-          <ul id="prismaEdges" class="flow-list">
-            <li>흐름 간선 데이터가 없습니다.</li>
-          </ul>
-        </div>
-        <div>
-          <h3>제외 사유</h3>
-          <ul id="prismaReasons" class="flow-list">
-            <li>기록된 제외 사유가 없습니다.</li>
-          </ul>
+    <section class='grid-wide'>
+      <div class='panel'>
+        <div class='panel-head'><h2>검색 품질 개요</h2><div class='subtle-note'>소스 수집과 순차 스크리닝 결과를 구조화해 보여줍니다.</div></div>
+        <div class='grid'>
+          <div><h3>소스별 검색 건수</h3><div id='sourceBreakdown' class='empty-state'>RISS와 KCI 수집 결과를 기다리는 중입니다.</div></div>
+          <div><h3>기준별 순차 분류</h3><div id='screeningSequence' class='empty-state'>기준별 평가 결과를 기다리는 중입니다.</div></div>
         </div>
       </div>
-    </div>
 
-    <div class="grid">
-      <div class="panel">
-        <h2>내보내기 미리보기</h2>
-        <textarea id="exportContent">내보내기 내용이 여기에 표시됩니다.</textarea>
-      </div>
-      <div class="panel">
-        <h2>추출 결과</h2>
-        <pre id="extraction">추출 결과가 여기에 표시됩니다.</pre>
-      </div>
-      <div class="panel">
-        <h2>수동 추출 보정</h2>
-        <label for="manualExtractionMessage">보정 메시지</label>
-        <input id="manualExtractionMessage" value="수동 추출 보정을 저장했습니다." />
-        <label for="manualExtractionJson">추출 JSON</label>
-        <textarea id="manualExtractionJson">{
-  "study_design": "group_comparison",
-  "participants": {
-    "sample_size_total": "",
-    "groups": []
-  },
-  "intervention_or_predictor": "",
-  "comparison": "",
-  "outcomes": [],
-  "timepoints": [],
-  "statistics": [],
-  "effect_size_inputs": {
-    "is_meta_analytic_ready": false,
-    "effect_type_candidates": [],
-    "recommended_effect_type": "",
-    "computation_method": "",
-    "correlation_coefficient": "",
-    "missing_inputs": []
-  },
-  "evidence_spans": [],
-  "confidence": "medium"
-}</textarea>
-        <label for="revisionToRestore">복원할 리비전</label>
-        <select id="revisionToRestore">
-          <option value="">불러온 리비전이 없습니다</option>
-        </select>
-        <label for="restoreRevisionMessage">복원 메시지</label>
-        <input id="restoreRevisionMessage" value="Restored extraction revision." />
-        <div class="actions" style="margin-top:14px;">
-          <button id="saveExtractionOverride" class="ghost">수동 추출 저장</button>
-          <button id="restoreRevision" class="secondary">선택 리비전 복원</button>
+      <div class='panel'>
+        <div class='panel-head'><h2>최근 검색</h2><div class='subtle-note'>최근 10건</div></div>
+        <div class='table-shell'>
+          <table>
+            <thead><tr><th>검색 ID</th><th>검색어</th><th>상태</th><th>열기</th></tr></thead>
+            <tbody id='searches'><tr><td colspan='4'>이전 검색이 없습니다.</td></tr></tbody>
+          </table>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="panel">
-      <h2>PRISMA 집계</h2>
-      <pre id="prisma">PRISMA 집계가 여기에 표시됩니다.</pre>
-    </div>
+    <section class='workspace-grid'>
+      <div class='panel'>
+        <div class='panel-head'><h2>감사 워크리스트</h2><div id='worklistSummary' class='subtle-note'>대표 후보와 리뷰 큐 신호를 합쳐 표시합니다.</div></div>
+        <div class='table-shell'>
+          <table>
+            <thead>
+              <tr>
+                <th class='worklist-candidate'>후보</th><th>우선순위</th><th>품질 점수</th><th>리뷰 사유</th><th>원문 상태</th><th>추출 상태</th><th>효과크기</th><th>연도</th><th>출처</th>
+              </tr>
+            </thead>
+            <tbody id='worklistBody'><tr><td colspan='9'>검색을 실행하면 감사 워크리스트가 표시됩니다.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class='panel sticky-panel'>
+        <div class='panel-head'><h2>후보 감사 패널</h2><div class='subtle-note'>선택한 후보의 품질 신호와 수동 조작 영역입니다.</div></div>
+        <div id='selectedCandidateHeader' class='empty-state'>워크리스트에서 후보를 선택하면 감사 패널이 활성화됩니다.</div>
+        <div class='section-block'><h3>서지 정보</h3><div id='candidateBibliography' class='empty-state'>후보를 선택하면 서지 정보가 표시됩니다.</div></div>
+        <div class='section-block'><h3>판정 이력</h3><div id='decisionOverview' class='empty-state'>제목·초록 및 원문 단계 판정 이력이 표시됩니다.</div></div>
+        <div class='section-block'><h3>원문 / OCR 상태</h3><div id='fullTextStatusView' class='empty-state'>원문 등록 상태와 OCR 필요 여부가 표시됩니다.</div></div>
+        <div class='section-block'><h3>추출 상태</h3><div id='extractionOverview' class='empty-state'>추출 실행 결과와 메시지가 표시됩니다.</div></div>
+        <div class='section-block'><h3>품질 평가</h3><div id='qualityOverview' class='empty-state'>품질 점수, 경고, 근거 개수가 표시됩니다.</div></div>
+        <div class='section-block'><h3>효과크기 준비도</h3><div id='effectSizeOverview' class='empty-state'>효과크기 계산 가능 여부와 누락 입력을 표시합니다.</div></div>
+        <div class='section-block'><h3>주요 경고</h3><div id='warningChips' class='empty-state'>선택 후보의 리뷰 사유와 품질 경고가 표시됩니다.</div></div>
+
+        <div class='section-block'>
+          <h3>수동 선별</h3>
+          <label for='reviewCandidate'>후보</label>
+          <select id='reviewCandidate'><option value=''>후보를 선택하세요</option></select>
+          <label for='reviewStage'>검토 단계</label>
+          <select id='reviewStage'><option value='title_abstract'>제목 / 초록</option><option value='full_text'>원문</option></select>
+          <label for='reviewReasonCode'>사유 코드</label>
+          <input id='reviewReasonCode' placeholder='예: insufficient_statistics' />
+          <label for='reviewReasonText'>검토 메모</label>
+          <textarea id='reviewReasonText' class='compact'>수동 선별 사유를 기록합니다.</textarea>
+          <div class='actions'><button id='decisionInclude'>포함</button><button id='decisionMaybe' class='ghost'>추가 검토</button><button id='decisionExclude' class='secondary'>제외</button></div>
+          <div id='reviewResult' class='feedback-box'>수동 선별 작업 결과가 여기에 표시됩니다.</div>
+        </div>
+
+        <div class='section-block'>
+          <h3>원문 등록 및 추출</h3>
+          <label for='fullTextFile'>TXT 또는 PDF 업로드</label>
+          <input id='fullTextFile' type='file' accept='.txt,.pdf,text/plain,application/pdf' />
+          <p class='api-note'>이미지 기반 PDF에서 텍스트가 추출되지 않으면 <code>ocr_required</code> 상태가 됩니다. 백엔드에 OCR 명령이 설정되어 있으면 저장된 파일에 대해 OCR 재시도를 실행할 수 있습니다.</p>
+          <label for='fullText'>대체 원문 텍스트</label>
+          <textarea id='fullText'>The study included 120 middle school students. The intervention group had 60 students and the control group had 60 students. After the self-directed learning program, the intervention group mean was 82.4 with a standard deviation of 10.1. The control group mean was 75.2 with a standard deviation of 11.3. The difference was statistically significant at p less than .05.</textarea>
+          <div class='actions'><button id='runOcr' class='ghost'>저장된 파일 OCR 실행</button><button id='runExtraction'>원문 또는 OCR 텍스트 등록 후 추출 실행</button></div>
+          <div id='candidateActionFeedback' class='feedback-box'>후보 관련 작업 응답이 여기에 표시됩니다.</div>
+        </div>
+        <div class='section-block'>
+          <h3>리비전 이력</h3>
+          <div id='revisionHistoryTable' class='empty-state'>후보를 선택하면 추출 리비전 이력이 표시됩니다.</div>
+          <label for='revisionToRestore'>복원할 리비전</label>
+          <select id='revisionToRestore'><option value=''>불러온 리비전이 없습니다</option></select>
+          <label for='restoreRevisionMessage'>복원 메시지</label>
+          <input id='restoreRevisionMessage' value='Restored extraction revision.' />
+          <div class='actions'><button id='restoreRevision' class='secondary'>선택 리비전 복원</button></div>
+        </div>
+
+        <div class='section-block'>
+          <h3>리비전 비교</h3>
+          <div id='revisionComparisonSummary' class='empty-state'>비교할 리비전을 선택하면 현재 추출과 차이를 구조화해 표시합니다.</div>
+          <div id='revisionComparisonTable' class='empty-state'>변경 필드 표가 여기에 표시됩니다.</div>
+        </div>
+
+        <div class='section-block'>
+          <h3>수동 추출 보정</h3>
+          <label for='manualExtractionMessage'>보정 메시지</label>
+          <input id='manualExtractionMessage' value='수동 추출 보정을 저장했습니다.' />
+          <label for='manualExtractionJson'>추출 JSON</label>
+          <textarea id='manualExtractionJson'>{}</textarea>
+          <div class='actions'><button id='saveExtractionOverride' class='ghost'>수동 추출 저장</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class='panel'>
+      <div class='panel-head'><h2>활동 타임라인</h2><div class='subtle-note'>검색 전체와 선택 후보 관련 이벤트를 분리해 표시합니다.</div></div>
+      <div class='grid'>
+        <div><h3>검색 전체 이벤트</h3><div id='searchEventsStructured' class='empty-state'>검색 이벤트를 불러오면 타임라인이 표시됩니다.</div></div>
+        <div><h3>선택 후보 이벤트</h3><div id='candidateEventsStructured' class='empty-state'>후보를 선택하면 관련 이벤트만 분리해 표시됩니다.</div></div>
+      </div>
+    </section>
+
+    <section class='panel'>
+      <div class='panel-head'><h2>PRISMA 개요</h2><div class='subtle-note'>워크리스트보다 낮은 우선순위의 참고 섹션입니다.</div></div>
+      <div id='prismaCounts' class='empty-state'>PRISMA 집계가 여기에 구조화되어 표시됩니다.</div>
+      <div class='section-block'>
+        <h3>PRISMA 플로우 데이터</h3>
+        <div id='prismaFlow' class='flow-stages'><div class='flow-stage'>검색을 실행하면 PRISMA 플로우 데이터가 여기에 표시됩니다.</div></div>
+        <div class='grid' style='margin-top: 16px;'>
+          <div><h3>흐름 간선</h3><ul id='prismaEdges' class='flow-list'><li>흐름 간선 데이터가 없습니다.</li></ul></div>
+          <div><h3>제외 사유</h3><ul id='prismaReasons' class='flow-list'><li>기록된 제외 사유가 없습니다.</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <section class='panel'>
+      <div class='panel-head'><h2>원본 보기 및 내보내기</h2><div class='subtle-note'>디버깅과 export preview 용도입니다.</div></div>
+      <details>
+        <summary>원본 payload와 내보내기 미리보기 열기</summary>
+        <div class='details-inner'>
+          <div class='details-grid'>
+            <div><h3>내보내기 미리보기</h3><textarea id='exportContent' class='raw-textarea'>내보내기 내용이 여기에 표시됩니다.</textarea></div>
+            <div><h3>실행 결과 원본</h3><pre id='result'>검색 요청을 생성하고 실행하면 파이프라인 결과가 여기에 표시됩니다.</pre></div>
+            <div><h3>검색 요약 원본</h3><pre id='summary'>검색 요약이 여기에 표시됩니다.</pre></div>
+            <div><h3>PRISMA 원본</h3><pre id='prisma'>PRISMA 집계가 여기에 표시됩니다.</pre></div>
+            <div><h3>리뷰 큐 원본</h3><pre id='reviewQueue'>현재 검색의 검토 대기열이 여기에 표시됩니다.</pre></div>
+            <div><h3>후보 상세 원본</h3><pre id='candidateDetail'>후보를 선택하면 상세 payload가 여기에 표시됩니다.</pre></div>
+            <div><h3>이벤트 원본</h3><pre id='events'>검색 이벤트가 여기에 표시됩니다.</pre></div>
+            <div><h3>추출 이력 원본</h3><pre id='extractionHistory'>후보를 선택하면 추출 리비전 이력이 여기에 표시됩니다.</pre></div>
+            <div><h3>리비전 비교 원본</h3><pre id='revisionComparison'>현재 추출 결과와 비교할 리비전을 선택하세요.</pre></div>
+            <div><h3>추출 응답 원본</h3><pre id='extraction'>추출 결과가 여기에 표시됩니다.</pre></div>
+          </div>
+        </div>
+      </details>
+    </section>
   </div>
 
   <script>
     function resolveApiBase() {
-      if (window.location.protocol === "file:") {
-        return "http://127.0.0.1:8000/api";
+      if (window.location.protocol === 'file:') {
+        return 'http://127.0.0.1:8000/api';
       }
 
       if (window.localStorage) {
-        const override = window.localStorage.getItem("domesticMetaApiBase");
+        const override = window.localStorage.getItem('domesticMetaApiBase');
         if (override) {
-          return override.replace(/\/$/, "");
+          return override.replace(/\/$/, '');
         }
       }
 
@@ -604,828 +533,848 @@ interview</textarea>
 
     const apiBase = resolveApiBase();
 
-    const runButton = document.getElementById("run");
-    const exportManifestButton = document.getElementById("exportManifest");
-    const exportCsvButton = document.getElementById("exportCsv");
-    const exportScreeningButton = document.getElementById("exportScreening");
-    const exportPrismaButton = document.getElementById("exportPrisma");
-    const exportPrismaFlowButton = document.getElementById("exportPrismaFlow");
-    const exportMetaButton = document.getElementById("exportMeta");
-    const exportAuditButton = document.getElementById("exportAudit");
-    const exportEventsButton = document.getElementById("exportEvents");
-    const exportRevisionHistoryButton = document.getElementById("exportRevisionHistory");
-    const decisionIncludeButton = document.getElementById("decisionInclude");
-    const decisionMaybeButton = document.getElementById("decisionMaybe");
-    const decisionExcludeButton = document.getElementById("decisionExclude");
-    const runOcrButton = document.getElementById("runOcr");
-    const runExtractionButton = document.getElementById("runExtraction");
-    const saveExtractionOverrideButton = document.getElementById("saveExtractionOverride");
-    const restoreRevisionButton = document.getElementById("restoreRevision");
-
-    const queryInput = document.getElementById("query");
-    const expandedKeywordsInput = document.getElementById("expandedKeywords");
-    const yearFromInput = document.getElementById("yearFrom");
-    const yearToInput = document.getElementById("yearTo");
-    const includeThesesInput = document.getElementById("includeTheses");
-    const includeJournalsInput = document.getElementById("includeJournals");
-    const inclusionRulesInput = document.getElementById("inclusionRules");
-    const exclusionRulesInput = document.getElementById("exclusionRules");
-    const result = document.getElementById("result");
-    const summary = document.getElementById("summary");
-    const sourceBreakdownView = document.getElementById("sourceBreakdown");
-    const screeningSequenceView = document.getElementById("screeningSequence");
-    const prisma = document.getElementById("prisma");
-    const prismaFlow = document.getElementById("prismaFlow");
-    const prismaEdges = document.getElementById("prismaEdges");
-    const prismaReasons = document.getElementById("prismaReasons");
-    const extraction = document.getElementById("extraction");
-    const reviewResult = document.getElementById("reviewResult");
-    const reviewQueue = document.getElementById("reviewQueue");
-    const eventsView = document.getElementById("events");
-    const extractionHistory = document.getElementById("extractionHistory");
-    const revisionComparison = document.getElementById("revisionComparison");
-    const candidateDetail = document.getElementById("candidateDetail");
-    const candidatesBody = document.getElementById("candidates");
-    const searchesBody = document.getElementById("searches");
-    const exportContent = document.getElementById("exportContent");
-    const reviewCandidate = document.getElementById("reviewCandidate");
-    const reviewStage = document.getElementById("reviewStage");
-    const reviewReasonCode = document.getElementById("reviewReasonCode");
-    const reviewReasonText = document.getElementById("reviewReasonText");
-    const fullText = document.getElementById("fullText");
-    const fullTextFile = document.getElementById("fullTextFile");
-    const manualExtractionMessage = document.getElementById("manualExtractionMessage");
-    const manualExtractionJson = document.getElementById("manualExtractionJson");
-    const revisionToRestore = document.getElementById("revisionToRestore");
-    const restoreRevisionMessage = document.getElementById("restoreRevisionMessage");
-
-    let lastSearchId = null;
-    let currentCandidates = [];
-    let currentExtractionHistory = [];
-
-    const statusLabels = {
-      pending: "대기",
-      running: "실행 중",
-      completed: "완료",
-      failed: "실패",
-      include: "포함",
-      exclude: "제외",
-      needs_human_review: "추가 검토",
-      selected_for_full_text: "원문 검토 대상",
-      needs_review_title_abstract: "제목/초록 검토 필요",
-      excluded_title_abstract: "제목/초록 제외",
-      title_abstract: "제목/초록",
-      full_text: "원문",
-      extracted: "추출 완료",
-      manual_override: "수동 보정",
-      ocr_required: "OCR 필요",
-      full_text_needs_ocr: "원문 OCR 필요",
-      full_text_decision_missing: "원문 판정 필요",
-      title_abstract_decision_missing: "제목/초록 판정 필요"
+    const elements = {
+      apiBaseLabel: document.getElementById('apiBaseLabel'),
+      runButton: document.getElementById('run'),
+      exportManifestButton: document.getElementById('exportManifest'),
+      exportCsvButton: document.getElementById('exportCsv'),
+      exportScreeningButton: document.getElementById('exportScreening'),
+      exportPrismaButton: document.getElementById('exportPrisma'),
+      exportPrismaFlowButton: document.getElementById('exportPrismaFlow'),
+      exportMetaButton: document.getElementById('exportMeta'),
+      exportAuditButton: document.getElementById('exportAudit'),
+      exportEventsButton: document.getElementById('exportEvents'),
+      exportRevisionHistoryButton: document.getElementById('exportRevisionHistory'),
+      decisionIncludeButton: document.getElementById('decisionInclude'),
+      decisionMaybeButton: document.getElementById('decisionMaybe'),
+      decisionExcludeButton: document.getElementById('decisionExclude'),
+      runOcrButton: document.getElementById('runOcr'),
+      runExtractionButton: document.getElementById('runExtraction'),
+      saveExtractionOverrideButton: document.getElementById('saveExtractionOverride'),
+      restoreRevisionButton: document.getElementById('restoreRevision'),
+      queryInput: document.getElementById('query'),
+      expandedKeywordsInput: document.getElementById('expandedKeywords'),
+      yearFromInput: document.getElementById('yearFrom'),
+      yearToInput: document.getElementById('yearTo'),
+      includeThesesInput: document.getElementById('includeTheses'),
+      includeJournalsInput: document.getElementById('includeJournals'),
+      inclusionRulesInput: document.getElementById('inclusionRules'),
+      exclusionRulesInput: document.getElementById('exclusionRules'),
+      reviewCandidate: document.getElementById('reviewCandidate'),
+      reviewStage: document.getElementById('reviewStage'),
+      reviewReasonCode: document.getElementById('reviewReasonCode'),
+      reviewReasonText: document.getElementById('reviewReasonText'),
+      fullText: document.getElementById('fullText'),
+      fullTextFile: document.getElementById('fullTextFile'),
+      manualExtractionMessage: document.getElementById('manualExtractionMessage'),
+      manualExtractionJson: document.getElementById('manualExtractionJson'),
+      revisionToRestore: document.getElementById('revisionToRestore'),
+      restoreRevisionMessage: document.getElementById('restoreRevisionMessage'),
+      runSummary: document.getElementById('runSummary'),
+      searchContext: document.getElementById('searchContext'),
+      sourceBreakdown: document.getElementById('sourceBreakdown'),
+      screeningSequence: document.getElementById('screeningSequence'),
+      searchesBody: document.getElementById('searches'),
+      worklistBody: document.getElementById('worklistBody'),
+      worklistSummary: document.getElementById('worklistSummary'),
+      selectedCandidateHeader: document.getElementById('selectedCandidateHeader'),
+      candidateBibliography: document.getElementById('candidateBibliography'),
+      decisionOverview: document.getElementById('decisionOverview'),
+      fullTextStatusView: document.getElementById('fullTextStatusView'),
+      extractionOverview: document.getElementById('extractionOverview'),
+      qualityOverview: document.getElementById('qualityOverview'),
+      effectSizeOverview: document.getElementById('effectSizeOverview'),
+      warningChips: document.getElementById('warningChips'),
+      revisionHistoryTable: document.getElementById('revisionHistoryTable'),
+      revisionComparisonSummary: document.getElementById('revisionComparisonSummary'),
+      revisionComparisonTable: document.getElementById('revisionComparisonTable'),
+      searchEventsStructured: document.getElementById('searchEventsStructured'),
+      candidateEventsStructured: document.getElementById('candidateEventsStructured'),
+      prismaCounts: document.getElementById('prismaCounts'),
+      prismaFlow: document.getElementById('prismaFlow'),
+      prismaEdges: document.getElementById('prismaEdges'),
+      prismaReasons: document.getElementById('prismaReasons'),
+      candidateActionFeedback: document.getElementById('candidateActionFeedback'),
+      reviewResult: document.getElementById('reviewResult'),
+      exportContent: document.getElementById('exportContent'),
+      result: document.getElementById('result'),
+      summary: document.getElementById('summary'),
+      prisma: document.getElementById('prisma'),
+      reviewQueue: document.getElementById('reviewQueue'),
+      candidateDetail: document.getElementById('candidateDetail'),
+      events: document.getElementById('events'),
+      extractionHistory: document.getElementById('extractionHistory'),
+      revisionComparison: document.getElementById('revisionComparison'),
+      extraction: document.getElementById('extraction'),
+      metricTotalCandidates: document.getElementById('metricTotalCandidates'),
+      metricTotalCandidatesMeta: document.getElementById('metricTotalCandidatesMeta'),
+      metricCanonicalCandidates: document.getElementById('metricCanonicalCandidates'),
+      metricCanonicalCandidatesMeta: document.getElementById('metricCanonicalCandidatesMeta'),
+      metricReviewNeeded: document.getElementById('metricReviewNeeded'),
+      metricReviewNeededMeta: document.getElementById('metricReviewNeededMeta'),
+      metricHighRisk: document.getElementById('metricHighRisk'),
+      metricHighRiskMeta: document.getElementById('metricHighRiskMeta'),
+      metricOcrNeeded: document.getElementById('metricOcrNeeded'),
+      metricOcrNeededMeta: document.getElementById('metricOcrNeededMeta'),
+      metricExtracted: document.getElementById('metricExtracted'),
+      metricExtractedMeta: document.getElementById('metricExtractedMeta'),
+      metricIncludedStudies: document.getElementById('metricIncludedStudies'),
+      metricIncludedStudiesMeta: document.getElementById('metricIncludedStudiesMeta')
     };
 
-    function translateStatus(value) {
-      if (value === null || value === undefined || value === "") {
-        return "-";
-      }
-      return statusLabels[value] || value;
+    const state = {
+      lastSearchId: null,
+      currentRunResult: null,
+      currentSummary: null,
+      currentPrisma: null,
+      currentCandidates: [],
+      currentReviewQueue: [],
+      currentSearchEvents: [],
+      currentCandidateDetail: null,
+      currentExtractionHistory: [],
+      currentWorklist: [],
+      currentComparison: null,
+      queueError: null,
+      candidatesError: null,
+      eventsError: null
+    };
+
+    const statusLabels = {
+      pending: '대기', running: '실행 중', completed: '완료', failed: '실패', include: '포함', exclude: '제외', needs_human_review: '추가 검토', selected_for_full_text: '원문 검토 대상', needs_review_title_abstract: '제목·초록 검토 필요', excluded_title_abstract: '제목·초록 제외', title_abstract: '제목·초록', full_text: '원문', extracted: '추출 완료', manual_override: '수동 보정', fallback_heuristic: '휴리스틱 추출', ocr_required: 'OCR 필요', full_text_needs_ocr: '원문 OCR 필요', no_text_extracted: '텍스트 추출 실패', ocr_failed: 'OCR 실패', available: '사용 가능', stub: 'Stub 데이터', live: 'Live', live_misconfigured: 'Live 설정 누락', live_failed: 'Live 호출 실패', backend_unknown: '백엔드 미상', mode_unknown: '모드 미상'
+    };
+
+    const reasonLabels = {
+      title_abstract_decision_missing: '제목·초록 판정 누락', title_abstract_review_needed: '제목·초록 추가 검토', full_text_review_needed: '원문 추가 검토', full_text_needed: '원문 확보 필요', ocr_required: 'OCR 필요', ocr_failed: 'OCR 실패', text_extraction_pending: '텍스트 추출 대기', full_text_decision_missing: '원문 판정 누락', extraction_not_run: '추출 미실행', effect_size_not_computable: '효과크기 계산 불가', quality_assessment_low: '품질 점수 낮음', sample_size_mismatch: '표본 수 불일치', missing_evidence_spans: '근거 span 누락', effect_inputs_incomplete: '효과크기 입력 불완전', meta_ready_without_sufficient_inputs: '메타분석 준비 표기 불일치', low_confidence_extraction: '낮은 추출 신뢰도'
+    };
+
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .split('&').join('&amp;')
+        .split('<').join('&lt;')
+        .split('>').join('&gt;')
+        .split(String.fromCharCode(34)).join('&quot;')
+        .split(String.fromCharCode(39)).join('&#39;');
     }
+
+    function translateStatus(value) {
+      if (value === null || value === undefined || value === '') {
+        return '-';
+      }
+      return statusLabels[value] || String(value);
+    }
+
+    function translateReason(value) {
+      if (!value) {
+        return '-';
+      }
+      return reasonLabels[value] || String(value).replace(/_/g, ' ');
+    }
+
     function parseList(value) {
-      return value
-        .split(/\r?\n|,/)
-        .map((item) => item.trim())
-        .filter(Boolean);
+      return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
+    }
+
+    function dedupe(values) {
+      const output = [];
+      values.forEach((value) => {
+        if (!value || output.includes(value)) {
+          return;
+        }
+        output.push(value);
+      });
+      return output;
+    }
+
+    function safeJoin(items, fallback = '-') {
+      return Array.isArray(items) && items.length ? items.join(', ') : fallback;
+    }
+
+    function setMetric(valueElement, metaElement, value, meta) {
+      valueElement.textContent = value;
+      metaElement.textContent = meta;
+    }
+
+    function setHtmlMessage(element, message, kind = 'empty') {
+      element.innerHTML = `<div class='${kind}-state'>${escapeHtml(message)}</div>`;
+    }
+
+    function setFeedback(element, message, kind = 'info') {
+      const prefix = kind === 'error' ? '오류' : kind === 'success' ? '완료' : '안내';
+      element.textContent = `${prefix}: ${message}`;
+    }
+
+    function compactJson(value) {
+      return JSON.stringify(value, null, 2);
+    }
+
+    function statusPill(status) {
+      if (!status) {
+        return `<span class='pill pill-muted'>-</span>`;
+      }
+      const label = escapeHtml(translateStatus(status));
+      if (String(status).includes('ocr') || String(status).includes('failed') || String(status).includes('low')) {
+        return `<span class='pill pill-high'>${label}</span>`;
+      }
+      if (String(status).includes('pending') || String(status).includes('review') || String(status).includes('maybe')) {
+        return `<span class='pill pill-medium'>${label}</span>`;
+      }
+      return `<span class='pill pill-accent'>${label}</span>`;
+    }
+
+    function qualityPill(score) {
+      if (!score) {
+        return `<span class='pill pill-muted'>-</span>`;
+      }
+      if (score === 'high') {
+        return `<span class='pill pill-low'>QA High</span>`;
+      }
+      if (score === 'medium') {
+        return `<span class='pill pill-medium'>QA Medium</span>`;
+      }
+      return `<span class='pill pill-high'>QA Low</span>`;
+    }
+
+    function priorityPill(priority) {
+      if (!priority) {
+        return `<span class='pill pill-muted'>-</span>`;
+      }
+      if (priority === 'high') {
+        return `<span class='pill pill-high'>High</span>`;
+      }
+      if (priority === 'medium') {
+        return `<span class='pill pill-medium'>Medium</span>`;
+      }
+      return `<span class='pill pill-low'>Low</span>`;
+    }
+
+    function chipList(items, emptyMessage = '표시할 항목이 없습니다.') {
+      if (!Array.isArray(items) || !items.length) {
+        return `<div class='empty-state'>${escapeHtml(emptyMessage)}</div>`;
+      }
+      return `<div class='chip-list'>${items.map((item) => {
+        const cls = String(item).includes('low') || String(item).includes('mismatch') || String(item).includes('missing') ? 'chip-danger' : 'chip-accent';
+        return `<span class='chip ${cls}'>${escapeHtml(translateReason(item))}</span>`;
+      }).join('')}</div>`;
+    }
+
+    function factCard(label, value, note = '', wide = false) {
+      return `<div class='fact-card${wide ? ' wide' : ''}'><div class='fact-label'>${escapeHtml(label)}</div><div class='fact-value'>${value}</div>${note ? `<div class='subtle-note'>${escapeHtml(note)}</div>` : ''}</div>`;
+    }
+
+    function summaryRow(label, value) {
+      return `<div class='summary-row'><div class='summary-label'>${escapeHtml(label)}</div><div class='summary-value'>${value}</div></div>`;
+    }
+
+    function inferFullTextStatus(candidate) {
+      if (!candidate) { return null; }
+      if (candidate.status === 'full_text_needs_ocr') { return 'ocr_required'; }
+      if (candidate.status === 'selected_for_full_text') { return 'pending'; }
+      if (candidate.status === 'included_full_text') { return 'available'; }
+      return null;
+    }
+
+    function inferExtractionStatus(candidate) {
+      if (!candidate) { return null; }
+      if (candidate.status === 'extracted') { return 'completed'; }
+      if (candidate.status === 'manual_override') { return 'manual_override'; }
+      return null;
+    }
+
+    function selectedCandidate() {
+      return state.currentCandidates.find((item) => item.id === elements.reviewCandidate.value) || null;
     }
 
     function populateSearchForm(payload) {
-      queryInput.value = payload.query_text || "";
-      expandedKeywordsInput.value = (payload.expanded_keywords || []).join("\n");
-      yearFromInput.value = payload.year_from ?? "";
-      yearToInput.value = payload.year_to ?? "";
-      includeThesesInput.checked = Boolean(payload.include_theses);
-      includeJournalsInput.checked = Boolean(payload.include_journal_articles);
-      inclusionRulesInput.value = (payload.inclusion_rules || []).join("\n");
-      exclusionRulesInput.value = (payload.exclusion_rules || []).join("\n");
+      elements.queryInput.value = payload.query_text || '';
+      elements.expandedKeywordsInput.value = (payload.expanded_keywords || []).join('\n');
+      elements.yearFromInput.value = payload.year_from ?? '';
+      elements.yearToInput.value = payload.year_to ?? '';
+      elements.includeThesesInput.checked = Boolean(payload.include_theses);
+      elements.includeJournalsInput.checked = Boolean(payload.include_journal_articles);
+      elements.inclusionRulesInput.value = (payload.inclusion_rules || []).join('\n');
+      elements.exclusionRulesInput.value = (payload.exclusion_rules || []).join('\n');
     }
 
-    function renderCandidates(items) {
-      currentCandidates = items;
-
-      if (!items.length) {
-        candidatesBody.innerHTML = '<tr><td colspan="5">후보 논문이 없습니다.</td></tr>';
-        reviewCandidate.innerHTML = '<option value="">후보를 선택하세요</option>';
+    function renderSearchContext() {
+      const summary = state.currentSummary;
+      if (!summary) {
+        setHtmlMessage(elements.searchContext, '최근 검색을 열거나 새 검색을 실행하면 컨텍스트가 표시됩니다.');
         return;
       }
+      elements.searchContext.innerHTML = `<div class='summary-list'>${summaryRow('검색어', escapeHtml(summary.query_text))}${summaryRow('연도 범위', `${escapeHtml(summary.year_from)} - ${escapeHtml(summary.year_to)}`)}${summaryRow('확장 키워드', escapeHtml(safeJoin(summary.expanded_keywords)))}${summaryRow('포함 규칙', escapeHtml(safeJoin(summary.inclusion_rules)))}${summaryRow('제외 규칙', escapeHtml(safeJoin(summary.exclusion_rules)))}${summaryRow('상태', statusPill(summary.status))}</div>`;
+    }
 
-      candidatesBody.innerHTML = items.map((item) => `
-        <tr>
-          <td>${item.title}</td>
-          <td><span class="badge">${item.source}</span></td>
-          <td>${item.year}</td>
-          <td><span class="status">${translateStatus(item.status)}</span></td>
-          <td><button class="table-button ghost" data-candidate-id="${item.id}">선택</button></td>
-        </tr>
-      `).join("");
+    function renderRunSummary() {
+      const payload = state.currentRunResult;
+      if (!payload) {
+        setHtmlMessage(elements.runSummary, '검색을 실행하면 수집, 중복 제거, 스크리닝 결과가 구조화되어 표시됩니다.');
+        return;
+      }
+      const sourceRuns = (payload.source_runs || []).map((item) => `<div style='margin-bottom: 8px;'><strong>${escapeHtml(item.label)}</strong> ${statusPill(item.backend)} ${statusPill(item.query_mode)}<div class='subtle-note'>fetched ${escapeHtml(item.fetched_candidates)}건 / raw ${escapeHtml(item.raw_total_hits ?? '-')}</div></div>`).join('');
+      elements.runSummary.innerHTML = `<div class='summary-list'>${summaryRow('수집 후보', `<strong>${escapeHtml(payload.collected_candidates)}</strong>`)}${summaryRow('스크리닝 대상', `<strong>${escapeHtml(payload.screened_candidates)}</strong>`)}${summaryRow('중복 제거', `<strong>${escapeHtml(payload.duplicates_removed)}</strong>`)}${summaryRow('대표 후보', `<strong>${escapeHtml(payload.canonical_candidates)}</strong>`)}${summaryRow('소스 실행', sourceRuns || '-')}</div>`;
+    }
 
-      document.querySelectorAll("[data-candidate-id]").forEach((button) => {
-        button.addEventListener("click", async () => {
-          reviewCandidate.value = button.dataset.candidateId;
+    function renderSourceBreakdown() {
+      const items = state.currentSummary?.source_search_breakdown || [];
+      if (!items.length) {
+        setHtmlMessage(elements.sourceBreakdown, '소스별 검색 결과가 아직 없습니다.');
+        return;
+      }
+      elements.sourceBreakdown.innerHTML = `<div class='stack-list'>${items.map((item) => {
+        const statusSummary = Object.entries(item.status_counts || {}).map(([key, value]) => `${escapeHtml(translateStatus(key))} ${escapeHtml(value)}건`).join(' · ');
+        const backendNote = String(item.backend || '').startsWith('live_') && Array.isArray(item.query_plan?.notes) && item.query_plan.notes.length ? `<div class='subtle-note' style='margin-top: 8px;'>${escapeHtml(item.query_plan.notes[item.query_plan.notes.length - 1])}</div>` : '';
+        return `<div class='stack-item'><div class='stack-item-title'>${escapeHtml(item.label)}</div><div class='pill-list' style='margin-bottom: 10px;'>${statusPill(item.backend || 'backend_unknown')}${statusPill(item.query_mode || 'mode_unknown')}</div><div class='stack-item-meta'>raw total ${escapeHtml(item.raw_total_hits ?? '-')} · fetched ${escapeHtml(item.fetched_candidates)} · 대표 ${escapeHtml(item.canonical_candidates)} · 중복 ${escapeHtml(item.duplicate_candidates)}<br />${statusSummary || '상태 분포 없음'}${backendNote}</div></div>`;
+      }).join('')}</div>`;
+    }
+
+    function renderScreeningSequence() {
+      const items = state.currentSummary?.screening_sequence || [];
+      if (!items.length) {
+        setHtmlMessage(elements.screeningSequence, '기준별 분류 단계가 아직 없습니다.');
+        return;
+      }
+      elements.screeningSequence.innerHTML = `<div class='stack-list'>${items.map((item) => `<div class='stack-item'><div class='stack-item-title'>${escapeHtml(item.order)}. ${escapeHtml(item.label)}</div><div class='stack-item-meta'>${escapeHtml(item.description)}<br />평가 ${escapeHtml(item.evaluated_count)} · 통과 ${escapeHtml(item.passed_count)} · 제외 ${escapeHtml(item.excluded_count)} · 검토 ${escapeHtml(item.review_count)} · 자동 포함 ${escapeHtml(item.included_count)}</div></div>`).join('')}</div>`;
+    }
+    function renderMetricCards() {
+      const summary = state.currentSummary;
+      const reviewQueue = state.currentReviewQueue || [];
+      const candidates = state.currentCandidates || [];
+      const prisma = state.currentPrisma;
+      const statusCounts = summary?.status_counts || {};
+      const canonicalCount = summary?.canonical_candidate_count ?? candidates.filter((item) => item.canonical_record_id === item.id || item.canonical_record_id === null).length;
+      const reviewNeeded = reviewQueue.length;
+      const highRisk = reviewQueue.filter((item) => item.review_priority === 'high' || item.quality_assessment?.score === 'low').length;
+      const ocrNeeded = Object.values(summary?.full_text_status_counts || {}).length ? (summary.full_text_status_counts.ocr_required || 0) + (summary.full_text_status_counts.ocr_failed || 0) + (summary.full_text_status_counts.no_text_extracted || 0) : candidates.filter((item) => inferFullTextStatus(item) === 'ocr_required').length;
+      const extracted = (statusCounts.extracted || 0) + (statusCounts.manual_override || 0) + (statusCounts.fallback_heuristic || 0);
+      setMetric(elements.metricTotalCandidates, elements.metricTotalCandidatesMeta, String(summary?.candidate_count ?? candidates.length ?? '-'), summary ? `결정 ${summary.decision_count}건 · 이벤트 ${summary.event_count}건` : '검색을 불러오면 집계됩니다.');
+      setMetric(elements.metricCanonicalCandidates, elements.metricCanonicalCandidatesMeta, String(canonicalCount || 0), '중복 제거 후 대표 후보 기준');
+      setMetric(elements.metricReviewNeeded, elements.metricReviewNeededMeta, String(reviewNeeded), state.queueError ? '리뷰 큐 일부를 불러오지 못했습니다.' : 'review_priority 및 review_reasons 기준');
+      setMetric(elements.metricHighRisk, elements.metricHighRiskMeta, String(highRisk), 'high 우선순위 또는 low 품질 점수');
+      setMetric(elements.metricOcrNeeded, elements.metricOcrNeededMeta, String(ocrNeeded), 'ocr_required, ocr_failed, no_text_extracted 포함');
+      setMetric(elements.metricExtracted, elements.metricExtractedMeta, String(extracted), '후보 상태 집계 기준');
+      setMetric(elements.metricIncludedStudies, elements.metricIncludedStudiesMeta, String(prisma?.studies_included_in_review ?? 0), prisma ? `식별 ${prisma.identified_records} / 선별 ${prisma.records_screened}` : 'PRISMA 집계를 불러오면 업데이트됩니다.');
+    }
+
+    function buildWorklist() {
+      const queueById = new Map((state.currentReviewQueue || []).map((item) => [item.candidate.id, item]));
+      const canonicalCandidates = (state.currentCandidates || []).filter((item) => item.canonical_record_id === item.id || item.canonical_record_id === null);
+      return canonicalCandidates.map((candidate) => {
+        const queueItem = queueById.get(candidate.id);
+        return {
+          candidate,
+          review_priority: queueItem?.review_priority || 'low',
+          review_reasons: queueItem?.review_reasons || [],
+          quality_assessment: queueItem?.quality_assessment || null,
+          effect_size_summary: queueItem?.effect_size_summary || null,
+          full_text_status: queueItem?.full_text_status || inferFullTextStatus(candidate),
+          extraction_status: queueItem?.extraction_status || inferExtractionStatus(candidate)
+        };
+      }).sort((left, right) => {
+        const priorityDelta = (priorityOrder[left.review_priority] ?? 9) - (priorityOrder[right.review_priority] ?? 9);
+        if (priorityDelta !== 0) { return priorityDelta; }
+        if (left.candidate.year !== right.candidate.year) { return right.candidate.year - left.candidate.year; }
+        return left.candidate.title.localeCompare(right.candidate.title);
+      });
+    }
+
+    function populateCandidateSelect() {
+      const previousValue = elements.reviewCandidate.value;
+      if (!state.currentWorklist.length) {
+        elements.reviewCandidate.innerHTML = `<option value=''>후보를 선택하세요</option>`;
+        return;
+      }
+      elements.reviewCandidate.innerHTML = state.currentWorklist.map((item) => `<option value='${escapeHtml(item.candidate.id)}'>${escapeHtml(item.candidate.title)} (${escapeHtml(item.candidate.source)}, ${escapeHtml(item.candidate.year)}, ${escapeHtml(item.review_priority)})</option>`).join('');
+      elements.reviewCandidate.value = state.currentWorklist.some((item) => item.candidate.id === previousValue) ? previousValue : state.currentWorklist[0].candidate.id;
+    }
+
+    function renderWorklist() {
+      if (state.candidatesError) {
+        elements.worklistBody.innerHTML = `<tr><td colspan='9'>${escapeHtml(state.candidatesError)}</td></tr>`;
+        elements.worklistSummary.textContent = '후보 목록을 불러오지 못했습니다.';
+        return;
+      }
+      state.currentWorklist = buildWorklist();
+      if (!state.currentWorklist.length) {
+        elements.worklistBody.innerHTML = `<tr><td colspan='9'>대표 후보가 없습니다.</td></tr>`;
+        elements.worklistSummary.textContent = '검색을 실행하거나 최근 검색을 열어주세요.';
+        return;
+      }
+      const selectedId = elements.reviewCandidate.value;
+      const highCount = state.currentWorklist.filter((item) => item.review_priority === 'high').length;
+      elements.worklistSummary.textContent = `대표 후보 ${state.currentWorklist.length}건 · high ${highCount}건 · ${state.queueError ? '품질 큐 일부 로드 실패' : `${state.currentReviewQueue.length}건이 리뷰 큐에 있습니다`}`;
+      elements.worklistBody.innerHTML = state.currentWorklist.map((item) => {
+        const reasons = item.review_reasons.length ? item.review_reasons.slice(0, 3).map((reason) => `<span class='chip chip-accent'>${escapeHtml(translateReason(reason))}</span>`).join('') : `<span class='chip chip-muted'>리뷰 사유 없음</span>`;
+        const selectedClass = selectedId === item.candidate.id ? 'selected-row' : '';
+        const effectCell = item.effect_size_summary ? `${statusPill(item.effect_size_summary.is_computable ? 'completed' : 'failed')}<div class='title-meta'>${item.effect_size_summary.is_computable ? '가능' : '불가'}</div>` : `<span class='pill pill-muted'>-</span>`;
+        return `<tr class='${selectedClass}'><td class='worklist-candidate'><button class='title-button' data-candidate-id='${escapeHtml(item.candidate.id)}'>${escapeHtml(item.candidate.title)}</button><div class='title-meta'>${escapeHtml(item.candidate.journal_or_school)} · ${escapeHtml(translateStatus(item.candidate.status))}</div></td><td>${priorityPill(item.review_priority)}</td><td>${qualityPill(item.quality_assessment?.score || null)}</td><td><div class='chip-list'>${reasons}</div></td><td>${statusPill(item.full_text_status)}</td><td>${statusPill(item.extraction_status)}</td><td>${effectCell}</td><td>${escapeHtml(item.candidate.year)}</td><td><span class='pill pill-gold'>${escapeHtml(item.candidate.source.toUpperCase())}</span></td></tr>`;
+      }).join('');
+      document.querySelectorAll('[data-candidate-id]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          elements.reviewCandidate.value = button.dataset.candidateId;
           await loadCandidateDetail(button.dataset.candidateId);
+          renderWorklist();
         });
       });
-
-      const reviewItems = items.filter(
-        (item) => item.canonical_record_id === item.id || item.canonical_record_id === null
-      );
-
-      if (!reviewItems.length) {
-        reviewCandidate.innerHTML = '<option value="">검토 가능한 대표 후보가 없습니다</option>';
-        return;
-      }
-
-      const previousValue = reviewCandidate.value;
-      reviewCandidate.innerHTML = reviewItems.map((item) => `
-        <option value="${item.id}">${item.title} (${item.source}, ${item.year}, ${translateStatus(item.status)})</option>
-      `).join("");
-
-      if (reviewItems.some((item) => item.id === previousValue)) {
-        reviewCandidate.value = previousValue;
-      } else {
-        reviewCandidate.value = reviewItems[0].id;
-      }
     }
 
     function renderSearches(items) {
       if (!items.length) {
-        searchesBody.innerHTML = '<tr><td colspan="4">이전 검색이 없습니다.</td></tr>';
+        elements.searchesBody.innerHTML = `<tr><td colspan='4'>이전 검색이 없습니다.</td></tr>`;
         return;
       }
-
-      searchesBody.innerHTML = items.slice(0, 10).map((item) => `
-        <tr>
-          <td>${item.id}</td>
-          <td>${item.query_text}</td>
-          <td>${translateStatus(item.status)}</td>
-          <td><button class="table-button ghost" data-search-id="${item.id}">열기</button></td>
-        </tr>
-      `).join("");
-
-      document.querySelectorAll("[data-search-id]").forEach((button) => {
-        button.addEventListener("click", async () => {
-          lastSearchId = button.dataset.searchId;
-          await loadSearchRequestConfig(lastSearchId);
-          await refreshSearchState(lastSearchId);
+      elements.searchesBody.innerHTML = items.slice(0, 10).map((item) => `<tr><td class='mono'>${escapeHtml(item.id)}</td><td>${escapeHtml(item.query_text)}</td><td>${statusPill(item.status)}</td><td><button class='ghost' data-search-id='${escapeHtml(item.id)}'>열기</button></td></tr>`).join('');
+      document.querySelectorAll('[data-search-id]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          state.lastSearchId = button.dataset.searchId;
+          await loadSearchRequestConfig(state.lastSearchId);
+          await refreshSearchState(state.lastSearchId);
         });
       });
     }
 
-    function renderSourceBreakdown(items) {
-      if (!items.length) {
-        sourceBreakdownView.textContent = "RISS와 KCI 검색 건수가 아직 없습니다.";
+    function renderCandidatePanel(detailPayload) {
+      if (!detailPayload) {
+        setHtmlMessage(elements.selectedCandidateHeader, '워크리스트에서 후보를 선택하면 감사 패널이 활성화됩니다.');
+        setHtmlMessage(elements.candidateBibliography, '후보를 선택하면 서지 정보가 표시됩니다.');
+        setHtmlMessage(elements.decisionOverview, '제목·초록 및 원문 단계 판정 이력이 표시됩니다.');
+        setHtmlMessage(elements.fullTextStatusView, '원문 등록 상태와 OCR 필요 여부가 표시됩니다.');
+        setHtmlMessage(elements.extractionOverview, '추출 실행 결과와 메시지가 표시됩니다.');
+        setHtmlMessage(elements.qualityOverview, '품질 점수, 경고, 근거 개수가 표시됩니다.');
+        setHtmlMessage(elements.effectSizeOverview, '효과크기 계산 가능 여부와 누락 입력을 표시합니다.');
+        setHtmlMessage(elements.warningChips, '선택 후보의 리뷰 사유와 품질 경고가 표시됩니다.');
+        setHtmlMessage(elements.revisionHistoryTable, '후보를 선택하면 추출 리비전 이력이 표시됩니다.');
+        setHtmlMessage(elements.revisionComparisonSummary, '비교할 리비전을 선택하면 현재 추출과 차이를 구조화해 표시합니다.');
+        setHtmlMessage(elements.revisionComparisonTable, '변경 필드 표가 여기에 표시됩니다.');
         return;
       }
-
-      sourceBreakdownView.textContent = items.map((item) => {
-        const statusSummary = Object.entries(item.status_counts || {}).map(([key, value]) => translateStatus(key) + " " + value + "건").join(", ");
-        return [
-          item.label + " | 질의 모드: " + (item.query_mode || "-"),
-          "- 총 검색 건수: " + (item.raw_total_hits ?? "-"),
-          "- 현재 수집 건수: " + item.fetched_candidates,
-          "- 대표 후보: " + item.canonical_candidates,
-          "- 중복 후보: " + item.duplicate_candidates,
-          "- 수집 경로: " + (item.backend || "-"),
-          "- 상태 분포: " + (statusSummary || "없음")
-        ].join("\n");
-      }).join("\n\n");
+      const candidate = detailPayload.candidate;
+      const quality = detailPayload.quality_assessment || {};
+      const effect = detailPayload.effect_size_summary || {};
+      const extraction = detailPayload.extraction_result || null;
+      const artifact = detailPayload.full_text_artifact || null;
+      const warnings = dedupe([...(detailPayload.review_reasons || []), ...(quality.warnings || []), ...(effect.review_flags || []), ...(quality.critical_fields_missing || [])]);
+      const titleDecision = detailPayload.latest_title_abstract_decision;
+      const fullTextDecision = detailPayload.latest_full_text_decision;
+      const decisionCard = (label, item) => item ? factCard(label, `<div class='pill-list' style='margin-bottom: 8px;'>${statusPill(item.decision)}${statusPill(item.confidence)}</div><div>${escapeHtml(item.reason_code || '사유 코드 없음')}</div><div class='subtle-note'>${escapeHtml(item.reason_text || '메모 없음')}</div>`, `${item.reviewed_by} · ${item.created_at || ''}`) : factCard(label, '아직 판정 없음', '수동 검토 전 상태');
+      const linkMarkup = candidate.url ? `<a href='${escapeHtml(candidate.url)}' target='_blank' rel='noreferrer'>${escapeHtml(candidate.url)}</a>` : '-';
+      const computed = effect.computed_effect_size || null;
+      elements.selectedCandidateHeader.innerHTML = `<div class='candidate-header'><div class='pill-list' style='margin-bottom: 12px;'>${statusPill(candidate.status)}${priorityPill(detailPayload.review_priority)}${qualityPill(quality.score || null)}</div><h2 class='candidate-title'>${escapeHtml(candidate.title)}</h2><p class='candidate-subtitle'>${escapeHtml(candidate.source.toUpperCase())} · ${escapeHtml(candidate.year)} · ${escapeHtml(candidate.journal_or_school || '-')}</p></div>`;
+      elements.candidateBibliography.innerHTML = `<div class='fact-grid'>${factCard('저자', escapeHtml(safeJoin(candidate.authors)))}${factCard('문서 유형', escapeHtml(candidate.document_type))}${factCard('기관 / 저널', escapeHtml(candidate.journal_or_school || '-'))}${factCard('언어', escapeHtml(candidate.language || '-'))}${factCard('DOI', escapeHtml(candidate.doi || '-'))}${factCard('링크', linkMarkup)}${factCard('키워드', escapeHtml(safeJoin(candidate.keywords)), '', true)}${factCard('초록', escapeHtml(candidate.abstract || '초록 없음'), '', true)}</div>`;
+      elements.decisionOverview.innerHTML = `<div class='fact-grid'>${decisionCard('제목 / 초록 판정', titleDecision)}${decisionCard('원문 판정', fullTextDecision)}</div>`;
+      elements.fullTextStatusView.innerHTML = artifact ? `<div class='fact-grid'>${factCard('파일', escapeHtml(artifact.file_name))}${factCard('MIME', escapeHtml(artifact.mime_type))}${factCard('텍스트 상태', statusPill(artifact.text_extraction_status))}${factCard('저장 경로', `<span class='mono'>${escapeHtml(artifact.stored_path || '-')}</span>`)}${factCard('원문 URL', escapeHtml(artifact.source_url || '-'))}${factCard('생성 시각', escapeHtml(artifact.created_at || '-'))}</div>` : `<div class='empty-state'>저장된 원문이 없습니다.</div>`;
+      elements.extractionOverview.innerHTML = extraction ? `<div class='fact-grid'>${factCard('상태', statusPill(extraction.status))}${factCard('모델', escapeHtml(extraction.model_name || 'unknown'))}${factCard('생성 시각', escapeHtml(extraction.created_at || '-'))}${factCard('confidence', escapeHtml(extraction.fields_json?.confidence || '-'))}${factCard('메시지', escapeHtml(extraction.message || '-'), '', true)}</div>` : `<div class='empty-state'>추출 결과가 아직 없습니다.</div>`;
+      elements.qualityOverview.innerHTML = `<div class='fact-grid'>${factCard('품질 점수', qualityPill(quality.score || null))}${factCard('근거 수', `<strong>${escapeHtml(quality.evidence_count ?? 0)}</strong>`)}${factCard('표본 수 일치', escapeHtml(quality.group_sample_size_total_matches === null || quality.group_sample_size_total_matches === undefined ? '-' : String(quality.group_sample_size_total_matches)))}${factCard('핵심 필드 존재', escapeHtml(safeJoin(quality.critical_fields_present)), '', true)}${factCard('누락 핵심 필드', escapeHtml(safeJoin(quality.critical_fields_missing)), '', true)}${factCard('경고', chipList(quality.warnings || [], '품질 경고 없음'), '', true)}</div>`;
+      elements.effectSizeOverview.innerHTML = `<div class='fact-grid'>${factCard('계산 가능', effect.is_computable ? statusPill('completed') : statusPill('failed'))}${factCard('추천 effect type', escapeHtml(effect.recommended_effect_type || '-'))}${factCard('계산 방식', escapeHtml(effect.computation_method || '-'))}${factCard('계산값', computed ? `<strong>${escapeHtml(computed.metric)} ${escapeHtml(computed.value)}</strong>` : '-')}${factCard('가용 입력', escapeHtml(safeJoin(effect.available_inputs)), '', true)}${factCard('누락 입력', escapeHtml(safeJoin(effect.missing_inputs)), '', true)}${factCard('리뷰 플래그', chipList(effect.review_flags || [], '리뷰 플래그 없음'), '', true)}</div>`;
+      elements.warningChips.innerHTML = chipList(warnings, '강조할 경고가 없습니다.');
     }
 
-    function renderScreeningSequence(items) {
+    function renderStructuredEvents(target, items, emptyMessage) {
       if (!items.length) {
-        screeningSequenceView.textContent = "순차 분류 단계가 아직 없습니다.";
+        setHtmlMessage(target, emptyMessage);
         return;
       }
-
-      screeningSequenceView.textContent = items.map((item) => {
-        const outcomes = Object.entries(item.outcome_counts || {}).map(([key, value]) => key + " " + value + "건").join(", ");
-        return [
-          item.order + ". " + item.label,
-          "- 설명: " + item.description,
-          "- 이 단계에 도달한 후보: " + item.evaluated_count,
-          "- 통과: " + item.passed_count,
-          "- 제외: " + item.excluded_count,
-          "- 추가 검토: " + item.review_count,
-          "- 자동 포함: " + item.included_count,
-          "- 결과 분포: " + (outcomes || "없음")
-        ].join("\n");
-      }).join("\n\n");
+      target.innerHTML = `<div class='timeline'>${items.map((item) => `<div class='timeline-item'><div class='timeline-meta'>${escapeHtml(item.created_at || '-')} · ${escapeHtml(item.event_type)}${item.stage ? ` · ${escapeHtml(item.stage)}` : ''}${item.candidate_id ? ` · ${escapeHtml(item.candidate_id)}` : ''}</div><div class='timeline-message'>${escapeHtml(item.message || '')}</div></div>`).join('')}</div>`;
     }
 
-    function renderEvents(items) {
-      if (!items.length) {
-        eventsView.textContent = "검색 이벤트가 아직 없습니다.";
+    function renderTimelines() {
+      if (state.eventsError) {
+        setHtmlMessage(elements.searchEventsStructured, state.eventsError, 'error');
+        setHtmlMessage(elements.candidateEventsStructured, state.eventsError, 'error');
         return;
       }
+      renderStructuredEvents(elements.searchEventsStructured, state.currentSearchEvents, '검색 이벤트가 아직 없습니다.');
+      const candidateId = elements.reviewCandidate.value;
+      const candidateEvents = candidateId ? state.currentSearchEvents.filter((item) => item.candidate_id === candidateId) : [];
+      renderStructuredEvents(elements.candidateEventsStructured, candidateEvents, '선택 후보와 연결된 이벤트가 없습니다.');
+    }
 
-      eventsView.textContent = items.map((item) => {
-        const candidateLabel = item.candidate_id ? " candidate=" + item.candidate_id : "";
-        const stageLabel = item.stage ? " [" + item.stage + "]" : "";
-        return item.created_at + " | " + translateStatus(item.status) + " | " + item.event_type + stageLabel + candidateLabel + " | " + item.message;
-      }).join("\n");
+    function renderPrismaCounts() {
+      const payload = state.currentPrisma;
+      if (!payload) {
+        setHtmlMessage(elements.prismaCounts, 'PRISMA 집계가 아직 없습니다.');
+        return;
+      }
+      elements.prismaCounts.innerHTML = `<div class='prisma-grid'><div class='prisma-card'><div class='fact-label'>Identified</div><div class='prisma-card-value'>${escapeHtml(payload.identified_records)}</div></div><div class='prisma-card'><div class='fact-label'>Duplicates Removed</div><div class='prisma-card-value'>${escapeHtml(payload.duplicate_records_removed)}</div></div><div class='prisma-card'><div class='fact-label'>Screened</div><div class='prisma-card-value'>${escapeHtml(payload.records_screened)}</div></div><div class='prisma-card'><div class='fact-label'>Eligibility</div><div class='prisma-card-value'>${escapeHtml(payload.reports_assessed_for_eligibility)}</div></div><div class='prisma-card'><div class='fact-label'>Included</div><div class='prisma-card-value'>${escapeHtml(payload.studies_included_in_review)}</div></div></div>`;
     }
 
     function renderPrismaFlow(payload) {
-      const stageOrder = ["identification", "screening", "retrieval", "eligibility", "included"];
-      const stageLabels = {
-        identification: "Identification",
-        screening: "Screening",
-        retrieval: "Retrieval",
-        eligibility: "Eligibility",
-        included: "Included"
-      };
-
-      const groups = stageOrder.map((stage) => ({
-        stage,
-        label: stageLabels[stage],
-        nodes: payload.nodes.filter((node) => node.stage === stage)
-      })).filter((group) => group.nodes.length);
-
-      prismaFlow.innerHTML = groups.map((group) => `
-        <div class="flow-stage">
-          <div class="flow-stage-title">${group.label}</div>
-          ${group.nodes.map((node) => `
-            <div class="flow-node">
-              <div class="flow-count">${node.count}</div>
-              <div class="flow-label">${node.label}</div>
-              <div class="flow-desc">${node.description}</div>
-            </div>
-          `).join("")}
-        </div>
-      `).join("");
-
-      prismaEdges.innerHTML = payload.edges.length
-        ? payload.edges.map((edge) => `
-            <li>${edge.source} -> ${edge.target}: ${edge.count} (${edge.label})</li>
-          `).join("")
-        : "<li>흐름 간선 데이터가 없습니다.</li>";
-
-      prismaReasons.innerHTML = payload.exclusion_reasons.length
-        ? payload.exclusion_reasons.map((reason) => `
-            <li>${reason.reason_code}: ${reason.count}</li>
-          `).join("")
-        : "<li>기록된 제외 사유가 없습니다.</li>";
-    }
-
-    async function fetchJson(path, options) {
-      const response = await fetch(`${apiBase}${path}`, options);
-      if (!response.ok) {
-        const detail = await response.text();
-        throw new Error(`${response.status} ${response.statusText}: ${detail}`);
-      }
-      return response.json();
-    }
-
-    async function loadSearches(autoOpenLatest = false) {
-      const payload = await fetchJson("/search-requests");
-      renderSearches(payload);
-
-      if (autoOpenLatest && !lastSearchId && payload.length) {
-        lastSearchId = payload[0].id;
-        await refreshSearchState(lastSearchId);
-      }
-    }
-
-    async function loadSearchRequestConfig(searchId) {
-      if (!searchId) {
+      if (!payload) {
+        elements.prismaFlow.innerHTML = `<div class='flow-stage'>검색을 실행하면 PRISMA 플로우 데이터가 여기에 표시됩니다.</div>`;
+        elements.prismaEdges.innerHTML = `<li>흐름 간선 데이터가 없습니다.</li>`;
+        elements.prismaReasons.innerHTML = `<li>기록된 제외 사유가 없습니다.</li>`;
         return;
       }
-
-      const payload = await fetchJson(`/search-requests/${searchId}`);
-      populateSearchForm(payload);
+      const stageOrder = ['identification', 'screening', 'retrieval', 'eligibility', 'included'];
+      const stageLabels = { identification: 'Identification', screening: 'Screening', retrieval: 'Retrieval', eligibility: 'Eligibility', included: 'Included' };
+      const groups = stageOrder.map((stage) => ({ stage, label: stageLabels[stage], nodes: payload.nodes.filter((node) => node.stage === stage) })).filter((group) => group.nodes.length);
+      elements.prismaFlow.innerHTML = groups.length ? groups.map((group) => `<div class='flow-stage'><div class='flow-stage-title'>${group.label}</div>${group.nodes.map((node) => `<div class='flow-node'><div class='flow-count'>${escapeHtml(node.count)}</div><div class='flow-label'>${escapeHtml(node.label)}</div><div class='flow-desc'>${escapeHtml(node.description)}</div></div>`).join('')}</div>`).join('') : `<div class='flow-stage'>PRISMA 플로우 노드가 없습니다.</div>`;
+      elements.prismaEdges.innerHTML = payload.edges.length ? payload.edges.map((edge) => `<li>${escapeHtml(edge.source)} -> ${escapeHtml(edge.target)}: ${escapeHtml(edge.count)} (${escapeHtml(edge.label)})</li>`).join('') : `<li>흐름 간선 데이터가 없습니다.</li>`;
+      elements.prismaReasons.innerHTML = payload.exclusion_reasons.length ? payload.exclusion_reasons.map((reason) => `<li>${escapeHtml(reason.reason_code)}: ${escapeHtml(reason.count)}</li>`).join('') : `<li>기록된 제외 사유가 없습니다.</li>`;
     }
 
     function populateManualExtractionEditor(detailPayload) {
-      const extractionPayload = detailPayload?.extraction_result?.fields_json;
-      manualExtractionJson.value = JSON.stringify(extractionPayload || {
-        study_design: "group_comparison",
-        participants: { sample_size_total: "", groups: [] },
-        intervention_or_predictor: "",
-        comparison: "",
-        outcomes: [],
-        timepoints: [],
-        statistics: [],
-        effect_size_inputs: {
-          is_meta_analytic_ready: false,
-          effect_type_candidates: [],
-          recommended_effect_type: "",
-          computation_method: "",
-          correlation_coefficient: "",
-          missing_inputs: []
-        },
-        evidence_spans: [],
-        confidence: "medium"
-      }, null, 2);
-      manualExtractionMessage.value = detailPayload?.extraction_result?.status === "manual_override"
-        ? (detailPayload.extraction_result.message || "수동 추출 보정을 저장했습니다.")
-        : "수동 추출 보정을 저장했습니다.";
+      const extractionPayload = detailPayload?.extraction_result?.fields_json || { study_design: 'group_comparison', participants: { sample_size_total: '', groups: [] }, intervention_or_predictor: '', comparison: '', outcomes: [], timepoints: [], statistics: [], effect_size_inputs: { is_meta_analytic_ready: false, effect_type_candidates: [], recommended_effect_type: '', computation_method: '', correlation_coefficient: '', missing_inputs: [] }, evidence_spans: [], confidence: 'medium' };
+      elements.manualExtractionJson.value = compactJson(extractionPayload);
+      elements.manualExtractionMessage.value = detailPayload?.extraction_result?.status === 'manual_override' ? (detailPayload.extraction_result.message || '수동 추출 보정을 저장했습니다.') : '수동 추출 보정을 저장했습니다.';
     }
 
-    async function loadCandidateDetail(candidateId) {
-      if (!candidateId) {
-        candidateDetail.textContent = "후보를 선택하면 상세 정보를 확인할 수 있습니다.";
-        extractionHistory.textContent = "후보를 선택하면 추출 이력을 확인할 수 있습니다.";
-        revisionComparison.textContent = "리비전을 선택하면 현재 추출 결과와 비교합니다.";
-        currentExtractionHistory = [];
-        populateRevisionRestoreOptions([]);
-        populateManualExtractionEditor(null);
+    function populateRevisionRestoreOptions(revisions) {
+      state.currentExtractionHistory = Array.isArray(revisions) ? revisions : [];
+      if (!state.currentExtractionHistory.length) {
+        elements.revisionToRestore.innerHTML = `<option value=''>불러온 리비전이 없습니다</option>`;
+        elements.restoreRevisionMessage.value = 'Restored extraction revision.';
         return;
       }
-
-      const payload = await fetchJson(`/candidates/${candidateId}`);
-      reviewStage.value = suggestReviewStage(payload);
-      candidateDetail.textContent = JSON.stringify(payload, null, 2);
-      populateManualExtractionEditor(payload);
-      await loadExtractionHistory(candidateId);
-    }
-
-    function suggestReviewStage(detailPayload) {
-      if (detailPayload.latest_full_text_decision) {
-        return "full_text";
-      }
-
-      if (
-        detailPayload.full_text_artifact ||
-        detailPayload.extraction_result ||
-        (
-          detailPayload.latest_title_abstract_decision &&
-          detailPayload.latest_title_abstract_decision.decision === "include"
-        )
-      ) {
-        return "full_text";
-      }
-
-      return "title_abstract";
+      const previousValue = elements.revisionToRestore.value;
+      const ordered = [...state.currentExtractionHistory].sort((left, right) => right.revision_index - left.revision_index);
+      elements.revisionToRestore.innerHTML = ordered.map((item) => `<option value='${escapeHtml(item.id)}'>#${escapeHtml(item.revision_index)} | ${escapeHtml(item.status)} | ${escapeHtml(item.model_name || 'unknown')} | ${escapeHtml(item.created_at || '')}</option>`).join('');
+      elements.revisionToRestore.value = ordered.some((item) => item.id === previousValue) ? previousValue : ordered[0].id;
+      syncRestoreRevisionMessage();
     }
 
     function selectedRevision() {
-      return currentExtractionHistory.find((item) => item.id === revisionToRestore.value) || null;
+      return state.currentExtractionHistory.find((item) => item.id === elements.revisionToRestore.value) || null;
     }
 
     function syncRestoreRevisionMessage() {
       const revision = selectedRevision();
-      restoreRevisionMessage.value = revision
-        ? `Restored extraction revision ${revision.revision_index}.`
-        : "Restored extraction revision.";
+      elements.restoreRevisionMessage.value = revision ? `Restored extraction revision ${revision.revision_index}.` : 'Restored extraction revision.';
     }
 
-    function populateRevisionRestoreOptions(revisions) {
-      currentExtractionHistory = Array.isArray(revisions) ? revisions : [];
-
-      if (!currentExtractionHistory.length) {
-        revisionToRestore.innerHTML = '<option value="">불러온 리비전이 없습니다</option>';
-        restoreRevisionMessage.value = "Restored extraction revision.";
+    function renderRevisionHistory(revisions) {
+      if (!revisions.length) {
+        setHtmlMessage(elements.revisionHistoryTable, '선택 후보에 대한 추출 리비전이 없습니다.');
         return;
       }
-
-      const previousValue = revisionToRestore.value;
-      const ordered = [...currentExtractionHistory].sort((left, right) => right.revision_index - left.revision_index);
-      revisionToRestore.innerHTML = ordered.map((item) => `
-        <option value="${item.id}">#${item.revision_index} | ${item.status} | ${item.model_name || "unknown"} | ${item.created_at || ""}</option>
-      `).join("");
-
-      if (ordered.some((item) => item.id === previousValue)) {
-        revisionToRestore.value = previousValue;
-      } else {
-        revisionToRestore.value = ordered[0].id;
-      }
-      syncRestoreRevisionMessage();
+      const ordered = [...revisions].sort((left, right) => right.revision_index - left.revision_index);
+      elements.revisionHistoryTable.innerHTML = `<div class='table-shell'><table><thead><tr><th>#</th><th>상태</th><th>모델</th><th>시각</th><th>메시지</th><th>선택</th></tr></thead><tbody>${ordered.map((item) => `<tr><td>${escapeHtml(item.revision_index)}</td><td>${statusPill(item.status)}</td><td>${escapeHtml(item.model_name || 'unknown')}</td><td>${escapeHtml(item.created_at || '-')}</td><td>${escapeHtml(item.message || '-')}</td><td><button class='ghost' data-revision-id='${escapeHtml(item.id)}'>비교</button></td></tr>`).join('')}</tbody></table></div>`;
+      document.querySelectorAll('[data-revision-id]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          elements.revisionToRestore.value = button.dataset.revisionId;
+          syncRestoreRevisionMessage();
+          await loadRevisionComparison(elements.reviewCandidate.value);
+        });
+      });
     }
 
-    async function loadRevisionComparison(candidateId) {
+    function renderRevisionComparison(payload) {
+      if (!payload) {
+        setHtmlMessage(elements.revisionComparisonSummary, '비교할 리비전을 선택하면 현재 추출과 차이를 구조화해 표시합니다.');
+        setHtmlMessage(elements.revisionComparisonTable, '변경 필드 표가 여기에 표시됩니다.');
+        return;
+      }
+      elements.revisionComparisonSummary.innerHTML = `<div class='fact-grid'>${factCard('리비전', `#${escapeHtml(payload.revision_index)}`)}${factCard('변경 필드 수', `<strong>${escapeHtml(payload.changed_field_count)}</strong>`)}${factCard('현재 추출 ID', `<span class='mono'>${escapeHtml(payload.current_extraction_id)}</span>`)}${factCard('리비전 ID', `<span class='mono'>${escapeHtml(payload.revision_id)}</span>`)}</div>`;
+      if (!payload.differences.length) {
+        setHtmlMessage(elements.revisionComparisonTable, '차이점이 없습니다.');
+        return;
+      }
+      elements.revisionComparisonTable.innerHTML = `<div class='table-shell'><table><thead><tr><th>field_path</th><th>change_type</th><th>current</th><th>revision</th></tr></thead><tbody>${payload.differences.map((item) => `<tr><td class='mono'>${escapeHtml(item.field_path)}</td><td>${escapeHtml(item.change_type)}</td><td class='mono'>${escapeHtml(JSON.stringify(item.current_value))}</td><td class='mono'>${escapeHtml(JSON.stringify(item.revision_value))}</td></tr>`).join('')}</tbody></table></div>`;
+    }
+    function fetchJson(path, options) {
+      return fetch(`${apiBase}${path}`, options).then(async (response) => {
+        if (!response.ok) {
+          const detail = await response.text();
+          throw new Error(`${response.status} ${response.statusText}: ${detail}`);
+        }
+        return response.json();
+      });
+    }
+
+    function loadSearches(autoOpenLatest = false) {
+      return fetchJson('/search-requests').then(async (payload) => {
+        renderSearches(payload);
+        if (autoOpenLatest && !state.lastSearchId && payload.length) {
+          state.lastSearchId = payload[0].id;
+          await loadSearchRequestConfig(state.lastSearchId);
+          await refreshSearchState(state.lastSearchId);
+        }
+      });
+    }
+
+    function loadSearchRequestConfig(searchId) {
+      if (!searchId) { return Promise.resolve(); }
+      return fetchJson(`/search-requests/${searchId}`).then((payload) => { populateSearchForm(payload); });
+    }
+
+    function loadReviewQueue() {
+      if (!state.lastSearchId) {
+        elements.reviewQueue.textContent = '먼저 검색을 실행하거나 최근 검색을 열어주세요.';
+        return Promise.resolve();
+      }
+      return fetchJson(`/search-requests/${state.lastSearchId}/review-queue`).then((payload) => {
+        state.currentReviewQueue = payload;
+        state.queueError = null;
+        elements.reviewQueue.textContent = compactJson(payload);
+        renderMetricCards();
+        renderWorklist();
+      }).catch((error) => {
+        state.currentReviewQueue = [];
+        state.queueError = String(error);
+        elements.reviewQueue.textContent = String(error);
+        renderMetricCards();
+        renderWorklist();
+      });
+    }
+
+    function loadPrismaFlow() {
+      if (!state.lastSearchId) {
+        renderPrismaFlow(null);
+        return Promise.resolve();
+      }
+      return fetchJson(`/search-requests/${state.lastSearchId}/prisma/flow`).then((payload) => { renderPrismaFlow(payload); }).catch((error) => {
+        elements.prismaFlow.innerHTML = `<div class='flow-stage'>${escapeHtml(String(error))}</div>`;
+        elements.prismaEdges.innerHTML = `<li>흐름 간선 데이터를 불러오지 못했습니다.</li>`;
+        elements.prismaReasons.innerHTML = `<li>제외 사유 데이터를 불러오지 못했습니다.</li>`;
+      });
+    }
+
+    function loadCandidateDetail(candidateId) {
       if (!candidateId) {
-        revisionComparison.textContent = "리비전을 선택하면 현재 추출 결과와 비교합니다.";
-        return;
+        elements.candidateDetail.textContent = '후보를 선택하면 상세 payload가 여기에 표시됩니다.';
+        elements.extractionHistory.textContent = '후보를 선택하면 추출 리비전 이력이 여기에 표시됩니다.';
+        elements.revisionComparison.textContent = '현재 추출 결과와 비교할 리비전을 선택하세요.';
+        renderCandidatePanel(null);
+        renderStructuredEvents(elements.candidateEventsStructured, [], '선택 후보와 연결된 이벤트가 없습니다.');
+        populateManualExtractionEditor(null);
+        populateRevisionRestoreOptions([]);
+        return Promise.resolve();
       }
+      setHtmlMessage(elements.selectedCandidateHeader, '후보 상세를 불러오는 중입니다.', 'loading');
+      return fetchJson(`/candidates/${candidateId}`).then((payload) => {
+        elements.reviewStage.value = payload.latest_full_text_decision || payload.full_text_artifact || payload.extraction_result || (payload.latest_title_abstract_decision && payload.latest_title_abstract_decision.decision === 'include') ? 'full_text' : 'title_abstract';
+        elements.candidateDetail.textContent = compactJson(payload);
+        renderCandidatePanel(payload);
+        populateManualExtractionEditor(payload);
+        renderTimelines();
+        return loadExtractionHistory(candidateId);
+      }).catch((error) => {
+        elements.candidateDetail.textContent = String(error);
+        renderCandidatePanel(null);
+        setHtmlMessage(elements.selectedCandidateHeader, String(error), 'error');
+      });
+    }
 
+    function loadExtractionHistory(candidateId) {
+      if (!candidateId) {
+        elements.extractionHistory.textContent = '후보를 선택하면 추출 리비전 이력이 여기에 표시됩니다.';
+        populateRevisionRestoreOptions([]);
+        renderRevisionHistory([]);
+        renderRevisionComparison(null);
+        return Promise.resolve();
+      }
+      return fetchJson(`/candidates/${candidateId}/extraction-history`).then((payload) => {
+        elements.extractionHistory.textContent = compactJson(payload);
+        populateRevisionRestoreOptions(payload);
+        renderRevisionHistory(payload);
+        return loadRevisionComparison(candidateId);
+      }).catch((error) => {
+        elements.extractionHistory.textContent = String(error);
+        populateRevisionRestoreOptions([]);
+        setHtmlMessage(elements.revisionHistoryTable, String(error), 'error');
+        renderRevisionComparison(null);
+      });
+    }
+
+    function loadRevisionComparison(candidateId) {
+      if (!candidateId) {
+        elements.revisionComparison.textContent = '현재 추출 결과와 비교할 리비전을 선택하세요.';
+        renderRevisionComparison(null);
+        return Promise.resolve();
+      }
       const revision = selectedRevision();
       if (!revision) {
-        revisionComparison.textContent = "선택된 추출 리비전이 없습니다.";
-        return;
+        elements.revisionComparison.textContent = '선택된 추출 리비전이 없습니다.';
+        renderRevisionComparison(null);
+        return Promise.resolve();
       }
-
-      try {
-        const payload = await fetchJson(`/candidates/${candidateId}/extraction-history/${revision.id}/compare-current`);
-        revisionComparison.textContent = JSON.stringify(payload, null, 2);
-      } catch (error) {
-        revisionComparison.textContent = String(error);
-      }
-    }
-    async function loadExtractionHistory(candidateId) {
-      if (!candidateId) {
-        extractionHistory.textContent = "후보를 선택하면 추출 이력을 확인할 수 있습니다.";
-        revisionComparison.textContent = "리비전을 선택하면 현재 추출 결과와 비교합니다.";
-        currentExtractionHistory = [];
-        populateRevisionRestoreOptions([]);
-        return;
-      }
-
-      const payload = await fetchJson(`/candidates/${candidateId}/extraction-history`);
-      extractionHistory.textContent = JSON.stringify(payload, null, 2);
-      populateRevisionRestoreOptions(payload);
-      await loadRevisionComparison(candidateId);
-    }
-
-    async function loadReviewQueue() {
-      if (!lastSearchId) {
-        reviewQueue.textContent = "먼저 검색을 실행하거나 최근 검색을 열어주세요.";
-        return;
-      }
-
-      const payload = await fetchJson(`/search-requests/${lastSearchId}/review-queue`);
-      reviewQueue.textContent = JSON.stringify(payload, null, 2);
-    }
-
-    async function loadPrismaFlow() {
-      if (!lastSearchId) {
-        prismaFlow.innerHTML = '<div class="flow-stage">검색을 실행하면 PRISMA 플로우 노드가 표시됩니다.</div>';
-        prismaEdges.innerHTML = "<li>흐름 간선 데이터가 없습니다.</li>";
-        prismaReasons.innerHTML = "<li>기록된 제외 사유가 없습니다.</li>";
-        return;
-      }
-
-      const payload = await fetchJson(`/search-requests/${lastSearchId}/prisma/flow`);
-      renderPrismaFlow(payload);
-    }
-
-    async function refreshSearchState(searchId) {
-      const [summaryJson, prismaJson, candidatesJson, eventsJson] = await Promise.all([
-        fetchJson(`/search-requests/${searchId}/summary`),
-        fetchJson(`/search-requests/${searchId}/prisma`),
-        fetchJson(`/search-requests/${searchId}/candidates`),
-        fetchJson(`/search-requests/${searchId}/events`)
-      ]);
-
-      populateSearchForm(summaryJson);
-      summary.textContent = JSON.stringify(summaryJson, null, 2);
-      renderSourceBreakdown(summaryJson.source_search_breakdown || []);
-      renderScreeningSequence(summaryJson.screening_sequence || []);
-      prisma.textContent = JSON.stringify(prismaJson, null, 2);
-      renderEvents(eventsJson);
-
-      renderCandidates(candidatesJson);
-      await loadSearches(false);
-      await loadReviewQueue();
-      await loadPrismaFlow();
-      await loadCandidateDetail(reviewCandidate.value);
-    }
-
-    async function loadExport(kind) {
-      if (!lastSearchId) {
-        exportContent.value = "먼저 검색을 실행하거나 최근 검색을 열어주세요.";
-        return;
-      }
-
-      const routes = {
-        manifest: `/search-requests/${lastSearchId}/exports/search-request.json`,
-        candidates: `/search-requests/${lastSearchId}/exports/candidates.csv`,
-        screening: `/search-requests/${lastSearchId}/exports/screening-log.json`,
-        prisma: `/search-requests/${lastSearchId}/exports/prisma-counts.json`,
-        prismaFlow: `/search-requests/${lastSearchId}/exports/prisma-flow.json`,
-        meta: `/search-requests/${lastSearchId}/exports/meta-analysis-ready.csv`,
-        audit: `/search-requests/${lastSearchId}/exports/audit-report.md`,
-        events: `/search-requests/${lastSearchId}/exports/events.json`,
-        revisions: `/search-requests/${lastSearchId}/exports/extraction-revisions.json`
-      };
-
-      const payload = await fetchJson(routes[kind]);
-      exportContent.value = payload.content;
-    }
-
-    function selectedCandidate() {
-      return currentCandidates.find((item) => item.id === reviewCandidate.value) || null;
-    }
-
-    async function submitDecision(decision) {
-      const candidate = selectedCandidate();
-      if (!candidate) {
-        reviewResult.textContent = "판정을 제출하기 전에 후보를 선택하세요.";
-        return;
-      }
-
-      const payload = {
-        stage: reviewStage.value,
-        decision,
-        reason_code: reviewReasonCode.value || null,
-        reason_text: reviewReasonText.value || null,
-        reviewed_by: "dashboard"
-      };
-
-      const response = await fetchJson(`/candidates/${candidate.id}/decision`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+      return fetchJson(`/candidates/${candidateId}/extraction-history/${revision.id}/compare-current`).then((payload) => {
+        state.currentComparison = payload;
+        elements.revisionComparison.textContent = compactJson(payload);
+        renderRevisionComparison(payload);
+      }).catch((error) => {
+        state.currentComparison = null;
+        elements.revisionComparison.textContent = String(error);
+        setHtmlMessage(elements.revisionComparisonSummary, String(error), 'error');
+        setHtmlMessage(elements.revisionComparisonTable, String(error), 'error');
       });
-
-      reviewResult.textContent = JSON.stringify(response, null, 2);
-      await refreshSearchState(lastSearchId);
-      await loadExport("screening");
     }
 
-    runButton.addEventListener("click", async () => {
-      result.textContent = "검색 요청을 제출하는 중입니다...";
-      summary.textContent = "검색 요약을 불러오는 중입니다...";
-      prisma.textContent = "PRISMA 집계를 불러오는 중입니다...";
-      sourceBreakdownView.textContent = "RISS와 KCI 검색 건수를 계산하는 중입니다...";
-      screeningSequenceView.textContent = "기준별 순차 분류를 계산하는 중입니다...";
-      prismaFlow.innerHTML = '<div class="flow-stage">PRISMA 플로우를 생성하는 중입니다...</div>';
-      prismaEdges.innerHTML = "<li>흐름 간선 목록을 생성하는 중입니다...</li>";
-      prismaReasons.innerHTML = "<li>제외 사유 요약을 생성하는 중입니다...</li>";
-      reviewResult.textContent = "수동 선별 결과를 기다리는 중입니다...";
-      reviewQueue.textContent = "검토 대기열을 불러오는 중입니다...";
-      eventsView.textContent = "검색 이벤트를 불러오는 중입니다...";
-      extractionHistory.textContent = "추출 리비전을 불러오는 중입니다...";
-      revisionComparison.textContent = "리비전 비교 결과를 불러오는 중입니다...";
+    function refreshSearchState(searchId) {
+      state.lastSearchId = searchId;
+      state.currentSummary = null;
+      state.currentPrisma = null;
+      state.currentCandidates = [];
+      state.currentReviewQueue = [];
+      state.currentSearchEvents = [];
+      state.currentWorklist = [];
+      state.queueError = null;
+      state.candidatesError = null;
+      state.eventsError = null;
+      setHtmlMessage(elements.searchContext, '검색 컨텍스트를 불러오는 중입니다.', 'loading');
+      setHtmlMessage(elements.sourceBreakdown, '소스별 검색 결과를 계산하는 중입니다.', 'loading');
+      setHtmlMessage(elements.screeningSequence, '기준별 순차 분류를 계산하는 중입니다.', 'loading');
+      setHtmlMessage(elements.prismaCounts, 'PRISMA 집계를 불러오는 중입니다.', 'loading');
+      setHtmlMessage(elements.searchEventsStructured, '검색 이벤트를 불러오는 중입니다.', 'loading');
+      setHtmlMessage(elements.candidateEventsStructured, '후보 이벤트를 기다리는 중입니다.', 'loading');
+      elements.worklistBody.innerHTML = `<tr><td colspan='9'>감사 워크리스트를 불러오는 중입니다.</td></tr>`;
+      elements.worklistSummary.textContent = '후보와 리뷰 신호를 합치는 중입니다.';
+      elements.summary.textContent = '검색 요약을 불러오는 중입니다...';
+      elements.prisma.textContent = 'PRISMA 집계를 불러오는 중입니다...';
+      elements.reviewQueue.textContent = '검토 대기열을 불러오는 중입니다...';
+      elements.events.textContent = '검색 이벤트를 불러오는 중입니다...';
+      renderCandidatePanel(null);
+      populateManualExtractionEditor(null);
       populateRevisionRestoreOptions([]);
-      candidateDetail.textContent = "후보 상세 정보를 불러오는 중입니다...";
-      extraction.textContent = "추출 결과를 기다리는 중입니다...";
-      exportContent.value = "내보내기 미리보기를 기다리는 중입니다...";
 
+      const summaryPromise = fetchJson(`/search-requests/${searchId}/summary`).then((payload) => { state.currentSummary = payload; populateSearchForm(payload); elements.summary.textContent = compactJson(payload); renderSearchContext(); renderSourceBreakdown(); renderScreeningSequence(); renderMetricCards(); }).catch((error) => { elements.summary.textContent = String(error); setHtmlMessage(elements.searchContext, String(error), 'error'); setHtmlMessage(elements.sourceBreakdown, String(error), 'error'); setHtmlMessage(elements.screeningSequence, String(error), 'error'); });
+      const prismaPromise = fetchJson(`/search-requests/${searchId}/prisma`).then((payload) => { state.currentPrisma = payload; elements.prisma.textContent = compactJson(payload); renderPrismaCounts(); renderMetricCards(); }).catch((error) => { elements.prisma.textContent = String(error); setHtmlMessage(elements.prismaCounts, String(error), 'error'); });
+      const candidatesPromise = fetchJson(`/search-requests/${searchId}/candidates`).then((payload) => { state.currentCandidates = payload; renderMetricCards(); renderWorklist(); populateCandidateSelect(); }).catch((error) => { state.currentCandidates = []; state.candidatesError = String(error); renderWorklist(); });
+      const eventsPromise = fetchJson(`/search-requests/${searchId}/events`).then((payload) => { state.currentSearchEvents = payload; elements.events.textContent = compactJson(payload); renderTimelines(); }).catch((error) => { state.eventsError = String(error); elements.events.textContent = String(error); renderTimelines(); });
+
+      return Promise.allSettled([summaryPromise, prismaPromise, candidatesPromise, eventsPromise, loadReviewQueue(), loadPrismaFlow()]).then(async () => {
+        await loadSearches(false);
+        populateCandidateSelect();
+        renderWorklist();
+        if (elements.reviewCandidate.value) { await loadCandidateDetail(elements.reviewCandidate.value); }
+      });
+    }
+
+    function loadExport(kind) {
+      if (!state.lastSearchId) {
+        elements.exportContent.value = '먼저 검색을 실행하거나 최근 검색을 열어주세요.';
+        return Promise.resolve();
+      }
+      const routes = { manifest: `/search-requests/${state.lastSearchId}/exports/search-request.json`, candidates: `/search-requests/${state.lastSearchId}/exports/candidates.csv`, screening: `/search-requests/${state.lastSearchId}/exports/screening-log.json`, prisma: `/search-requests/${state.lastSearchId}/exports/prisma-counts.json`, prismaFlow: `/search-requests/${state.lastSearchId}/exports/prisma-flow.json`, meta: `/search-requests/${state.lastSearchId}/exports/meta-analysis-ready.csv`, audit: `/search-requests/${state.lastSearchId}/exports/audit-report.md`, events: `/search-requests/${state.lastSearchId}/exports/events.json`, revisions: `/search-requests/${state.lastSearchId}/exports/extraction-revisions.json` };
+      return fetchJson(routes[kind]).then((payload) => { elements.exportContent.value = payload.content; });
+    }
+
+    function submitDecision(decision) {
+      const candidate = selectedCandidate();
+      if (!candidate) { setFeedback(elements.reviewResult, '판정을 제출하기 전에 후보를 선택하세요.', 'error'); return Promise.resolve(); }
+      const payload = { stage: elements.reviewStage.value, decision, reason_code: elements.reviewReasonCode.value || null, reason_text: elements.reviewReasonText.value || null, reviewed_by: 'dashboard' };
+      return fetchJson(`/candidates/${candidate.id}/decision`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(async (response) => { setFeedback(elements.reviewResult, `판정을 저장했습니다. ${response.decision} / ${response.stage}`, 'success'); await refreshSearchState(state.lastSearchId); await loadExport('screening'); });
+    }
+
+    elements.runButton.addEventListener('click', async () => {
+      setFeedback(elements.reviewResult, '검색 실행 전 수동 선별 결과가 초기화되었습니다.');
+      setFeedback(elements.candidateActionFeedback, '검색 실행을 준비하는 중입니다.');
+      elements.result.textContent = '검색 요청을 제출하는 중입니다...';
       try {
-        const created = await fetchJson("/search-requests", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query_text: queryInput.value,
-            expanded_keywords: parseList(expandedKeywordsInput.value),
-            year_from: Number(yearFromInput.value || 2010),
-            year_to: Number(yearToInput.value || 2026),
-            include_theses: includeThesesInput.checked,
-            include_journal_articles: includeJournalsInput.checked,
-            inclusion_rules: parseList(inclusionRulesInput.value),
-            exclusion_rules: parseList(exclusionRulesInput.value)
-          })
-        });
-        lastSearchId = created.id;
-
-        const executed = await fetchJson(`/search-requests/${created.id}/run`, {
-          method: "POST"
-        });
-
-        result.textContent = JSON.stringify(executed, null, 2);
+        const created = await fetchJson('/search-requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query_text: elements.queryInput.value, expanded_keywords: parseList(elements.expandedKeywordsInput.value), year_from: Number(elements.yearFromInput.value || 2010), year_to: Number(elements.yearToInput.value || 2026), include_theses: elements.includeThesesInput.checked, include_journal_articles: elements.includeJournalsInput.checked, inclusion_rules: parseList(elements.inclusionRulesInput.value), exclusion_rules: parseList(elements.exclusionRulesInput.value) }) });
+        state.lastSearchId = created.id;
+        const executed = await fetchJson(`/search-requests/${created.id}/run`, { method: 'POST' });
+        state.currentRunResult = executed;
+        elements.result.textContent = compactJson(executed);
+        renderRunSummary();
         await refreshSearchState(created.id);
-        await loadExport("candidates");
+        await loadExport('candidates');
       } catch (error) {
-        result.textContent = String(error);
-        summary.textContent = "검색 실행에 실패했습니다.";
-        prisma.textContent = "검색 실행에 실패했습니다.";
-        sourceBreakdownView.textContent = "검색 실행에 실패했습니다.";
-        screeningSequenceView.textContent = "검색 실행에 실패했습니다.";
-        prismaFlow.innerHTML = '<div class="flow-stage">검색 실행에 실패했습니다.</div>';
-        prismaEdges.innerHTML = "<li>검색 실행에 실패했습니다.</li>";
-        prismaReasons.innerHTML = "<li>검색 실행에 실패했습니다.</li>";
-        reviewResult.textContent = "검색 실행에 실패했습니다.";
-        reviewQueue.textContent = "검색 실행에 실패했습니다.";
-        eventsView.textContent = "검색 실행에 실패했습니다.";
-        extractionHistory.textContent = "검색 실행에 실패했습니다.";
-        revisionComparison.textContent = "검색 실행에 실패했습니다.";
-        populateRevisionRestoreOptions([]);
-        candidateDetail.textContent = "검색 실행에 실패했습니다.";
-        candidatesBody.innerHTML = '<tr><td colspan="5">검색 실행에 실패했습니다.</td></tr>';
+        state.currentRunResult = null;
+        elements.result.textContent = String(error);
+        renderRunSummary();
+        setFeedback(elements.candidateActionFeedback, String(error), 'error');
       }
     });
 
-    decisionIncludeButton.addEventListener("click", async () => {
-      try {
-        await submitDecision("include");
-      } catch (error) {
-        reviewResult.textContent = String(error);
-      }
-    });
+    elements.decisionIncludeButton.addEventListener('click', () => { submitDecision('include').catch((error) => setFeedback(elements.reviewResult, String(error), 'error')); });
+    elements.decisionMaybeButton.addEventListener('click', () => { submitDecision('needs_human_review').catch((error) => setFeedback(elements.reviewResult, String(error), 'error')); });
+    elements.decisionExcludeButton.addEventListener('click', () => { submitDecision('exclude').catch((error) => setFeedback(elements.reviewResult, String(error), 'error')); });
 
-    decisionMaybeButton.addEventListener("click", async () => {
-      try {
-        await submitDecision("needs_human_review");
-      } catch (error) {
-        reviewResult.textContent = String(error);
-      }
-    });
-
-    decisionExcludeButton.addEventListener("click", async () => {
-      try {
-        await submitDecision("exclude");
-      } catch (error) {
-        reviewResult.textContent = String(error);
-      }
-    });
-
-    runOcrButton.addEventListener("click", async () => {
+    elements.runOcrButton.addEventListener('click', async () => {
       try {
         const candidate = selectedCandidate();
-        if (!candidate) {
-          extraction.textContent = "OCR을 실행하기 전에 후보를 선택하세요.";
-          return;
-        }
-
-        const payload = await fetchJson(`/candidates/${candidate.id}/ocr`, {
-          method: "POST"
-        });
-
-        extraction.textContent = JSON.stringify(payload, null, 2);
-        await refreshSearchState(lastSearchId);
+        if (!candidate) { setFeedback(elements.candidateActionFeedback, 'OCR을 실행하기 전에 후보를 선택하세요.', 'error'); return; }
+        const payload = await fetchJson(`/candidates/${candidate.id}/ocr`, { method: 'POST' });
+        elements.extraction.textContent = compactJson(payload);
+        setFeedback(elements.candidateActionFeedback, `OCR 실행 결과: ${payload.status}`, 'success');
+        await refreshSearchState(state.lastSearchId);
       } catch (error) {
-        extraction.textContent = String(error);
+        elements.extraction.textContent = String(error);
+        setFeedback(elements.candidateActionFeedback, String(error), 'error');
       }
     });
 
-    runExtractionButton.addEventListener("click", async () => {
+    elements.runExtractionButton.addEventListener('click', async () => {
       try {
         const candidate = selectedCandidate();
-        if (!candidate) {
-          extraction.textContent = "추출을 실행하기 전에 후보를 선택하세요.";
-          return;
-        }
-
-        const selectedFile = fullTextFile.files[0];
-
+        if (!candidate) { setFeedback(elements.candidateActionFeedback, '추출을 실행하기 전에 후보를 선택하세요.', 'error'); return; }
+        const selectedFile = elements.fullTextFile.files[0];
         if (selectedFile) {
           const formData = new FormData();
-          formData.append("file", selectedFile);
-          await fetchJson(`/candidates/${candidate.id}/full-text-file`, {
-            method: "POST",
-            body: formData
-          });
+          formData.append('file', selectedFile);
+          await fetchJson(`/candidates/${candidate.id}/full-text-file`, { method: 'POST', body: formData });
         } else {
-          await fetchJson(`/candidates/${candidate.id}/full-text`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              file_name: "dashboard-demo.txt",
-              mime_type: "text/plain",
-              text_content: fullText.value
-            })
-          });
+          await fetchJson(`/candidates/${candidate.id}/full-text`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_name: 'dashboard-demo.txt', mime_type: 'text/plain', text_content: elements.fullText.value }) });
         }
-
-        const payload = await fetchJson(`/candidates/${candidate.id}/extract`, {
-          method: "POST"
-        });
-
-        extraction.textContent = JSON.stringify(payload, null, 2);
-        await refreshSearchState(lastSearchId);
-        await loadExport("meta");
-        await loadExport("revisions");
+        const payload = await fetchJson(`/candidates/${candidate.id}/extract`, { method: 'POST' });
+        elements.extraction.textContent = compactJson(payload);
+        setFeedback(elements.candidateActionFeedback, `추출 상태: ${payload.status}`, 'success');
+        await refreshSearchState(state.lastSearchId);
+        await loadExport('meta');
+        await loadExport('revisions');
       } catch (error) {
-        extraction.textContent = String(error);
+        elements.extraction.textContent = String(error);
+        setFeedback(elements.candidateActionFeedback, String(error), 'error');
       }
     });
 
-    saveExtractionOverrideButton.addEventListener("click", async () => {
+    elements.saveExtractionOverrideButton.addEventListener('click', async () => {
       try {
         const candidate = selectedCandidate();
-        if (!candidate) {
-          extraction.textContent = "수동 추출 보정을 저장하기 전에 후보를 선택하세요.";
-          return;
-        }
-
-        const payload = await fetchJson(`/candidates/${candidate.id}/extraction`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fields_json: JSON.parse(manualExtractionJson.value),
-            message: manualExtractionMessage.value || "수동 추출 보정을 저장했습니다.",
-            reviewed_by: "dashboard",
-            notes: "Saved from dashboard"
-          })
-        });
-
-        extraction.textContent = JSON.stringify(payload, null, 2);
-        await refreshSearchState(lastSearchId);
-        await loadExport("meta");
-        await loadExport("revisions");
+        if (!candidate) { setFeedback(elements.candidateActionFeedback, '수동 추출 보정을 저장하기 전에 후보를 선택하세요.', 'error'); return; }
+        const payload = await fetchJson(`/candidates/${candidate.id}/extraction`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields_json: JSON.parse(elements.manualExtractionJson.value), message: elements.manualExtractionMessage.value || '수동 추출 보정을 저장했습니다.', reviewed_by: 'dashboard', notes: 'Saved from dashboard' }) });
+        elements.extraction.textContent = compactJson(payload);
+        setFeedback(elements.candidateActionFeedback, `수동 추출 저장 완료: ${payload.status}`, 'success');
+        await refreshSearchState(state.lastSearchId);
+        await loadExport('meta');
+        await loadExport('revisions');
       } catch (error) {
-        extraction.textContent = String(error);
+        elements.extraction.textContent = String(error);
+        setFeedback(elements.candidateActionFeedback, String(error), 'error');
       }
     });
 
-    exportCsvButton.addEventListener("click", async () => {
-      try {
-        await loadExport("candidates");
-      } catch (error) {
-        exportContent.value = String(error);
-      }
-    });
-
-    exportManifestButton.addEventListener("click", async () => {
-      try {
-        await loadExport("manifest");
-      } catch (error) {
-        exportContent.value = String(error);
-      }
-    });
-
-    exportScreeningButton.addEventListener("click", async () => {
-      try {
-        await loadExport("screening");
-      } catch (error) {
-        exportContent.value = String(error);
-      }
-    });
-
-    exportPrismaButton.addEventListener("click", async () => {
-      try {
-        await loadExport("prisma");
-      } catch (error) {
-        exportContent.value = String(error);
-      }
-    });
-
-    exportPrismaFlowButton.addEventListener("click", async () => {
-      try {
-        await loadExport("prismaFlow");
-      } catch (error) {
-        exportContent.value = String(error);
-      }
-    });
-
-    exportMetaButton.addEventListener("click", async () => {
-      try {
-        await loadExport("meta");
-      } catch (error) {
-        exportContent.value = String(error);
-      }
-    });
-
-    exportAuditButton.addEventListener("click", async () => {
-      try {
-        await loadExport("audit");
-      } catch (error) {
-        exportContent.value = String(error);
-      }
-    });
-
-    exportEventsButton.addEventListener("click", async () => {
-      try {
-        await loadExport("events");
-      } catch (error) {
-        exportContent.value = String(error);
-      }
-    });
-
-    exportRevisionHistoryButton.addEventListener("click", async () => {
-      try {
-        await loadExport("revisions");
-      } catch (error) {
-        exportContent.value = String(error);
-      }
-    });
-
-    restoreRevisionButton.addEventListener("click", async () => {
+    elements.restoreRevisionButton.addEventListener('click', async () => {
       try {
         const candidate = selectedCandidate();
         const revision = selectedRevision();
-        if (!candidate) {
-          extraction.textContent = "추출 리비전을 복원하기 전에 후보를 선택하세요.";
-          return;
-        }
-        if (!revision) {
-          extraction.textContent = "복원할 추출 리비전을 선택하세요.";
-          return;
-        }
-
-        const payload = await fetchJson(`/candidates/${candidate.id}/extraction-history/${revision.id}/restore`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: restoreRevisionMessage.value || null,
-            reviewed_by: "dashboard",
-            notes: "Restored from dashboard"
-          })
-        });
-
-        extraction.textContent = JSON.stringify(payload, null, 2);
-        await refreshSearchState(lastSearchId);
-        await loadExport("meta");
-        await loadExport("revisions");
+        if (!candidate) { setFeedback(elements.candidateActionFeedback, '추출 리비전을 복원하기 전에 후보를 선택하세요.', 'error'); return; }
+        if (!revision) { setFeedback(elements.candidateActionFeedback, '복원할 추출 리비전을 선택하세요.', 'error'); return; }
+        const payload = await fetchJson(`/candidates/${candidate.id}/extraction-history/${revision.id}/restore`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: elements.restoreRevisionMessage.value || null, reviewed_by: 'dashboard', notes: 'Restored from dashboard' }) });
+        elements.extraction.textContent = compactJson(payload);
+        setFeedback(elements.candidateActionFeedback, `리비전 #${revision.revision_index} 복원 완료`, 'success');
+        await refreshSearchState(state.lastSearchId);
+        await loadExport('meta');
+        await loadExport('revisions');
       } catch (error) {
-        extraction.textContent = String(error);
+        elements.extraction.textContent = String(error);
+        setFeedback(elements.candidateActionFeedback, String(error), 'error');
       }
     });
 
-    revisionToRestore.addEventListener("change", async () => {
-      syncRestoreRevisionMessage();
-      await loadRevisionComparison(reviewCandidate.value);
-    });
+    elements.exportCsvButton.addEventListener('click', () => loadExport('candidates').catch((error) => { elements.exportContent.value = String(error); }));
+    elements.exportManifestButton.addEventListener('click', () => loadExport('manifest').catch((error) => { elements.exportContent.value = String(error); }));
+    elements.exportScreeningButton.addEventListener('click', () => loadExport('screening').catch((error) => { elements.exportContent.value = String(error); }));
+    elements.exportPrismaButton.addEventListener('click', () => loadExport('prisma').catch((error) => { elements.exportContent.value = String(error); }));
+    elements.exportPrismaFlowButton.addEventListener('click', () => loadExport('prismaFlow').catch((error) => { elements.exportContent.value = String(error); }));
+    elements.exportMetaButton.addEventListener('click', () => loadExport('meta').catch((error) => { elements.exportContent.value = String(error); }));
+    elements.exportAuditButton.addEventListener('click', () => loadExport('audit').catch((error) => { elements.exportContent.value = String(error); }));
+    elements.exportEventsButton.addEventListener('click', () => loadExport('events').catch((error) => { elements.exportContent.value = String(error); }));
+    elements.exportRevisionHistoryButton.addEventListener('click', () => loadExport('revisions').catch((error) => { elements.exportContent.value = String(error); }));
 
-    reviewCandidate.addEventListener("change", async () => {
-      try {
-        await loadCandidateDetail(reviewCandidate.value);
-      } catch (error) {
-        candidateDetail.textContent = String(error);
-      }
-    });
+    elements.revisionToRestore.addEventListener('change', () => { syncRestoreRevisionMessage(); loadRevisionComparison(elements.reviewCandidate.value).catch(() => {}); });
+    elements.reviewCandidate.addEventListener('change', () => { loadCandidateDetail(elements.reviewCandidate.value).catch((error) => { elements.candidateDetail.textContent = String(error); }); });
 
-    loadSearches(true).catch(() => {});
+    elements.apiBaseLabel.textContent = apiBase;
+    renderRunSummary();
+    renderMetricCards();
+    renderPrismaCounts();
+    renderPrismaFlow(null);
+    renderCandidatePanel(null);
+    populateManualExtractionEditor(null);
+    loadSearches(true).catch((error) => { elements.searchesBody.innerHTML = `<tr><td colspan='4'>${escapeHtml(String(error))}</td></tr>`; });
   </script>
 </body>
 </html>
-
-

@@ -1,4 +1,4 @@
-﻿import os
+import os
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -8,12 +8,47 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = BASE_DIR / "data"
 
 
+def _strip_matching_quotes(value: str) -> str:
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        return value[1:-1]
+    return value
+
+
+def load_env_file(path: Path) -> None:
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text(encoding="utf-8-sig").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        if line.startswith("export "):
+            line = line[7:].strip()
+
+        if "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        if not key or key in os.environ:
+            continue
+
+        os.environ[key] = _strip_matching_quotes(value.strip())
+
+
+load_env_file(BASE_DIR / ".env")
+
+
 class Settings(BaseModel):
     app_name: str = "RISS Meta Agent API"
     environment: str = os.getenv("APP_ENV", "development")
     cors_allow_origins: list[str] = [
         item.strip()
-        for item in os.getenv("CORS_ALLOW_ORIGINS", "http://127.0.0.1:8000,http://localhost:8000,http://127.0.0.1:5500,http://localhost:5500").split(",")
+        for item in os.getenv(
+            "CORS_ALLOW_ORIGINS",
+            "http://127.0.0.1:8000,http://localhost:8000,http://127.0.0.1:5500,http://localhost:5500",
+        ).split(",")
         if item.strip()
     ]
     uploads_dir: str = str(BASE_DIR / "uploads")
@@ -38,8 +73,11 @@ class Settings(BaseModel):
     riss_api_key_param: str = os.getenv("RISS_API_KEY_PARAM", "apiKey")
     riss_query_param: str = os.getenv("RISS_QUERY_PARAM", "keyword")
     riss_count_param: str = os.getenv("RISS_COUNT_PARAM", "count")
-    riss_query_mode: str = os.getenv("RISS_QUERY_MODE", "integrated").lower()
+    riss_query_mode: str = os.getenv("RISS_QUERY_MODE", "web").lower()
     riss_response_format: str = os.getenv("RISS_RESPONSE_FORMAT", "json")
+    riss_web_page_scale: int = int(os.getenv("RISS_WEB_PAGE_SCALE", "100"))
+    riss_thesis_collection: str = os.getenv("RISS_THESIS_COLLECTION", "bib_t")
+    riss_journal_collection: str = os.getenv("RISS_JOURNAL_COLLECTION", "re_a_kor")
     riss_document_type_param: str | None = os.getenv("RISS_DOCUMENT_TYPE_PARAM")
     riss_thesis_value: str = os.getenv("RISS_THESIS_VALUE", "thesis")
     riss_journal_value: str = os.getenv("RISS_JOURNAL_VALUE", "journal")

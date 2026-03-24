@@ -72,14 +72,28 @@ Key settings:
 - `AUTO_CREATE_TABLES=true|false`
 - `KCI_LIVE_ENABLED=true`
 - `RISS_LIVE_ENABLED=true`
+- `RISS_QUERY_MODE=web|sparql|integrated`
+- `RISS_API_URL=https://www.riss.kr/search/Search.do`
+- `RISS_WEB_PAGE_SCALE=100`
+- `RISS_THESIS_COLLECTION=bib_t`
+- `RISS_JOURNAL_COLLECTION=re_a_kor`
 - `OPENAI_API_KEY=...`
 - `OCR_COMMAND_TEMPLATE=tesseract {input_path} stdout -l kor+eng`
 - `CORS_ALLOW_ORIGINS=http://localhost:3000,http://127.0.0.1:5500`
+
+The backend loads `backend/.env` automatically at import time and does not overwrite variables
+that are already present in the process environment.
 
 When live collection or OpenAI extraction is not configured, the prototype falls back to local
 stub data or heuristic extraction.
 If uploaded PDF text extraction fails or returns no usable text, the candidate remains in an
 OCR-needed state until manual text or an OCR-derived text file is supplied.
+
+`RISS_QUERY_MODE=web` is now the default live path. In that mode the connector collects the real
+`www.riss.kr` search result pages, paginates through the configured thesis and journal collections,
+and normalizes the result cards into the shared candidate schema. `sparql` remains available for
+the official Linked Data endpoint, and `integrated` remains as a lower-fidelity fallback for older
+parameter-based integrations.
 
 If you are using `REPOSITORY_BACKEND=sqlalchemy` for a persistent relational database, prefer:
 
@@ -173,7 +187,7 @@ pytest tests
 
 ## Open items
 
-- production validation of `RISS` endpoint mapping
+- production validation of `RISS` web-result parsing and field mapping
 - deployment pipeline validation for Alembic-based `PostgreSQL` upgrades
 - OCR execution pipeline and stronger PDF parsing
 - authentication and multi-user separation

@@ -22,7 +22,7 @@ def test_dashboard_serves_frontend_html() -> None:
 
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
-    assert "교육학 메타분석 AI 워크스페이스" in response.text
+    assert "교육학 메타분석 AI 감사 워크스페이스" in response.text
 
 
 def test_api_root_returns_message_and_key_endpoints() -> None:

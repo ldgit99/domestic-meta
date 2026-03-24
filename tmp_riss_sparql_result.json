@@ -1,0 +1,2 @@
+﻿{ "head" : { "vars" : ["URI","TITLE"] } ,"results" : { "bindings" : [ {"URI" : { "type" : "uri", "value" : "https://data.riss.kr/resource/Thesis/000000002155"},"TITLE" : { "type" : "literal", "value" : "Gretchen 悲劇의 意義:Faust 救濟와의 關聯에서"}}{"URI" : { "type" : "uri", "value" : "https://data.riss.kr/resource/Thesis/000000010876"},"TITLE" : { "type" : "literal", "value" : "남북한 초·중등 과학 교과서의 화학 내용 비교"}}{"URI" : { "type" : "uri", "value" : "https://data.riss.kr/resource/Thesis/000000017180"},"TITLE" : { "type" : "literal", "value" : "獨逸語의 音素'r'와 그 Realisation"}}] } }
+

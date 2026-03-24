@@ -1,6 +1,7 @@
 ﻿from fastapi.testclient import TestClient
 
 from app.api.dependencies import get_orchestrator, get_store
+from app.core.config import settings
 from app.main import app
 from app.repositories.memory import MemoryStore
 from app.services.orchestrator import SearchOrchestrator
@@ -11,6 +12,8 @@ def test_search_run_and_summary_expose_source_breakdown_and_screening_sequence()
     orchestrator = SearchOrchestrator(store=store)
     app.dependency_overrides[get_store] = lambda: store
     app.dependency_overrides[get_orchestrator] = lambda: orchestrator
+    previous_riss_live_enabled = settings.riss_live_enabled
+    settings.riss_live_enabled = False
 
     try:
         client = TestClient(app)
@@ -58,4 +61,5 @@ def test_search_run_and_summary_expose_source_breakdown_and_screening_sequence()
         assert quantitative_step["included_count"] == 2
         assert quantitative_step["review_count"] == 1
     finally:
+        settings.riss_live_enabled = previous_riss_live_enabled
         app.dependency_overrides.clear()
